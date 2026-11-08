@@ -1,6 +1,7 @@
 //! Minecraft: Java Edition world-seed logic.
 
 pub mod biome;
+pub mod density;
 pub mod mth;
 pub mod noise;
 pub mod random;

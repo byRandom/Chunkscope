@@ -46,7 +46,13 @@ Bedrock Edition is out of scope for now.
 - [ ] Large biomes / amplified presets, Nether and End biomes
 - [x] Structure placement: candidate chunks, frequency rolls, exclusion zones (all vanilla structure sets)
 - [x] Strongholds (concentric rings with their biome search)
-- [ ] Structure validation (biome and terrain height), which needs terrain generation
+- [ ] Terrain height (needed to validate structures), in steps:
+  - [x] Volume-mode noise (`NoiseStack.addToVolume`)
+  - [ ] Volume-mode density samplers, cell interpolation, smeared Perlin noise
+  - [ ] Overworld `final_density` (the game's compiled sampler tree)
+  - [ ] Aquifers
+  - [ ] Heightmaps (`getBaseHeight`)
+- [ ] Structure validation (biome and terrain height)
 - [ ] Strongholds and world spawn
 - [ ] Seed search CLI with filters
 - [ ] Map viewer GUI

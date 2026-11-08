@@ -1,0 +1,13 @@
+//! Density functions (26.x `levelgen.densityfunction`), evaluated in volume
+//! mode like the game's terrain generation.
+//!
+//! Terrain generation (and so heightmaps) samples density functions in volume
+//! mode (`sampleVolume`), while biome climate uses point mode
+//! (`sampleValue`). The two are separate code paths in the game; some
+//! samplers only do part of their work in one of them (for example, cell
+//! interpolation only happens in volume mode). This module mirrors the volume
+//! paths so each can be verified against the game on its own.
+
+mod volume;
+
+pub use volume::DensityVolume;
