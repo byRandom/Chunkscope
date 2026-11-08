@@ -90,6 +90,7 @@ public class GameOracle {
         structurePlacement(lookup);
         frequencyReduction();
         strongholds(lookup);
+        volumeNoise(vanilla);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -801,6 +802,59 @@ public class GameOracle {
                 StringBuilder sb = new StringBuilder(String.valueOf(seed));
                 for (var p : positions) sb.append(' ').append(p.x()).append(',').append(p.z());
                 w.println(sb);
+            }
+        }
+    }
+    // ---- volume-mode noise (terrain path) ----------------------------------------
+    static long fnv(net.minecraft.world.level.levelgen.densityfunction.DensityBuffer b, int n) {
+        long h = 0xcbf29ce484222325L;
+        for (int i = 0; i < n; i++) {
+            h ^= Integer.toUnsignedLong(Float.floatToRawIntBits(b.get(i)));
+            h *= 0x100000001b3L;
+        }
+        return h;
+    }
+
+    /** NoiseStack.addToVolume for every vanilla noise over several volume shapes. */
+    static void volumeNoise(Map<String, NormalNoise> vanilla) throws IOException {
+        record Shape(String name, int[] v, double xz, double y) {}
+        List<Shape> shapes = new ArrayList<>(List.of(
+                new Shape("column", new int[] {1, 384, 1, 0, -64, 0, 1, 1, 1}, 1.0, 1.0),
+                new Shape("cells", new int[] {5, 49, 5, -16, -64, 32, 4, 8, 4}, 0.25, 0.125),
+                new Shape("slice", new int[] {16, 1, 16, 1000, 0, -2000, 1, 1, 1}, 0.25, 0.0),
+                new Shape("far", new int[] {3, 20, 3, 29_999_990, 300, -29_999_990, 2, 3, 2}, 1.0, 0.5)));
+        for (int i = 0; i < 4; i++) {
+            int x = INPUTS.nextInt(-2_000_000, 2_000_000), z = INPUTS.nextInt(-2_000_000, 2_000_000);
+            shapes.add(new Shape("random" + i, new int[] {INPUTS.nextInt(1, 6), INPUTS.nextInt(1, 40), INPUTS.nextInt(1, 6), x,
+                    INPUTS.nextInt(-64, 300), z, INPUTS.nextInt(1, 5), INPUTS.nextInt(1, 9), INPUTS.nextInt(1, 5)},
+                    INPUTS.nextDouble() * 2, INPUTS.nextDouble() * 2));
+        }
+        try (PrintWriter w = writer("volume_noise.txt")) {
+            for (Shape s : shapes) {
+                StringBuilder sb = new StringBuilder("shape " + s.name());
+                for (int v : s.v()) sb.append(' ').append(v);
+                sb.append(' ').append(bits(s.xz())).append(' ').append(bits(s.y()));
+                w.println(sb);
+            }
+            for (long seed : List.of(0L, -4172144997902289642L, INPUTS.nextLong())) {
+                PositionalRandomFactory factory = new XoroshiroRandomSource(seed).forkPositional();
+                for (var e : vanilla.entrySet()) {
+                    Noise n = e.getValue().create(factory.fromHashOf(e.getKey()));
+                    StringBuilder sb = new StringBuilder(seed + " " + e.getKey());
+                    for (Shape s : shapes) {
+                        int[] v = s.v();
+                        var volume = new net.minecraft.world.level.levelgen.densityfunction.DensityVolume(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8]);
+                        int size = v[0] * v[1] * v[2];
+                        var buffer = net.minecraft.world.level.levelgen.densityfunction.DensityBuffer.createUnpooled(size);
+                        buffer.fill(0.0f);
+                        n.addToVolume(buffer, volume, s.xz(), s.y(), 1.0f);
+                        n.addToVolume(buffer, volume, s.xz(), s.y(), -0.75f); // accumulation on top
+                        sb.append(' ').append(s.name()).append('=').append(Long.toHexString(fnv(buffer, size)))
+                                .append(',').append(bits(buffer.get(0))).append(',').append(bits(buffer.get(size / 2)))
+                                .append(',').append(bits(buffer.get(size - 1)));
+                    }
+                    w.println(sb);
+                }
             }
         }
     }

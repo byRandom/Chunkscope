@@ -233,6 +233,30 @@ impl NoiseStack {
         sum
     }
 
+    /// `NoiseStack.addToVolume(buffer, volume, xzScale, yScale, amplitude)`:
+    /// each layer adds `amplitude * layer.amplitude * noise` to `buffer`,
+    /// sampled at `xzScale * frequency` (the game multiplies the scales first;
+    /// point mode multiplies the coordinate by each in turn).
+    pub fn add_to_volume(
+        &self,
+        buffer: &mut [f32],
+        volume: &crate::density::DensityVolume,
+        xz_scale: f64,
+        y_scale: f64,
+        amplitude: f32,
+    ) {
+        for layer in &self.layers {
+            let f = layer.frequency;
+            layer.noise.add_to_volume(
+                buffer,
+                volume,
+                xz_scale * f,
+                y_scale * f,
+                amplitude * layer.amplitude,
+            );
+        }
+    }
+
     /// `NoiseStack.get(double, double)`.
     pub fn get_2d(&self, x: f64, z: f64) -> f32 {
         let mut sum = 0.0f32;
