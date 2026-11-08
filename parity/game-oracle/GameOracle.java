@@ -28,7 +28,25 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import net.minecraft.SharedConstants;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.registries.VanillaRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.util.CubicSpline;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Climate;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterList;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
+import net.minecraft.world.level.levelgen.densityfunction.op.SplineFunction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
 import net.minecraft.world.level.levelgen.PositionalRandomFactory;
@@ -62,6 +80,12 @@ public class GameOracle {
         normalNoiseOctaves(vanilla);
         vanillaNoiseSamples(vanilla);
         writeVanillaTable(vanilla, Path.of(args[2]));
+        // Biomes need the game's registries (built from code, no world needed).
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+        HolderLookup.Provider lookup = VanillaRegistries.createWorldLookup();
+        writeBiomeTables(lookup, Path.of(args[3]));
+        climateAndBiomes(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -404,5 +428,164 @@ public class GameOracle {
     static String rustF64(double d) {
         String s = Double.toString(d);
         return s.replace("E", "e");
+    }
+
+    // ---- biomes ---------------------------------------------------------------
+    /** Breadth-first search for the first object of a class inside a record/object graph. */
+    static <T> T find(Object root, Class<T> type) {
+        java.util.ArrayDeque<Object> queue = new java.util.ArrayDeque<>(List.of(root));
+        java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        while (!queue.isEmpty()) {
+            Object o = queue.poll();
+            if (o == null || !seen.add(o)) continue;
+            if (type.isInstance(o)) return type.cast(o);
+            if (o instanceof Holder<?> h) { queue.add(h.value()); continue; }
+            if (o instanceof Iterable<?> it) { it.forEach(queue::add); continue; }
+            for (Class<?> k = o.getClass(); k != null && k != Object.class && k != Record.class; k = k.getSuperclass()) {
+                if (!k.getName().startsWith("net.minecraft")) break;
+                for (Field f : k.getDeclaredFields()) {
+                    if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || f.getType().isPrimitive()) continue;
+                    try { f.setAccessible(true); queue.add(f.get(o)); } catch (ReflectiveOperationException | RuntimeException e) { /* skip */ }
+                }
+            }
+        }
+        throw new IllegalStateException("no " + type.getSimpleName() + " in " + root);
+    }
+
+    static DensityFunction densityFunction(HolderLookup.Provider lookup, String name) {
+        return lookup.lookupOrThrow(Registries.DENSITY_FUNCTION)
+                .getOrThrow(ResourceKey.create(Registries.DENSITY_FUNCTION, Identifier.parse(name))).value();
+    }
+
+    /** The registry name a spline coordinate refers to. */
+    static String coordinateName(SplineFunction.Coordinate c) {
+        Holder<?> h = find(c.function(), Holder.class);
+        return h.unwrapKey().orElseThrow().identifier().toString();
+    }
+
+    static String rustF32(float f) {
+        String s = Float.toString(f).replace("E", "e");
+        return s;
+    }
+
+    static void rustSpline(StringBuilder out, CubicSpline<SplineFunction.Coordinate> spline, String indent) {
+        if (spline instanceof CubicSpline.Constant<SplineFunction.Coordinate> c) {
+            out.append("Spline::Constant(").append(rustF32(c.value())).append(")");
+            return;
+        }
+        var m = (CubicSpline.Multipoint<SplineFunction.Coordinate>) spline;
+        String coordinate = switch (coordinateName(m.coordinate())) {
+            case "minecraft:overworld/continents" -> "Continents";
+            case "minecraft:overworld/erosion" -> "Erosion";
+            case "minecraft:overworld/ridges_folded" -> "RidgesFolded";
+            default -> throw new IllegalStateException("unknown spline coordinate " + coordinateName(m.coordinate()));
+        };
+        out.append("Spline::Multipoint(&Multipoint {\n");
+        out.append(indent).append("    coordinate: SplineCoordinate::").append(coordinate).append(",\n");
+        out.append(indent).append("    locations: &[");
+        for (int i = 0; i < m.locations().length; i++) out.append(i == 0 ? "" : ", ").append(rustF32(m.locations()[i]));
+        out.append("],\n").append(indent).append("    derivatives: &[");
+        for (int i = 0; i < m.derivatives().length; i++) out.append(i == 0 ? "" : ", ").append(rustF32(m.derivatives()[i]));
+        out.append("],\n").append(indent).append("    values: &[\n");
+        for (CubicSpline<SplineFunction.Coordinate> v : m.values()) {
+            out.append(indent).append("        ");
+            rustSpline(out, v, indent + "        ");
+            out.append(",\n");
+        }
+        out.append(indent).append("    ],\n").append(indent).append("})");
+    }
+
+    static void writeBiomeTables(HolderLookup.Provider lookup, Path rs) throws IOException {
+        StringBuilder out = new StringBuilder();
+        out.append("// @generated by parity/game-oracle/GameOracle.java from Minecraft ")
+                .append(Files.readString(this_out().resolve("VERSION")).trim()).append(". Do not edit.\n");
+        out.append("//! Overworld terrain spline and biome parameter list, exported from the game.\n\n");
+        out.append("use super::climate::Parameter;\nuse super::spline::{Multipoint, Spline, SplineCoordinate};\n\n");
+
+        // overworld/offset = cache(lerp(blend_alpha, blend_offset, add(<constant>, spline)))
+        DensityFunction offset = densityFunction(lookup, "minecraft:overworld/offset");
+        SplineFunction spline = find(offset, SplineFunction.class);
+        var add = find(offset, net.minecraft.world.level.levelgen.densityfunction.op.BinaryFunction.class);
+        Object constant = add.left() instanceof SplineFunction ? add.right() : add.left();
+        float offsetAdd = (float) call(constant, "value");
+        out.append("/// The constant added to the spline in `minecraft:overworld/offset`.\n");
+        out.append("pub const OFFSET_ADD: f32 = ").append(rustF32(offsetAdd)).append(";\n\n");
+        out.append("/// The spline of `minecraft:overworld/offset`.\npub const OFFSET: Spline = ");
+        rustSpline(out, spline.spline(), "");
+        out.append(";\n\n");
+
+        var params = MultiNoiseBiomeSourceParameterList.knownPresets().get(MultiNoiseBiomeSourceParameterList.Preset.OVERWORLD);
+        List<String> biomes = new ArrayList<>();
+        List<Climate.Parameter> parameters = new ArrayList<>();
+        StringBuilder entries = new StringBuilder();
+        for (var pair : params.values()) {
+            Climate.ParameterPoint p = pair.getFirst();
+            String biome = pair.getSecond().identifier().toString();
+            if (!biomes.contains(biome)) biomes.add(biome);
+            entries.append("    ([");
+            Climate.Parameter[] ps = {p.temperature(), p.humidity(), p.continentalness(), p.erosion(), p.depth(), p.weirdness()};
+            for (int i = 0; i < 6; i++) {
+                if (!parameters.contains(ps[i])) parameters.add(ps[i]);
+                entries.append(i == 0 ? "" : ", ").append(parameters.indexOf(ps[i]));
+            }
+            entries.append("], ").append(p.offset()).append(", ").append(biomes.indexOf(biome)).append("),\n");
+        }
+        out.append("/// Biome registry names; `Biome(i)` is `BIOMES[i]`.\npub const BIOMES: [&str; ").append(biomes.size()).append("] = [\n");
+        for (String b : biomes) out.append("    \"").append(b).append("\",\n");
+        out.append("];\n\n/// Distinct climate ranges used by `OVERWORLD`.\npub const PARAMETERS: [Parameter; ")
+                .append(parameters.size()).append("] = [\n");
+        for (Climate.Parameter p : parameters) out.append("    Parameter::new(").append(p.min()).append(", ").append(p.max()).append("),\n");
+        out.append("];\n\n/// The `minecraft:overworld` parameter list, in game order: indices into\n")
+                .append("/// `PARAMETERS` for temperature, humidity, continentalness, erosion, depth\n")
+                .append("/// and weirdness, then the offset, then the index into `BIOMES`.\n")
+                .append("pub static OVERWORLD: [([u16; 6], i64, u16); ").append(params.values().size()).append("] = [\n")
+                .append(entries).append("];\n");
+        Files.writeString(rs, out);
+    }
+
+    static Path this_out() {
+        return out;
+    }
+
+    static void climateAndBiomes(HolderLookup.Provider lookup) throws IOException {
+        NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.OVERWORLD).value();
+        var preset = MultiNoiseBiomeSourceParameterList.knownPresets().get(MultiNoiseBiomeSourceParameterList.Preset.OVERWORLD);
+        List<Long> worldSeeds = List.of(0L, 1L, -1L, 42L, 123456789L, -4172144997902289642L, INPUTS.nextLong(), INPUTS.nextLong());
+        try (PrintWriter climate = writer("climate.txt"); PrintWriter biomes = writer("biomes.txt")) {
+            for (long seed : worldSeeds) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                Climate.Sampler sampler = rs.createClimateSampler(SamplerContext.EMPTY_UNCACHED);
+                DensitySampler.Bound[] fns = {sampler.temperature(), sampler.humidity(), sampler.continentalness(),
+                        sampler.erosion(), sampler.depth(), sampler.weirdness()};
+
+                // raw climate values at block positions
+                for (int i = 0; i < 300; i++) {
+                    int range = switch (i % 3) { case 0 -> 2_000; case 1 -> 200_000; default -> 30_000_000; };
+                    int x = INPUTS.nextInt(-range, range + 1), y = INPUTS.nextInt(-80, 340), z = INPUTS.nextInt(-range, range + 1);
+                    StringBuilder sb = new StringBuilder(seed + " " + x + " " + y + " " + z);
+                    for (DensitySampler.Bound f : fns) sb.append(' ').append(bits(f.sampleValue(x, y, z)));
+                    climate.println(sb);
+                }
+
+                // biome queries in a fixed order, on a fresh R-tree (its search starts from the last result)
+                Climate.ParameterList<ResourceKey<Biome>> list = new Climate.ParameterList<>(preset.values());
+                StringBuilder sb = new StringBuilder(String.valueOf(seed));
+                for (int qz = -24; qz < 24; qz++) for (int qx = -24; qx < 24; qx++) {
+                    query(sb, sampler, list, qx * 8, 16, qz * 8);
+                }
+                for (int i = 0; i < 400; i++) {
+                    int range = i % 2 == 0 ? 50_000 : 7_500_000; // quart coordinates
+                    query(sb, sampler, list, INPUTS.nextInt(-range, range), INPUTS.nextInt(-16, 80), INPUTS.nextInt(-range, range));
+                }
+                biomes.println(sb);
+            }
+        }
+    }
+
+    static void query(StringBuilder sb, Climate.Sampler sampler, Climate.ParameterList<ResourceKey<Biome>> list, int qx, int qy, int qz) {
+        Climate.TargetPoint t = sampler.sample(qx, qy, qz);
+        String biome = list.findValue(t).identifier().getPath();
+        sb.append(' ').append(qx).append(',').append(qy).append(',').append(qz).append('=').append(biome);
     }
 }

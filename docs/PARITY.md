@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises); next: biomes, structures, spawn | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes; next: structures, spawn | In progress |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -50,7 +50,10 @@ parity/game-oracle/run.sh          # or: parity/game-oracle/run.sh <version>
 Only the generated data is committed, never game code. The oracle also
 generates `crates/mc-core/src/noise/vanilla.rs`: the parameters of every
 vanilla `worldgen/noise` file, decoded with the game's own codec. These are
-numeric parameters, not code. Since 26.1 the game is
+numeric parameters, not code. For biomes it bootstraps the game's registries
+(`VanillaRegistries.createWorldLookup()`, no world or server needed) and
+generates `crates/mc-core/src/biome/generated.rs`: the overworld terrain
+offset spline and the overworld biome parameter list. Since 26.1 the game is
 shipped without obfuscation, so the oracle can use the real class and method
 names.
 
@@ -98,6 +101,19 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   `frequency * 1.0181268882175227`. Layers are summed in the order A0, B0, A1,
   B1, ...
 
+- **Density functions are compiled and `float` since 26.1.** The game
+  compiles `noise_router` functions into samplers, and the compiler rewrites
+  the tree. Climate noises get sliced at y = 0, `shift_a` becomes
+  `noise * 4`, and the blending `lerp` returns its second argument unchanged
+  when `alpha == 1`. Chunkscope evaluates the overworld climate functions in
+  the same compiled form.
+- **The terrain spline is `float` too.** The cubic Hermite interpolation must
+  keep the game's exact operation order:
+  `lerp(t, v0, v1) + t * (1 - t) * lerp(t, p, q)`. Regrouping the product
+  changes `depth` by one ulp.
+- **Climate values are quantized with `(long) (v * 10000f)`**, a float
+  multiply followed by truncation.
+
 ## Known non-determinism in the game itself
 
 Minecraft's own `RandomSource.nextGaussian()` (`MarsagliaPolarGaussian`) uses
@@ -111,3 +127,22 @@ x86_64 HotSpot result and document the caveat.
 
 `java.util.Random.nextGaussian()` uses `StrictMath` and is deterministic; it is
 implemented in `java-compat`.
+
+### Biome lookup depends on query order
+
+The R-tree search in `Climate.RTree` always finds the minimum distance, but
+when several biome boxes are at that same distance (for example, the point
+lies inside more than one), the winner depends on where the search started.
+It starts from the previous query's result, which the game keeps in a
+`ThreadLocal`, and only replaces it on a strictly smaller distance. So the
+same climate point can map to different biomes depending on what was looked
+up before on the same thread. For example, seed 0 at quart (96, 16, -192)
+gives `sparse_jungle` after the oracle's query sequence and `plains` on a
+fresh tree. In the game, this means some biome borders depend on chunk
+generation order.
+
+Chunkscope reproduces the game's search exactly, including that state.
+`ParameterList` keeps the last result, and the tests replay the oracle's
+query order on a fresh tree. A map rendered in a different order can
+therefore differ from the game in rare border cells. The game itself is not
+deterministic there either.

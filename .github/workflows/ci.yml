@@ -35,7 +35,7 @@ jobs:
       - name: Regenerate fixtures with the real game
         run: parity/game-oracle/run.sh
       - name: Fixtures must be up to date
-        run: git diff --exit-code -- parity/fixtures/game crates/mc-core/src/noise/vanilla.rs
+        run: git diff --exit-code -- parity/fixtures/game crates/mc-core/src/noise/vanilla.rs crates/mc-core/src/biome/generated.rs
 
   test:
     name: Test

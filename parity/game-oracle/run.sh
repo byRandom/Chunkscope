@@ -38,4 +38,4 @@ CP=$(find "$CACHE/bundle/META-INF" -name '*.jar' | sort | paste -sd: -)
 # Run from the cache dir: the game writes logs/ into the working directory.
 cd "$CACHE"
 "$JAVA" -cp "$CP" "$ROOT/parity/game-oracle/GameOracle.java" "$OUT" "$VERSION" \
-  "$ROOT/crates/mc-core/src/noise/vanilla.rs"
+  "$ROOT/crates/mc-core/src/noise/vanilla.rs" "$ROOT/crates/mc-core/src/biome/generated.rs"
