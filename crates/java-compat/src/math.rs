@@ -34,3 +34,25 @@ pub fn min_f32(a: f32, b: f32) -> f32 {
     }
     if a <= b { a } else { b }
 }
+
+/// `Math.max(float, float)`: NaN wins, and `0.0` is larger than `-0.0`.
+pub fn max_f32(a: f32, b: f32) -> f32 {
+    if a.is_nan() {
+        return a;
+    }
+    if a == 0.0 && b == 0.0 && a.to_bits() == (-0.0f32).to_bits() {
+        return b;
+    }
+    if a >= b { a } else { b }
+}
+
+/// `Math.min(double, double)`: NaN wins, and `-0.0` is smaller than `0.0`.
+pub fn min_f64(a: f64, b: f64) -> f64 {
+    if a.is_nan() {
+        return a;
+    }
+    if a == 0.0 && b == 0.0 && b.to_bits() == (-0.0f64).to_bits() {
+        return b;
+    }
+    if a <= b { a } else { b }
+}

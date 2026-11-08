@@ -108,3 +108,40 @@ impl DensityVolume {
             .wrapping_sub(1)
     }
 }
+
+impl DensityVolume {
+    /// `indexOfBlock(x, y, z)`: the index of a block of this volume, or `None`
+    /// if the block is outside it or between its steps.
+    pub fn index_of_block(&self, x: i32, y: i32, z: i32) -> Option<usize> {
+        let (rx, ry, rz) = (
+            x.wrapping_sub(self.min_block_x),
+            y.wrapping_sub(self.min_block_y),
+            z.wrapping_sub(self.min_block_z),
+        );
+        if self.step_block_x == 1 && self.step_block_y == 1 && self.step_block_z == 1 {
+            let inside = rx >= 0
+                && ry >= 0
+                && rz >= 0
+                && rx < self.size_x
+                && ry < self.size_y
+                && rz < self.size_z;
+            return inside.then(|| self.index(rx, ry, rz));
+        }
+        let inside = rx >= 0
+            && ry >= 0
+            && rz >= 0
+            && rx < self.size_x * self.step_block_x
+            && ry < self.size_y * self.step_block_y
+            && rz < self.size_z * self.step_block_z
+            && rx.rem_euclid(self.step_block_x) == 0
+            && ry.rem_euclid(self.step_block_y) == 0
+            && rz.rem_euclid(self.step_block_z) == 0;
+        inside.then(|| {
+            self.index(
+                rx.div_euclid(self.step_block_x),
+                ry.div_euclid(self.step_block_y),
+                rz.div_euclid(self.step_block_z),
+            )
+        })
+    }
+}

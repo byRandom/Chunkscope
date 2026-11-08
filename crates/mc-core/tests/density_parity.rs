@@ -57,12 +57,34 @@ fn noise_add_to_volume_matches_game() {
 
 const FINAL_DENSITY: &str = include_str!("../../../parity/fixtures/game/final_density.txt");
 
-/// Every node of the compiled overworld `final_density`, over full block
-/// columns, compared with the game's own sampler for that node.
+fn volume_hash(
+    s: &mc_core::density::DensitySampler,
+    ctx: &mc_core::density::EvalContext,
+    id: u32,
+    volume: &DensityVolume,
+) -> String {
+    let mut buffer = vec![0f32; volume.size()];
+    s.sample_node(ctx, id, &mut buffer, volume);
+    let n = buffer.len();
+    format!(
+        "{:x},{:x},{:x},{:x}",
+        fnv(&buffer),
+        buffer[0].to_bits(),
+        buffer[n / 2].to_bits(),
+        buffer[n - 1].to_bits()
+    )
+}
+
+/// Every node of the compiled overworld density trees (`final_density` and
+/// the aquifer's functions), compared with the game's own sampler for that
+/// node, each in a fresh caching context and in the oracle's order: a 3x1x3
+/// layer (volume mode), 4 points (point mode, which can read cached volume
+/// values), then a full block column (volume mode).
 #[test]
-fn final_density_nodes_match_game() {
-    use mc_core::density::{DensitySampler, generated::OVERWORLD_FINAL_DENSITY};
+fn density_nodes_match_game() {
+    use mc_core::density::{DensitySampler, EvalContext, generated::OVERWORLD_FINAL_DENSITY};
     let tree = OVERWORLD_FINAL_DENSITY;
+    let ys = [-64, -10, 63, 140];
     let mut failures = Vec::new();
     let mut sampler: Option<(i64, DensitySampler)> = None;
     for line in FINAL_DENSITY.lines() {
@@ -73,24 +95,35 @@ fn final_density_nodes_match_game() {
             sampler = Some((seed, DensitySampler::new(tree, seed)));
         }
         let s = &sampler.as_ref().unwrap().1;
-        let volume = DensityVolume::column(x, -64, 384, z);
+        let column = DensityVolume::column(x, -64, 384, z);
+        let layer = DensityVolume::with_steps(3, 1, 3, x - 4, 0, z - 4, 4, 1, 4);
         assert_eq!(t.len() - 3, tree.nodes.len());
         for (id, want) in t[3..].iter().enumerate() {
-            let mut buffer = vec![0f32; volume.size()];
-            s.sample_node(id as u32, &mut buffer, &volume);
-            let n = buffer.len();
-            let got = format!(
-                "{:x},{:x},{:x},{:x}",
-                fnv(&buffer),
-                buffer[0].to_bits(),
-                buffer[n / 2].to_bits(),
-                buffer[n - 1].to_bits()
-            );
-            if &got != want {
-                failures.push(format!(
-                    "seed {seed} column ({x}, {z}) node {id} {:?}: rust {got} game {want}",
-                    tree.nodes[id]
-                ));
+            let id = id as u32;
+            let parts: Vec<&str> = want.split('|').collect();
+            let mut check = |what: &str, got: String, want: &str| {
+                if got != want {
+                    failures.push(format!(
+                        "seed {seed} column ({x}, {z}) node {id} {what} {:?}: rust {got} game {want}",
+                        tree.nodes[id as usize]
+                    ));
+                }
+            };
+            let ctx = EvalContext::caching();
+            if parts[0] != "x" {
+                check("layer", volume_hash(s, &ctx, id, &layer), parts[0]);
+            }
+            let points: Vec<String> = ys
+                .iter()
+                .enumerate()
+                .map(|(i, &y)| {
+                    let v = s.sample_value(&ctx, id, x + i as i32, y, z - i as i32);
+                    format!("{:x}", v.to_bits())
+                })
+                .collect();
+            check("points", points.join("/"), parts[1]);
+            if parts[2] != "x" {
+                check("column", volume_hash(s, &ctx, id, &column), parts[2]);
             }
         }
     }
@@ -100,7 +133,7 @@ fn final_density_nodes_match_game() {
         failures.len(),
         failures
             .iter()
-            .take(8)
+            .take(10)
             .cloned()
             .collect::<Vec<_>>()
             .join("\n")

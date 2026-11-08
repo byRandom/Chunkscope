@@ -92,6 +92,8 @@ public class GameOracle {
         strongholds(lookup);
         volumeNoise(vanilla);
         finalDensity(lookup, Path.of(args[5]));
+        terrain(lookup);
+        aquifers(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -760,11 +762,15 @@ public class GameOracle {
     }
 
     static void resolveTag(ZipFile jar, Identifier tag, List<String> out) throws IOException {
-        ZipEntry e = jar.getEntry("data/" + tag.getNamespace() + "/tags/worldgen/biome/" + tag.getPath() + ".json");
+        resolveTag(jar, "worldgen/biome", tag, out);
+    }
+
+    static void resolveTag(ZipFile jar, String registry, Identifier tag, List<String> out) throws IOException {
+        ZipEntry e = jar.getEntry("data/" + tag.getNamespace() + "/tags/" + registry + "/" + tag.getPath() + ".json");
         var json = JsonParser.parseString(new String(jar.getInputStream(e).readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject();
         for (var v : json.getAsJsonArray("values")) {
             String s = v.isJsonObject() ? v.getAsJsonObject().get("id").getAsString() : v.getAsString();
-            if (s.startsWith("#")) resolveTag(jar, Identifier.parse(s.substring(1)), out);
+            if (s.startsWith("#")) resolveTag(jar, registry, Identifier.parse(s.substring(1)), out);
             else if (!out.contains(s)) out.add(s);
         }
     }
@@ -900,6 +906,7 @@ public class GameOracle {
         final Map<Object, String> noiseNames;
         final Map<Object, String> blendedStacks;
         String blendedParams;
+        final Map<String, Integer> roots = new LinkedHashMap<>();
 
         TreeExport(Map<Object, String> noiseNames, Map<Object, String> blendedStacks) {
             this.noiseNames = noiseNames;
@@ -937,8 +944,17 @@ public class GameOracle {
                 }
                 case "op.BinaryFunction$AddSampler" -> "Node::Add(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
                 case "op.BinaryFunction$MulSampler" -> "Node::Mul(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
-                case "op.BinaryFunction$MinSampler" -> "Node::Min(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
-                case "op.BinaryFunction$MaxSampler" -> "Node::Max(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$MinSampler" -> "Node::Min { left: " + node(fieldAny(s, "left")) + ", right: " + node(fieldAny(s, "right"))
+                        + ", right_min_value: " + rustF32Any((float) fieldAny(s, "rightMinValue")) + " }";
+                case "op.BinaryFunction$MaxSampler" -> "Node::Max { left: " + node(fieldAny(s, "left")) + ", right: " + node(fieldAny(s, "right"))
+                        + ", right_max_value: " + rustF32Any((float) fieldAny(s, "rightMaxValue")) + " }";
+                case "op.BinaryFunction$SubSampler" -> "Node::Sub(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$ConstSubSampler" -> "Node::ConstSub(" + rustF32Any((float) fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$ConstDivSampler" -> "Node::ConstDiv(" + rustF32Any((float) fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$ConstMinSampler" -> "Node::ConstMin(" + node(fieldAny(s, "left")) + ", " + rustF32Any((float) fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$ConstMaxSampler" -> "Node::ConstMax(" + node(fieldAny(s, "left")) + ", " + rustF32Any((float) fieldAny(s, "right")) + ")";
+                case "op.FindTopSurfaceFunction$Sampler" -> "Node::FindTopSurface { density: " + node(fieldAny(s, "density")) + ", upper_bound: "
+                        + node(fieldAny(s, "upperBound")) + ", lower_bound: " + fieldAny(s, "lowerBound") + ", cell_height: " + fieldAny(s, "cellHeight") + " }";
                 case "op.BinaryFunction$ConstAddSampler" -> "Node::ConstAdd(" + node(fieldAny(s, "left")) + ", " + rustF32Any((float) fieldAny(s, "right")) + ")";
                 case "op.BinaryFunction$ConstMulSampler" -> "Node::ConstMul(" + node(fieldAny(s, "left")) + ", " + rustF32Any((float) fieldAny(s, "right")) + ")";
                 case "op.UnaryFunction$AbsSampler" -> "Node::Abs(" + node(fieldAny(s, "input")) + ")";
@@ -969,7 +985,7 @@ public class GameOracle {
                         + fieldAny(s, "cellSizeXz") + ", cell_size_y: " + fieldAny(s, "cellSizeY") + ", cell_size_xz_inv: "
                         + rustF32Any((float) fieldAny(s, "cellSizeXzInv")) + ", cell_size_y_inv: " + rustF32Any((float) fieldAny(s, "cellSizeYInv")) + " }";
                 case "op.SliceFunction$YSampler" -> "Node::SliceY { input: " + node(fieldAny(s, "input")) + ", y: " + fieldAny(s, "y") + " }";
-                case "CachingDensitySampler" -> "Node::Cache(" + node(fieldAny(s, "input")) + ")";
+                case "CachingDensitySampler" -> "Node::Cache { input: " + node(fieldAny(s, "input")) + ", id: " + fieldAny(s, "id") + " }";
                 case "op.BlendDensityFunction$Sampler" -> "Node::Blend(" + node(fieldAny(s, "input")) + ")";
                 case "ContextBoundSampler" -> "Node::ContextBound { key: \"" + fieldAny(fieldAny(s, "key"), "name") + "\", fallback: "
                         + node(fieldAny(s, "fallbackSampler")) + " }";
@@ -1067,7 +1083,16 @@ public class GameOracle {
                 }
         }
         TreeExport t = new TreeExport(names, stacks);
-        t.node(col.bound().sampler());
+        // final_density first (keeps its node ids stable), then the aquifer's own functions
+        t.roots.put("FINAL_DENSITY", t.node(col.bound().sampler()));
+        Object aquifer = col.chunk().aquifer();
+        for (String[] f : new String[][] {{"AQUIFER_BARRIER", "barrierNoise"}, {"AQUIFER_FLOODEDNESS", "fluidLevelFloodednessNoise"},
+                {"AQUIFER_SPREAD", "fluidLevelSpreadNoise"}, {"AQUIFER_LAVA", "lavaNoise"}, {"AQUIFER_EXCLUSION", "exclusion"},
+                {"AQUIFER_SURFACE_LEVEL", "surfaceLevel"}}) {
+            var bound = (DensitySampler.Bound) fieldAny(aquifer, f[1]);
+            if (bound.context() != col.bound().context()) throw new IllegalStateException("aquifer sampler context differs");
+            t.roots.put(f[0], t.node(bound.sampler()));
+        }
         t.blendedParams = "BlendedNoiseParams { xz_scale: " + rustF64(blended.xzScale()) + ", y_scale: " + rustF64(blended.yScale())
                 + ", xz_factor: " + rustF64(blended.xzFactor()) + ", y_factor: " + rustF64(blended.yFactor())
                 + ", smear_scale_multiplier: " + rustF64(blended.smearScaleMultiplier()) + " }";
@@ -1098,16 +1123,22 @@ public class GameOracle {
                     } else if (!structure.equals(s)) {
                         throw new IllegalStateException("compiled tree differs between columns or seeds");
                     }
-                    // every node over the column, in id order (root last)
+                    // every node, in id order, each in a fresh caching context (caches carry state
+                    // between calls): a 3x1x3 layer with step 4 (as maxSurfaceLevel samples), then 4
+                    // points (point mode, which can read the cached layer), then the column
                     List<Object> byId = new ArrayList<>(java.util.Collections.nCopies(t.nodes.size(), null));
                     t.ids.forEach((o, id) -> byId.set(id, o));
                     StringBuilder sb = new StringBuilder(seed + " " + xz[0] + " " + xz[1]);
-                    int size = col.volume().sizeY();
+                    var layer = new net.minecraft.world.level.levelgen.densityfunction.DensityVolume(3, 1, 3, xz[0] - 4, 0, xz[1] - 4, 4, 1, 4);
+                    int[] ys = {-64, -10, 63, 140};
                     for (Object node : byId) {
-                        var buffer = net.minecraft.world.level.levelgen.densityfunction.DensityBuffer.createUnpooled(size);
-                        ((DensitySampler) node).sampleVolume(col.bound().context(), buffer, col.volume());
-                        sb.append(' ').append(Long.toHexString(fnv(buffer, size))).append(',').append(bits(buffer.get(0)))
-                                .append(',').append(bits(buffer.get(size / 2))).append(',').append(bits(buffer.get(size - 1)));
+                        DensitySampler d = (DensitySampler) node;
+                        var ctx = net.minecraft.world.level.levelgen.densityfunction.SamplerContext.builder().enableCaches().build();
+                        sb.append(' ').append(volumeHash(d, ctx, layer)).append('|');
+                        for (int i = 0; i < ys.length; i++) {
+                            sb.append(i == 0 ? "" : "/").append(bits(d.sampleValue(ctx, xz[0] + i, ys[i], xz[1] - i)));
+                        }
+                        sb.append('|').append(volumeHash(d, ctx, col.volume()));
                     }
                     w.println(sb);
                     col.chunk().close();
@@ -1128,9 +1159,105 @@ public class GameOracle {
         for (int i = 0; i < t.nodes.size(); i++) out.append("    /* ").append(i).append(" */ ").append(t.nodes.get(i)).append(",\n");
         out.append("];\n\nstatic NOISES: [NoiseSource; ").append(t.noises.size()).append("] = [\n");
         for (String n : t.noises) out.append("    ").append(n).append(",\n");
-        out.append("];\n\n/// `noise_settings/overworld.json` -> `noise_router.final_density`.\n");
-        out.append("pub static OVERWORLD_FINAL_DENSITY: Tree = Tree {\n    nodes: &NODES,\n    root: ").append(t.nodes.size() - 1)
-                .append(",\n    noises: &NOISES,\n    blended: Some(").append(t.blendedParams).append("),\n};\n");
+        out.append("];\n");
+        for (var e : t.roots.entrySet()) {
+            out.append("\n/// The compiled `").append(e.getKey().toLowerCase()).append("` of `noise_settings/overworld.json`.\n");
+            out.append("pub static OVERWORLD_").append(e.getKey()).append(": Tree = Tree {\n    nodes: &NODES,\n    root: ").append(e.getValue())
+                    .append(",\n    noises: &NOISES,\n    blended: Some(").append(t.blendedParams).append("),\n};\n");
+        }
         Files.writeString(rs, out);
+    }
+
+    /** FNV hash + first/middle/last values of a node over a volume, or "x" if the game rejects that volume. */
+    static String volumeHash(DensitySampler d, net.minecraft.world.level.levelgen.densityfunction.SamplerContext ctx,
+            net.minecraft.world.level.levelgen.densityfunction.DensityVolume volume) {
+        int size = volume.size();
+        var buffer = net.minecraft.world.level.levelgen.densityfunction.DensityBuffer.createUnpooled(size);
+        try {
+            d.sampleVolume(ctx, buffer, volume);
+        } catch (IllegalArgumentException e) {
+            return "x";
+        }
+        return Long.toHexString(fnv(buffer, size)) + "," + bits(buffer.get(0)) + "," + bits(buffer.get(size / 2)) + "," + bits(buffer.get(size - 1));
+    }
+
+    // ---- terrain: getBaseHeight / getBaseColumn through the real generator --------
+    static char substance(net.minecraft.world.level.block.state.BlockState state, NoiseGeneratorSettings settings) {
+        if (state.isAir()) return 'a';
+        if (state.is(net.minecraft.world.level.block.Blocks.WATER)) return 'w';
+        if (state.is(net.minecraft.world.level.block.Blocks.LAVA)) return 'l';
+        if (state == settings.defaultBlock()) return 's';
+        throw new IllegalStateException("unexpected block " + state);
+    }
+
+    static void terrain(HolderLookup.Provider lookup) throws IOException {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.OVERWORLD);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                        .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.OVERWORLD));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+        // OCEAN_FLOOR_WG tests BlockTags.BLOCKS_MOTION_IN_HEIGHTMAP, which is not bound in a
+        // world-less registry lookup; apply the same tag, resolved from the game's data, to
+        // the game's own column instead.
+        java.util.Set<String> motionBlocking = new java.util.HashSet<>();
+        try (ZipFile jar = new ZipFile(Path.of(NormalNoise.class.getProtectionDomain().getCodeSource().getLocation().getPath()).toFile())) {
+            List<String> list = new ArrayList<>();
+            resolveTag(jar, "block", Identifier.parse("minecraft:blocks_motion_in_heightmap"), list);
+            motionBlocking.addAll(list);
+        }
+        try (PrintWriter w = writer("terrain.txt")) {
+            for (long seed : List.of(0L, -4172144997902289642L, INPUTS.nextLong())) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                List<int[]> columns = new ArrayList<>(List.of(new int[] {0, 0}, new int[] {8, -8}, new int[] {-1000, 1000}));
+                for (int i = 0; i < 30; i++) {
+                    int range = i % 3 == 0 ? 2_000 : i % 3 == 1 ? 50_000 : 2_000_000;
+                    columns.add(new int[] {INPUTS.nextInt(-range, range), INPUTS.nextInt(-range, range)});
+                }
+                for (int[] xz : columns) {
+                    int ws = generator.getBaseHeight(xz[0], xz[1], net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, height, rs);
+                    var column = generator.getBaseColumn(xz[0], xz[1], height, rs);
+                    int of = height.getMinY();
+                    for (int y = height.getMinY() + height.getHeight() - 1; y >= height.getMinY(); y--) {
+                        String id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(column.getBlock(y).getBlock()).toString();
+                        if (motionBlocking.contains(id)) {
+                            of = y + 1;
+                            break;
+                        }
+                    }
+                    StringBuilder blocks = new StringBuilder();
+                    for (int y = height.getMinY(); y < height.getMinY() + height.getHeight(); y++) blocks.append(substance(column.getBlock(y), settings));
+                    w.println(seed + " " + xz[0] + " " + xz[1] + " " + ws + " " + of + " " + blocks);
+                }
+            }
+        }
+    }
+
+    /** NoiseBasedAquifer.computeSubstance directly, with densities near 0 where barriers and pressure decide. */
+    static void aquifers(HolderLookup.Provider lookup) throws Exception {
+        NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.OVERWORLD).value();
+        double[] densities = {-0.6, -0.2, -0.08, -0.03, -0.01, -0.002};
+        try (PrintWriter w = writer("aquifer.txt")) {
+            for (long seed : List.of(0L, INPUTS.nextLong())) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                for (int i = 0; i < 150; i++) {
+                    int range = i % 2 == 0 ? 3_000 : 1_000_000;
+                    int x = INPUTS.nextInt(-range, range), z = INPUTS.nextInt(-range, range);
+                    Column col = column(rs, settings, x, z);
+                    var aquifer = col.chunk().aquifer();
+                    StringBuilder sb = new StringBuilder(seed + " " + x + " " + z + " ");
+                    for (int y = 120; y >= -60; y--) {
+                        for (double d : densities) {
+                            var state = aquifer.computeSubstance(x, y, z, d);
+                            sb.append(substance(state == null ? settings.defaultBlock() : state, settings));
+                        }
+                    }
+                    w.println(sb);
+                    col.chunk().close();
+                }
+            }
+        }
     }
 }

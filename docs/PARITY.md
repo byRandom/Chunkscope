@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld `final_density` per sampler node; next: aquifers, heightmaps, structure validation, spawn | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps); next: structure validation, spawn | In progress |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -151,6 +151,29 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
 - **Smeared Perlin noise** (`old_blended_noise`) snaps the gradient Y to
   multiples of a per-octave smear (`computeFudgeY`) while the smoothstep uses
   the real Y. Dropping the smear changes 236 node outputs.
+
+- **Density caches are not transparent.** A `CachingDensitySampler` keeps,
+  per sampling context, the last volume it computed and the last point. A
+  point query inside that cached volume returns the volume-mode value, so
+  results depend on the order of queries through the same context. Volume
+  and point mode can differ in the sign of zero (`Mul` short-circuits to
+  `+0.0` only in point mode), so Chunkscope models the cache cells and
+  replays the game's order (a fresh `NoiseChunk` per column: the aquifer
+  samples the surface level first, then the final density, then blocks from
+  the top down).
+- **`find_top_surface` always samples density in point mode**, even when it
+  is evaluated in volume mode, and the aquifer's surface-level cache is
+  filled in volume mode for the chunk's area and in point mode outside it.
+- **`OCEAN_FLOOR_WG` uses a block tag** (`blocks_motion_in_heightmap`), not a
+  block property, in 26.x. Stone is in it; water and lava are not. The tag is
+  not bound in a world-less registry lookup, so the oracle applies the tag,
+  resolved from the game's data, to the game's own `getBaseColumn`.
+- **Aquifers.** The 4 nearest aquifer centers are kept with the newer one
+  first on equal distance; barrier stone appears where `density + pressure >
+  0`. A dedicated fixture calls `computeSubstance` with densities near 0
+  (where barriers decide) at every Y: breaking the tie order or a pressure
+  constant fails it. Not covered yet: the lava threshold window (fluid levels
+  between -12 and -10), which the fixtures never reach.
 
 ## Known non-determinism in the game itself
 
