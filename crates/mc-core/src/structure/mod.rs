@@ -1,7 +1,8 @@
 //! Structures (Minecraft 26.x).
 //!
 //! Implemented so far: where random-spread structure sets *attempt* to
-//! generate (candidate chunk per region, frequency rolls, exclusion zones).
+//! generate (candidate chunk per region, frequency rolls, exclusion zones),
+//! and stronghold positions (concentric rings with their biome search).
 //! Whether a structure actually generates there also depends on biome and
 //! terrain, which is not implemented yet.
 
@@ -9,6 +10,7 @@
 #[rustfmt::skip]
 pub mod generated;
 mod placement;
+pub mod stronghold;
 
 pub use generated::STRUCTURE_SETS;
 pub use placement::{

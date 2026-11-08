@@ -28,6 +28,7 @@ public class Oracle {
         slime();
         digitTable();
         streamSum(); // after the others so their inputs stay unchanged
+        mathRound();
         System.out.println("fixtures written by Java " + System.getProperty("java.version"));
     }
 
@@ -172,6 +173,24 @@ public class Oracle {
                 for (double x : xs) sb.append(' ').append(Long.toHexString(Double.doubleToRawLongBits(x)));
                 out.println(sb);
             }
+        }
+    }
+
+    // ---- Math.round(double) ------------------------------------------------
+    static void mathRound() throws IOException {
+        List<Double> xs = new ArrayList<>(List.of(0.0, -0.0, 0.5, -0.5, 1.5, -1.5, 2.5, -2.5, 0.49999999999999994,
+                -0.49999999999999994, 4503599627370495.5, -4503599627370495.5, 4503599627370496.0, 9.2233720368547758E18,
+                -9.2233720368547758E18, 1e300, -1e300, Double.MIN_VALUE, Double.NaN, Double.POSITIVE_INFINITY,
+                Double.NEGATIVE_INFINITY, Math.nextDown(0.5), Math.nextUp(-0.5)));
+        for (int i = 0; i < 3000; i++) {
+            xs.add(switch (i % 3) {
+                case 0 -> (INPUTS.nextDouble() - 0.5) * 4000.0;
+                case 1 -> INPUTS.nextInt(-100000, 100000) + 0.5;
+                default -> Double.longBitsToDouble(INPUTS.nextLong());
+            });
+        }
+        try (PrintWriter out = writer("math_round.txt")) {
+            for (double x : xs) out.println(Long.toHexString(Double.doubleToRawLongBits(x)) + " " + Math.round(x));
         }
     }
 

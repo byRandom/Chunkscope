@@ -89,3 +89,37 @@ fn frequency_reduction_matches_game() {
         }
     }
 }
+
+const STRONGHOLDS: &str = include_str!("../../../parity/fixtures/game/strongholds.txt");
+
+#[test]
+fn stronghold_positions_match_game() {
+    use mc_core::biome::OverworldBiomeSource;
+    use mc_core::structure::stronghold::ring_positions;
+    let rings = STRUCTURE_SETS
+        .find_set("minecraft:strongholds")
+        .and_then(|s| s.concentric_rings())
+        .expect("strongholds use concentric rings");
+    let mut mismatches = Vec::new();
+    for line in STRONGHOLDS.lines() {
+        let mut t = line.split(' ');
+        let seed: i64 = t.next().unwrap().parse().unwrap();
+        let want: Vec<(i32, i32)> = t
+            .map(|p| {
+                let (x, z) = p.split_once(',').unwrap();
+                (x.parse().unwrap(), z.parse().unwrap())
+            })
+            .collect();
+        assert_eq!(want.len(), rings.count as usize);
+        let got = ring_positions(seed, &rings, &OverworldBiomeSource::new(seed));
+        for (i, (g, w)) in got.iter().zip(&want).enumerate() {
+            if g != w {
+                mismatches.push((seed, i, *g, *w));
+            }
+        }
+    }
+    assert!(
+        mismatches.is_empty(),
+        "(seed, index, rust, game): {mismatches:?}"
+    );
+}

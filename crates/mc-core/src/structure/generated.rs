@@ -218,7 +218,14 @@ pub static STRUCTURE_SETS: [StructureSet; 21] = [
     StructureSet {
         name: "minecraft:strongholds",
         structures: &[("minecraft:stronghold", 1)],
-        placement: StructurePlacement::ConcentricRings { distance: 32, spread: 3, count: 128, salt: 0, preferred_biomes: "#minecraft:stronghold_biased_to" },
+        placement: StructurePlacement::ConcentricRings {
+            distance: 32,
+            spread: 3,
+            count: 128,
+            salt: 0,
+            preferred_biomes: "#minecraft:stronghold_biased_to",
+            preferred_biome_list: &["minecraft:plains", "minecraft:sunflower_plains", "minecraft:snowy_plains", "minecraft:ice_spikes", "minecraft:desert", "minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest", "minecraft:dark_forest", "minecraft:pale_garden", "minecraft:old_growth_birch_forest", "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga", "minecraft:taiga", "minecraft:snowy_taiga", "minecraft:savanna", "minecraft:savanna_plateau", "minecraft:windswept_hills", "minecraft:windswept_gravelly_hills", "minecraft:windswept_forest", "minecraft:windswept_savanna", "minecraft:jungle", "minecraft:sparse_jungle", "minecraft:bamboo_jungle", "minecraft:badlands", "minecraft:eroded_badlands", "minecraft:wooded_badlands", "minecraft:meadow", "minecraft:cherry_grove", "minecraft:grove", "minecraft:snowy_slopes", "minecraft:frozen_peaks", "minecraft:jagged_peaks", "minecraft:stony_peaks", "minecraft:mushroom_fields", "minecraft:dripstone_caves", "minecraft:lush_caves", "minecraft:sulfur_caves"],
+        },
     },
     StructureSet {
         name: "minecraft:swamp_huts",
