@@ -5,19 +5,37 @@ on:
   pull_request:
 
 jobs:
-  parity:
-    name: Java parity
+  jdk-parity:
+    name: JDK parity
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "21" # the JDK Minecraft 1.20.5+ ships with
+          java-version: "25" # the JDK Minecraft 26.x ships with
       - name: Regenerate fixtures with the real JDK
         run: java parity/oracle/Oracle.java
       - name: Fixtures must be up to date
         run: git diff --exit-code -- parity/fixtures crates/java-compat/src/digit_table.rs
+
+  game-parity:
+    name: Game parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: actions/cache@v4
+        with:
+          path: parity/.cache
+          key: minecraft-server-${{ hashFiles('parity/game-oracle/run.sh') }}
+      - name: Regenerate fixtures with the real game
+        run: parity/game-oracle/run.sh
+      - name: Fixtures must be up to date
+        run: git diff --exit-code -- parity/fixtures/game
 
   test:
     name: Test

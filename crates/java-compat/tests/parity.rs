@@ -1,6 +1,6 @@
 //! Compares against fixtures produced by the real JDK (parity/oracle/Oracle.java).
 
-use java_compat::{JavaRandom, strict_math};
+use java_compat::{BitRandom, JavaRandom, strict_math};
 
 const RANDOM: &str = include_str!("../../../parity/fixtures/random.txt");
 const STRICT_LOG: &str = include_str!("../../../parity/fixtures/strict_log.txt");

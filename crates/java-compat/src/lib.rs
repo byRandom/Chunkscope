@@ -7,4 +7,4 @@ pub mod random;
 pub mod strict_math;
 pub mod string;
 
-pub use random::JavaRandom;
+pub use random::{BitRandom, JavaRandom};

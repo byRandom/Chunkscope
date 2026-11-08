@@ -1,6 +1,6 @@
 [package]
 name = "mc-core"
-description = "Minecraft: Java Edition seed logic (seed parsing, slime chunks, ...)"
+description = "Minecraft: Java Edition seed logic: random sources, seed parsing, slime chunks"
 edition.workspace = true
 license.workspace = true
 version.workspace = true
@@ -8,3 +8,4 @@ repository.workspace = true
 
 [dependencies]
 java-compat = { path = "../java-compat" }
+md-5 = "0.11.0"

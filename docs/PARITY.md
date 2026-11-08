@@ -4,36 +4,52 @@ The whole project relies on one promise: **the same seed gives the same result
 as the game**. A seed finder that is right 99.9% of the time is wrong for
 someone. So nothing gets merged unless it is checked against an oracle.
 
+Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
+`parity/game-oracle/run.sh`; the version the fixtures came from is recorded in
+`parity/fixtures/game/VERSION`.
+
 ## Oracle tiers
 
-| Tier | Oracle                        | Covers                                                   | Status  |
-| ---- | ----------------------------- | -------------------------------------------------------- | ------- |
-| 1    | The real JDK (`Oracle.java`)  | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done    |
-| 2    | The real game (headless dump) | Xoroshiro seeding, noise, biomes, structures, spawn       | Planned |
-| 3    | cubiomes (cross-check)        | Large-scale differential testing of biomes and structures | Planned |
+| Tier | Oracle                                   | Covers                                                                                     | Status      |
+| ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
+| 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks; next: noise, biomes, structures, spawn  | In progress |
+| 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
+
+In every tier, the Rust tests recompute the same values and must match **bit
+for bit**. Floats are compared by their raw bits, never with a tolerance. CI
+regenerates every fixture from scratch and fails if anything changes. This
+means the committed fixtures always really come from the oracle.
 
 ### Tier 1: JDK oracle
 
-`parity/oracle/Oracle.java` runs on a real JDK and writes reference outputs to
-`parity/fixtures/`. The Rust tests (`crates/*/tests/parity.rs`) recompute the
-same values and must match **bit for bit**: floats are compared by their raw
-bits, not with a tolerance.
+`parity/oracle/Oracle.java` runs on a plain JDK and writes reference outputs
+to `parity/fixtures/`. It also generates
+`crates/java-compat/src/digit_table.rs`, the table of Unicode digits accepted
+by `Character.digit`. We don't keep a hand-written copy.
 
-The oracle also generates `crates/java-compat/src/digit_table.rs`, the table of
-Unicode digits accepted by `Character.digit`. We don't keep a hand-written copy.
+```bash
+java parity/oracle/Oracle.java
+```
 
-CI regenerates every fixture with JDK 21 and fails if anything changes. This
-means the committed fixtures always really come from Java.
+Use the JDK major version the target Minecraft version ships with (Java 25 for
+26.x). Unicode tables can change between JDK versions.
 
-Use the JDK major version the target Minecraft version ships with (Java 21 for
-1.20.5+). Unicode tables can change between JDK versions.
+### Tier 2: game oracle
 
-### Tier 2: game oracle (planned)
+`parity/game-oracle/run.sh` downloads the official server jar from Mojang
+(verified by SHA-1) into the git-ignored `parity/.cache/`. It puts the game and
+its bundled libraries on the classpath and runs `GameOracle.java`, which calls
+the game's own classes (`XoroshiroRandomSource`, `WorldgenRandom`, ...) and
+writes `parity/fixtures/game/`.
 
-Generation logic that only exists inside the game (biomes, structures) will be
-checked against data dumped from a real Java Edition server. This needs a
-small mod or datapack that writes biome/structure data for chosen seeds and
-coordinates. Only the dumped data is committed, never game code.
+```bash
+parity/game-oracle/run.sh          # or: parity/game-oracle/run.sh <version>
+```
+
+Only the generated data is committed, never game code. Since 26.1 the game is
+shipped without obfuscation, so the oracle can use the real class and method
+names.
 
 ## Pitfalls already caught
 
@@ -41,7 +57,7 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
 
 - **`StrictMath.log` ≠ Rust `f64::ln`.** Java uses fdlibm. With the platform
   `ln`, about 5% of inputs differ in the last bit. That changes
-  `nextGaussian`, and so every later value from the RNG.
+  `java.util.Random.nextGaussian`.
 - **`String.trim()` ≠ `str::trim()`.** Java only strips chars `<= U+0020`.
   `" 42"` (no-break space + 42) is the seed `155422` (a hash), not `42`.
 - **`Long.parseLong` accepts Unicode digits.** `"١٢٣"` (Arabic-Indic) and
@@ -52,3 +68,27 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   at 32 bits, others at 64.
 - **`nextInt(bound)` rejection loop** uses Java `int` overflow in its loop
   condition.
+- **Xoroshiro's `nextInt(bound)` is a different algorithm** (Lemire's
+  multiply-shift) from the LCG's. A naive modulo already differs on
+  `nextInt(5)` for seed 0.
+- **`WorldgenRandom` draws bits differently depending on what it wraps.** Over
+  an LCG it calls the LCG's `next(bits)`. Over Xoroshiro it uses
+  `nextLong() >>> (64 - bits)` and then applies the `java.util.Random`
+  algorithms on top. `fork()` and `setSeed()` go to the wrapped source.
+- **Positional factories differ.** Xoroshiro's `fromHashOf` uses MD5. Legacy's
+  uses `String.hashCode`. Legacy's `fromSeed` ignores the factory seed
+  entirely.
+
+## Known non-determinism in the game itself
+
+Minecraft's own `RandomSource.nextGaussian()` (`MarsagliaPolarGaussian`) uses
+`Math.log`, not `StrictMath.log`. `Math.log` is a HotSpot intrinsic. On x86_64
+it differs from `StrictMath.log` in about 7% of inputs (measured on OpenJDK 21
+and 25, interpreted and JIT-compiled alike), and other CPU architectures use
+different implementations. Gaussian values from the game's random sources can
+therefore depend on the player's CPU. Chunkscope does not implement them until
+a world-generation feature needs them; when one does, it must match the
+x86_64 HotSpot result and document the caveat.
+
+`java.util.Random.nextGaussian()` uses `StrictMath` and is deterministic; it is
+implemented in `java-compat`.

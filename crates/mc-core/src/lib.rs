@@ -1,5 +1,6 @@
 //! Minecraft: Java Edition world-seed logic.
 
+pub mod random;
 pub mod seed;
 pub mod slime;
 

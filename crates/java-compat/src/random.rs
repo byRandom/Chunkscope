@@ -1,4 +1,4 @@
-//! Bit-exact port of `java.util.Random` (JDK 17+/21 behaviour).
+//! Bit-exact port of `java.util.Random` (JDK 17+ behaviour).
 //!
 //! Every method mirrors the JDK source, including Java's 32-bit integer
 //! overflow semantics, so the same seed yields the same sequence.
@@ -9,6 +9,59 @@ const MASK: i64 = (1 << 48) - 1;
 const FLOAT_UNIT: f32 = 1.0 / (1u32 << 24) as f32;
 const DOUBLE_UNIT: f64 = 1.0 / (1u64 << 53) as f64;
 
+/// The methods `java.util.Random` derives from `next(bits)`.
+///
+/// Any generator that only overrides `next(bits)` (as Minecraft's
+/// `BitRandomSource` does) gets these exact algorithms.
+pub trait BitRandom {
+    /// `protected int next(int bits)`, with `1 <= bits <= 32`.
+    fn next(&mut self, bits: u32) -> i32;
+
+    fn next_int(&mut self) -> i32 {
+        self.next(32)
+    }
+
+    /// `nextInt(int bound)`. Panics if `bound <= 0`, like Java's IllegalArgumentException.
+    fn next_int_bounded(&mut self, bound: i32) -> i32 {
+        assert!(bound > 0, "bound must be positive");
+        let mut r = self.next(31);
+        let m = bound - 1;
+        if bound & m == 0 {
+            // power of two
+            ((bound as i64 * r as i64) >> 31) as i32
+        } else {
+            let mut u = r;
+            loop {
+                r = u % bound;
+                // Java: `u - r + m < 0` with int overflow
+                if u.wrapping_sub(r).wrapping_add(m) >= 0 {
+                    return r;
+                }
+                u = self.next(31);
+            }
+        }
+    }
+
+    fn next_long(&mut self) -> i64 {
+        let hi = (self.next(32) as i64) << 32;
+        hi.wrapping_add(self.next(32) as i64)
+    }
+
+    fn next_boolean(&mut self) -> bool {
+        self.next(1) != 0
+    }
+
+    fn next_float(&mut self) -> f32 {
+        self.next(24) as f32 * FLOAT_UNIT
+    }
+
+    fn next_double(&mut self) -> f64 {
+        let hi = (self.next(26) as i64) << 27;
+        (hi + self.next(27) as i64) as f64 * DOUBLE_UNIT
+    }
+}
+
+/// `java.util.Random`.
 #[derive(Clone, Debug)]
 pub struct JavaRandom {
     seed: i64,
@@ -35,59 +88,11 @@ impl JavaRandom {
         self.seed
     }
 
-    /// `protected int next(int bits)`.
-    #[inline]
-    pub fn next(&mut self, bits: u32) -> i32 {
-        debug_assert!((1..=32).contains(&bits));
-        self.seed = self.seed.wrapping_mul(MULTIPLIER).wrapping_add(ADDEND) & MASK;
-        // state is 48-bit non-negative, so `>>>` == `>>`; `(int)` truncates.
-        (self.seed >> (48 - bits)) as i32
-    }
-
-    pub fn next_int(&mut self) -> i32 {
-        self.next(32)
-    }
-
-    /// `nextInt(int bound)`. Panics if `bound <= 0`, like Java's IllegalArgumentException.
-    pub fn next_int_bounded(&mut self, bound: i32) -> i32 {
-        assert!(bound > 0, "bound must be positive");
-        let mut r = self.next(31);
-        let m = bound - 1;
-        if bound & m == 0 {
-            // power of two
-            ((bound as i64 * r as i64) >> 31) as i32
-        } else {
-            let mut u = r;
-            loop {
-                r = u % bound;
-                // Java: `u - r + m < 0` with int overflow
-                if u.wrapping_sub(r).wrapping_add(m) >= 0 {
-                    return r;
-                }
-                u = self.next(31);
-            }
-        }
-    }
-
-    pub fn next_long(&mut self) -> i64 {
-        let hi = (self.next(32) as i64) << 32;
-        hi.wrapping_add(self.next(32) as i64)
-    }
-
-    pub fn next_boolean(&mut self) -> bool {
-        self.next(1) != 0
-    }
-
-    pub fn next_float(&mut self) -> f32 {
-        self.next(24) as f32 * FLOAT_UNIT
-    }
-
-    pub fn next_double(&mut self) -> f64 {
-        let hi = (self.next(26) as i64) << 27;
-        (hi + self.next(27) as i64) as f64 * DOUBLE_UNIT
-    }
-
-    /// `nextGaussian()`. Java uses `StrictMath.log` (fdlibm); see `strict_math`.
+    /// `nextGaussian()`. Java's `Random` uses `StrictMath.log` (fdlibm); see
+    /// `strict_math`.
+    ///
+    /// Minecraft's own `RandomSource` implementations do NOT use this: they
+    /// use `Math.log`, which is platform-dependent (see docs/PARITY.md).
     pub fn next_gaussian(&mut self) -> f64 {
         if let Some(g) = self.next_next_gaussian.take() {
             return g;
@@ -102,6 +107,16 @@ impl JavaRandom {
                 return v1 * multiplier;
             }
         }
+    }
+}
+
+impl BitRandom for JavaRandom {
+    #[inline]
+    fn next(&mut self, bits: u32) -> i32 {
+        debug_assert!((1..=32).contains(&bits));
+        self.seed = self.seed.wrapping_mul(MULTIPLIER).wrapping_add(ADDEND) & MASK;
+        // state is 48-bit non-negative, so `>>>` == `>>`; `(int)` truncates.
+        (self.seed >> (48 - bits)) as i32
     }
 }
 

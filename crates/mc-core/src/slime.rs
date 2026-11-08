@@ -10,7 +10,7 @@
 //! `z*z` and `z*389711` overflow as 32-bit ints, while `* 4392871L` is 64-bit.
 //! The final `^` applies to the whole sum (Java operator precedence).
 
-use java_compat::JavaRandom;
+use java_compat::{BitRandom, JavaRandom};
 
 pub const SLIME_SALT: i64 = 987234911;
 

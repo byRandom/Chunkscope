@@ -5,8 +5,11 @@ Edition**, written in Rust. Think of an offline tool that shows biomes,
 structures and slime chunks for any seed, and can search millions of seeds for
 the features you care about.
 
-**Status:** early. The foundation (bit-exact Java RNG and seed handling) is
-done and verified against a real JDK; world generation is next.
+**Status:** early. The foundation (Java and Minecraft random number
+generators, seed handling) is done and verified against the real JDK and the
+real game classes. World generation is next.
+
+Target: Minecraft **26.3** (Java 25).
 
 ## Goals
 
@@ -23,15 +26,17 @@ Bedrock Edition is out of scope for now.
 | Crate                  | Purpose                                                                                 |
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | `crates/java-compat`   | Bit-exact ports of the JDK behaviour Minecraft relies on: `java.util.Random`, `StrictMath.log`, `String.hashCode`, `String.trim`, `Long.parseLong` |
-| `crates/mc-core`       | Minecraft logic: seed text → world seed, slime chunks                                   |
-| `parity/`              | Java oracle that produces reference fixtures from a real JDK                            |
+| `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), seed text → world seed, slime chunks |
+| `parity/oracle`        | JDK oracle: reference fixtures from a real JDK                                          |
+| `parity/game-oracle`   | Game oracle: reference fixtures from the real game classes (downloads the official server jar) |
 
 ## Roadmap
 
 - [x] `java.util.Random` (including `nextGaussian` via an fdlibm port)
 - [x] Seed text parsing exactly as the game does it
 - [x] Slime chunks
-- [ ] Xoroshiro128++ and Minecraft's `RandomSupport` seeding (1.18+)
+- [x] Xoroshiro128++, `RandomSupport` seeding and positional random factories
+- [x] `WorldgenRandom` decoration / feature / structure seeding
 - [ ] Perlin / octave / double-Perlin noise
 - [ ] Biome generation (starting with 1.21)
 - [ ] Structure placement and biome validation
@@ -45,10 +50,14 @@ Bedrock Edition is out of scope for now.
 cargo test
 ```
 
-To regenerate the reference fixtures (requires JDK 21):
+To regenerate the reference fixtures (requires JDK 25):
 
 ```bash
 java parity/oracle/Oracle.java
+```
+
+```bash
+parity/game-oracle/run.sh
 ```
 
 ## License
