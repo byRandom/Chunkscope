@@ -13,24 +13,27 @@ pub enum SplineCoordinate {
     RidgesFolded,
 }
 
+/// A spline whose points are evaluated over coordinates of type `C` (the
+/// overworld offset spline uses [`SplineCoordinate`]; density-function
+/// splines use an index into their node's coordinate list).
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Spline {
+pub enum Spline<C: 'static = SplineCoordinate> {
     Constant(f32),
-    Multipoint(&'static Multipoint),
+    Multipoint(&'static Multipoint<C>),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Multipoint {
-    pub coordinate: SplineCoordinate,
+pub struct Multipoint<C: 'static = SplineCoordinate> {
+    pub coordinate: C,
     pub locations: &'static [f32],
     pub derivatives: &'static [f32],
-    pub values: &'static [Spline],
+    pub values: &'static [Spline<C>],
 }
 
-impl Spline {
+impl<C: Copy> Spline<C> {
     /// `CubicSpline.sample`. `coordinate` returns the value of each input
     /// function at the point being sampled.
-    pub fn sample(&self, coordinate: &impl Fn(SplineCoordinate) -> f32) -> f32 {
+    pub fn sample(&self, coordinate: &impl Fn(C) -> f32) -> f32 {
         match self {
             Spline::Constant(v) => *v,
             Spline::Multipoint(m) => m.sample(coordinate),
@@ -38,8 +41,8 @@ impl Spline {
     }
 }
 
-impl Multipoint {
-    fn sample(&self, coordinate: &impl Fn(SplineCoordinate) -> f32) -> f32 {
+impl<C: Copy> Multipoint<C> {
+    fn sample(&self, coordinate: &impl Fn(C) -> f32) -> f32 {
         let x = coordinate(self.coordinate);
         let locations = self.locations;
         let start = find_interval_start(locations, x);

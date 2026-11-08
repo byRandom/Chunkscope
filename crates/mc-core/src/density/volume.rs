@@ -86,3 +86,25 @@ impl DensityVolume {
             .wrapping_add(i.wrapping_mul(self.step_block_z))
     }
 }
+
+impl DensityVolume {
+    /// `maxBlockX()`: `min + size * step - 1` (the last block of the last
+    /// step, not the last sampled block).
+    pub const fn max_block_x(&self) -> i32 {
+        self.min_block_x
+            .wrapping_add(self.size_x.wrapping_mul(self.step_block_x))
+            .wrapping_sub(1)
+    }
+
+    pub const fn max_block_y(&self) -> i32 {
+        self.min_block_y
+            .wrapping_add(self.size_y.wrapping_mul(self.step_block_y))
+            .wrapping_sub(1)
+    }
+
+    pub const fn max_block_z(&self) -> i32 {
+        self.min_block_z
+            .wrapping_add(self.size_z.wrapping_mul(self.step_block_z))
+            .wrapping_sub(1)
+    }
+}

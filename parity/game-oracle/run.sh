@@ -39,4 +39,4 @@ CP=$(find "$CACHE/bundle/META-INF" -name '*.jar' | sort | paste -sd: -)
 cd "$CACHE"
 "$JAVA" -cp "$CP" "$ROOT/parity/game-oracle/GameOracle.java" "$OUT" "$VERSION" \
   "$ROOT/crates/mc-core/src/noise/vanilla.rs" "$ROOT/crates/mc-core/src/biome/generated.rs" \
-  "$ROOT/crates/mc-core/src/structure/generated.rs"
+  "$ROOT/crates/mc-core/src/structure/generated.rs" "$ROOT/crates/mc-core/src/density/generated.rs"

@@ -55,6 +55,10 @@ pub struct PerlinNoise {
     offset_x: f64,
     offset_y: f64,
     offset_z: f64,
+    /// `SmearedPerlinNoise.fudgeYScale`: when set, the Y used for the
+    /// gradients is snapped to multiples of this ("smeared"); the smoothstep
+    /// still uses the real Y.
+    smear: Option<f64>,
 }
 
 impl PerlinNoise {
@@ -82,6 +86,40 @@ impl PerlinNoise {
             offset_x,
             offset_y,
             offset_z,
+            smear: None,
+        }
+    }
+
+    /// `new SmearedPerlinNoise(RandomSource, double fudgeYScale)`.
+    pub fn smeared(random: &mut impl RandomSource, fudge_y_scale: f64) -> Self {
+        Self {
+            smear: Some(fudge_y_scale),
+            ..Self::new(random)
+        }
+    }
+
+    pub fn smear(&self) -> Option<f64> {
+        self.smear
+    }
+
+    /// `SmearedPerlinNoise.computeFudgeY(yScaled, yFraction)`.
+    #[inline]
+    fn compute_fudge_y(y_scaled: f64, y_fraction: f64, fudge_y_scale: f64) -> f64 {
+        let v = if y_scaled >= 0.0 && y_scaled < y_fraction {
+            y_scaled
+        } else {
+            y_fraction
+        };
+        // 1.0E-7f widened to double, as in the game
+        mth::floor(v / fudge_y_scale + 1.0000000116860974e-7) as f64 * fudge_y_scale
+    }
+
+    /// The Y fraction used for the gradient dot products.
+    #[inline]
+    fn gradient_y(&self, y_scaled: f64, y_fraction: f64) -> f32 {
+        match self.smear {
+            Some(s) => (y_fraction - Self::compute_fudge_y(y_scaled, y_fraction, s)) as f32,
+            None => y_fraction as f32,
         }
     }
 
@@ -96,15 +134,16 @@ impl PerlinNoise {
     }
 
     /// `PerlinNoise.get(double, double, double)`.
-    pub fn get(&self, x: f64, y: f64, z: f64) -> f32 {
+    /// `PerlinNoise.get(double, double, double)` (and `SmearedPerlinNoise.get`).
+    pub fn get(&self, x: f64, y_scaled: f64, z: f64) -> f32 {
         let x = wrap(x) + self.offset_x;
-        let y = wrap(y) + self.offset_y;
+        let y = wrap(y_scaled) + self.offset_y;
         let z = wrap(z) + self.offset_z;
         let (xi, yi, zi) = (mth::floor(x), mth::floor(y), mth::floor(z));
         let xf = (x - xi as f64) as f32;
-        let yf = (y - yi as f64) as f32;
+        let yf = y - yi as f64;
         let zf = (z - zi as f64) as f32;
-        self.sample_and_lerp(xi, yi, zi, xf, yf, zf, yf)
+        self.sample_and_lerp(xi, yi, zi, xf, self.gradient_y(y_scaled, yf), zf, yf as f32)
     }
 
     /// `PerlinNoise.get(double x, double z)`: a horizontal slice at `y = 0`.
@@ -200,10 +239,12 @@ impl PerlinNoise {
                 let sx = mth::smoothstep(xf);
                 let mut last_y_cell = i32::MIN;
                 for yi in 0..volume.size_y {
-                    let y = wrap(volume.block_y(yi) as f64 * y_scale) + self.offset_y;
+                    let y_scaled = volume.block_y(yi) as f64 * y_scale;
+                    let y = wrap(y_scaled) + self.offset_y;
                     let y_cell = mth::floor(y);
-                    let yf = (y - y_cell as f64) as f32;
-                    let sy = mth::smoothstep(yf);
+                    let y_fraction = y - y_cell as f64;
+                    let sy = mth::smoothstep(y_fraction as f32);
+                    let yf = self.gradient_y(y_scaled, y_fraction);
                     if last_y_cell != y_cell {
                         let aa = self.permute(a.wrapping_add(y_cell));
                         let ab = self.permute(a.wrapping_add(y_cell).wrapping_add(1));

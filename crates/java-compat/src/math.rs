@@ -22,3 +22,15 @@ pub fn round(a: f64) -> i64 {
         a as i64
     }
 }
+
+/// `Math.min(float, float)`: NaN wins, and `-0.0` is smaller than `0.0`
+/// (`f32::min` returns the non-NaN operand instead).
+pub fn min_f32(a: f32, b: f32) -> f32 {
+    if a.is_nan() {
+        return a;
+    }
+    if a == 0.0 && b == 0.0 && b.to_bits() == (-0.0f32).to_bits() {
+        return b;
+    }
+    if a <= b { a } else { b }
+}
