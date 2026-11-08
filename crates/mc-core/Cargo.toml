@@ -4,6 +4,7 @@ description = "Minecraft: Java Edition seed logic (seed parsing, slime chunks, .
 edition.workspace = true
 license.workspace = true
 version.workspace = true
+repository.workspace = true
 
 [dependencies]
 java-compat = { path = "../java-compat" }

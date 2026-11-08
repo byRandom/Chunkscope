@@ -4,3 +4,4 @@ description = "Bit-exact reimplementations of the JDK behaviour Minecraft: Java 
 edition.workspace = true
 license.workspace = true
 version.workspace = true
+repository.workspace = true

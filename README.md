@@ -1,6 +1,4 @@
-# seedmap
-
-> Working name — subject to change.
+# Chunkscope
 
 A fast, local, open-source seed map and seed finder for **Minecraft: Java
 Edition**, written in Rust. Think of an offline tool that shows biomes,
