@@ -1,0 +1,9 @@
+[package]
+name = "mc-core"
+description = "Minecraft: Java Edition seed logic (seed parsing, slime chunks, ...)"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+java-compat = { path = "../java-compat" }

@@ -1,0 +1,6 @@
+[package]
+name = "java-compat"
+description = "Bit-exact reimplementations of the JDK behaviour Minecraft: Java Edition relies on"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
