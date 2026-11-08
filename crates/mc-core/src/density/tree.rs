@@ -66,14 +66,43 @@ pub enum Node {
     Add(NodeId, NodeId),
     /// `BinaryFunction.MulSampler`
     Mul(NodeId, NodeId),
-    /// `BinaryFunction.MinSampler`
-    Min(NodeId, NodeId),
-    /// `BinaryFunction.MaxSampler`
-    Max(NodeId, NodeId),
+    /// `BinaryFunction.MinSampler`. In point mode, `right` is skipped when
+    /// `left <= right_min_value` (the smallest value `right` can take).
+    Min {
+        left: NodeId,
+        right: NodeId,
+        right_min_value: f32,
+    },
+    /// `BinaryFunction.MaxSampler`. In point mode, `right` is skipped when
+    /// `left >= right_max_value`.
+    Max {
+        left: NodeId,
+        right: NodeId,
+        right_max_value: f32,
+    },
+    /// `BinaryFunction.SubSampler`: `left - right`.
+    Sub(NodeId, NodeId),
     /// `BinaryFunction.ConstAddSampler`: `input + value`.
     ConstAdd(NodeId, f32),
     /// `BinaryFunction.ConstMulSampler`: `input * value`.
     ConstMul(NodeId, f32),
+    /// `BinaryFunction.ConstSubSampler`: `value - input`.
+    ConstSub(f32, NodeId),
+    /// `BinaryFunction.ConstDivSampler`: `value / input`.
+    ConstDiv(f32, NodeId),
+    /// `BinaryFunction.ConstMinSampler`: `min(input, value)`.
+    ConstMin(NodeId, f32),
+    /// `BinaryFunction.ConstMaxSampler`: `max(input, value)`.
+    ConstMax(NodeId, f32),
+    /// `FindTopSurfaceFunction.Sampler`: from `upper_bound` down in steps of
+    /// `cell_height`, the first Y where `density` (always point mode) is
+    /// positive, else `lower_bound`. Volume mode needs a single-layer volume.
+    FindTopSurface {
+        density: NodeId,
+        upper_bound: NodeId,
+        lower_bound: i32,
+        cell_height: i32,
+    },
     /// `UnaryFunction.AbsSampler`
     Abs(NodeId),
     /// `UnaryFunction.CubeSampler`
@@ -123,8 +152,9 @@ pub enum Node {
     },
     /// `SliceFunction.YSampler`: the input at a fixed Y.
     SliceY { input: NodeId, y: i32 },
-    /// `CachingDensitySampler`: transparent for the values.
-    Cache(NodeId),
+    /// `CachingDensitySampler`: values go through the context's cache cell
+    /// `id`, so a point query can return a value cached in volume mode.
+    Cache { input: NodeId, id: u32 },
     /// `BlendDensityFunction.Sampler`: identity without old-chunk blending.
     Blend(NodeId),
     /// `ContextBoundSampler`: a context-provided sampler, or `fallback`.

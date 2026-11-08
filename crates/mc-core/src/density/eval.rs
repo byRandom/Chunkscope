@@ -1,12 +1,71 @@
 //! Volume-mode evaluation of a compiled [`Tree`] (`DensitySampler.sampleVolume`).
 
-use java_compat::math::min_f32;
+use java_compat::math::{max_f32, min_f32};
 
 use super::tree::{Axis, Node, NodeId, NoiseSource, Tree};
 use super::volume::DensityVolume;
 use crate::mth;
 use crate::noise::blended::FbmSet;
 use crate::noise::{NoiseStack, NormalNoise, vanilla};
+
+/// The evaluation state the game keeps in a `SamplerContext`: one cache
+/// cell per `CachingDensitySampler` id. Results depend on the order of
+/// queries made through the same context, exactly as in the game.
+pub struct EvalContext {
+    caching: bool,
+    cells: std::cell::RefCell<Vec<CacheCell>>,
+}
+
+#[derive(Clone, Debug)]
+struct CacheCell {
+    volume: Option<DensityVolume>,
+    buffer: Vec<f32>,
+    value_key: i64,
+    value: f32,
+}
+
+impl Default for CacheCell {
+    fn default() -> Self {
+        Self {
+            volume: None,
+            buffer: Vec::new(),
+            value_key: 0,
+            value: f32::NAN,
+        }
+    }
+}
+
+impl EvalContext {
+    /// A context with caches enabled (`SamplerContext.builder().enableCaches()`).
+    pub fn caching() -> Self {
+        Self {
+            caching: true,
+            cells: Default::default(),
+        }
+    }
+
+    /// A context without caches (`SamplerContext.EMPTY_UNCACHED`).
+    pub fn uncached() -> Self {
+        Self {
+            caching: false,
+            cells: Default::default(),
+        }
+    }
+
+    fn cell<T>(&self, id: u32, f: impl FnOnce(&mut CacheCell) -> T) -> T {
+        let mut cells = self.cells.borrow_mut();
+        if cells.len() <= id as usize {
+            cells.resize_with(id as usize + 1, CacheCell::default);
+        }
+        f(&mut cells[id as usize])
+    }
+}
+
+/// `BlockPos.asLong`: 26 bits of X, 12 of Y, 26 of Z.
+fn block_pos_as_long(x: i32, y: i32, z: i32) -> i64 {
+    const HORIZONTAL_MASK: i64 = (1 << 26) - 1;
+    ((x as i64 & HORIZONTAL_MASK) << 38) | (y as i64 & 0xFFF) | ((z as i64 & HORIZONTAL_MASK) << 12)
+}
 
 /// A tree bound to one world seed: its noises instantiated.
 pub struct DensitySampler {
@@ -47,17 +106,17 @@ impl DensitySampler {
     }
 
     /// The tree's root over `volume`.
-    pub fn sample_volume(&self, volume: &DensityVolume) -> Vec<f32> {
+    pub fn sample_volume(&self, ctx: &EvalContext, volume: &DensityVolume) -> Vec<f32> {
         let mut out = vec![0.0; volume.size()];
-        self.sample_node(self.tree.root, &mut out, volume);
+        self.sample_node(ctx, self.tree.root, &mut out, volume);
         out
     }
 
     /// One node over `volume` into `out` (`out.len() == volume.size()`).
-    pub fn sample_node(&self, id: NodeId, out: &mut [f32], v: &DensityVolume) {
+    pub fn sample_node(&self, ctx: &EvalContext, id: NodeId, out: &mut [f32], v: &DensityVolume) {
         let temp = |child: NodeId| {
             let mut b = vec![0.0f32; v.size()];
-            self.sample_node(child, &mut b, v);
+            self.sample_node(ctx, child, &mut b, v);
             b
         };
         match self.tree.nodes[id as usize] {
@@ -77,7 +136,7 @@ impl DensitySampler {
                 xz_scale,
                 y_scale,
             } => {
-                self.sample_node(shift_x, out, v);
+                self.sample_node(ctx, shift_x, out, v);
                 let sz = temp(shift_z);
                 let noise = &self.noises[noise as usize];
                 let mut i = 0;
@@ -147,65 +206,97 @@ impl DensitySampler {
                 }
             }
             Node::Add(a, b) => {
-                self.sample_node(a, out, v);
+                self.sample_node(ctx, a, out, v);
                 let r = temp(b);
                 out.iter_mut().zip(&r).for_each(|(o, r)| *o += r);
             }
             Node::Mul(a, b) => {
                 // no zero short-circuit in volume mode
-                self.sample_node(a, out, v);
+                self.sample_node(ctx, a, out, v);
                 let r = temp(b);
                 out.iter_mut().zip(&r).for_each(|(o, r)| *o *= r);
             }
-            Node::Min(a, b) => {
-                self.sample_node(a, out, v);
-                let r = temp(b);
+            Node::Min { left, right, .. } => {
+                self.sample_node(ctx, left, out, v);
+                let r = temp(right);
                 out.iter_mut().zip(&r).for_each(|(o, &r)| {
                     if r < *o {
                         *o = r
                     }
                 });
             }
-            Node::Max(a, b) => {
-                self.sample_node(a, out, v);
-                let r = temp(b);
+            Node::Max { left, right, .. } => {
+                self.sample_node(ctx, left, out, v);
+                let r = temp(right);
                 out.iter_mut().zip(&r).for_each(|(o, &r)| {
                     if r > *o {
                         *o = r
                     }
                 });
             }
+            Node::Sub(a, b) => {
+                self.sample_node(ctx, a, out, v);
+                let r = temp(b);
+                out.iter_mut().zip(&r).for_each(|(o, r)| *o += -r);
+            }
+            Node::ConstSub(c, a) => self.map(ctx, a, out, v, |x| c - x),
+            Node::ConstDiv(c, a) => self.map(ctx, a, out, v, |x| c / x),
+            Node::ConstMin(a, c) => self.map(ctx, a, out, v, |x| if c < x { c } else { x }),
+            Node::ConstMax(a, c) => self.map(ctx, a, out, v, |x| if c > x { c } else { x }),
+            Node::FindTopSurface {
+                density,
+                upper_bound,
+                lower_bound,
+                cell_height,
+            } => {
+                assert_eq!(v.size_y, 1, "FindTopSurface needs a single-layer volume");
+                self.sample_node(ctx, upper_bound, out, v);
+                let mut i = 0;
+                for zi in 0..v.size_z {
+                    let z = v.block_z(zi);
+                    for xi in 0..v.size_x {
+                        let x = v.block_x(xi);
+                        out[i] = self.find_surface_from(
+                            ctx,
+                            density,
+                            lower_bound,
+                            cell_height,
+                            x,
+                            z,
+                            out[i],
+                        ) as f32;
+                        i += 1;
+                    }
+                }
+            }
             Node::ConstAdd(a, c) => {
-                self.sample_node(a, out, v);
+                self.sample_node(ctx, a, out, v);
                 out.iter_mut().for_each(|o| *o += c);
             }
             Node::ConstMul(a, c) => {
-                self.sample_node(a, out, v);
+                self.sample_node(ctx, a, out, v);
                 out.iter_mut().for_each(|o| *o *= c);
             }
-            Node::Abs(a) => self.map(a, out, v, f32::abs),
-            Node::Cube(a) => self.map(a, out, v, |x| x * x * x),
-            Node::Square(a) => self.map(a, out, v, |x| x * x),
-            Node::Squeeze(a) => self.map(a, out, v, |x| {
+            Node::Abs(a) => self.map(ctx, a, out, v, f32::abs),
+            Node::Cube(a) => self.map(ctx, a, out, v, |x| x * x * x),
+            Node::Square(a) => self.map(ctx, a, out, v, |x| x * x),
+            Node::Squeeze(a) => self.map(ctx, a, out, v, |x| {
                 let c = clamp(x, -1.0, 1.0);
                 c / 2.0 - c * c * c / 24.0
             }),
             Node::LeakyRelu {
                 input,
                 negative_factor,
-            } => self.map(
-                input,
-                out,
-                v,
-                |x| if x > 0.0 { x } else { x * negative_factor },
-            ),
-            Node::Clamp { input, min, max } => self.map(input, out, v, |x| clamp(x, min, max)),
+            } => self.map(ctx, input, out, v, |x| {
+                if x > 0.0 { x } else { x * negative_factor }
+            }),
+            Node::Clamp { input, min, max } => self.map(ctx, input, out, v, |x| clamp(x, min, max)),
             Node::Lerp {
                 alpha,
                 first,
                 second,
             } => {
-                self.sample_node(alpha, out, v);
+                self.sample_node(ctx, alpha, out, v);
                 let f = temp(first);
                 let s = temp(second);
                 for i in 0..out.len() {
@@ -217,7 +308,7 @@ impl DensitySampler {
                 first,
                 second,
             } => {
-                self.sample_node(alpha, out, v);
+                self.sample_node(ctx, alpha, out, v);
                 let s = temp(second);
                 for i in 0..out.len() {
                     out[i] = lerp_alpha(out[i], first, s[i]);
@@ -230,7 +321,7 @@ impl DensitySampler {
                 when_in_range,
                 when_out_of_range,
             } => {
-                self.sample_node(when_in_range, out, v);
+                self.sample_node(ctx, when_in_range, out, v);
                 let x = temp(input);
                 let other = temp(when_out_of_range);
                 for i in 0..out.len() {
@@ -244,7 +335,7 @@ impl DensitySampler {
                 thresholds,
                 samplers,
             } => {
-                self.sample_node(input, out, v);
+                self.sample_node(ctx, input, out, v);
                 let buffers: Vec<Vec<f32>> = samplers.iter().map(|&s| temp(s)).collect();
                 for (i, o) in out.iter_mut().enumerate() {
                     let k = thresholds
@@ -267,11 +358,11 @@ impl DensitySampler {
                     xz_inv: cell_size_xz_inv,
                     y_inv: cell_size_y_inv,
                 };
-                self.interpolate(input, &cell, out, v);
+                self.interpolate(ctx, input, &cell, out, v);
             }
             Node::SliceY { input, y } => {
                 if v.size_y == 1 && v.min_block_y == y {
-                    self.sample_node(input, out, v);
+                    self.sample_node(ctx, input, out, v);
                 } else {
                     let layer = DensityVolume::with_steps(
                         v.size_x,
@@ -285,7 +376,7 @@ impl DensitySampler {
                         v.step_block_z,
                     );
                     let mut b = vec![0.0f32; layer.size()];
-                    self.sample_node(input, &mut b, &layer);
+                    self.sample_node(ctx, input, &mut b, &layer);
                     for zi in 0..v.size_z {
                         for xi in 0..v.size_x {
                             let start = v.index(xi, 0, zi);
@@ -294,8 +385,9 @@ impl DensitySampler {
                     }
                 }
             }
-            Node::Cache(a) | Node::Blend(a) | Node::ContextBound { fallback: a, .. } => {
-                self.sample_node(a, out, v)
+            Node::Cache { input, id } => self.sample_volume_cached(ctx, id, input, out, v),
+            Node::Blend(a) | Node::ContextBound { fallback: a, .. } => {
+                self.sample_node(ctx, a, out, v)
             }
             Node::Spline {
                 coordinates,
@@ -309,13 +401,355 @@ impl DensitySampler {
         }
     }
 
-    fn map(&self, input: NodeId, out: &mut [f32], v: &DensityVolume, f: impl Fn(f32) -> f32) {
-        self.sample_node(input, out, v);
+    /// `SamplerContext.sampleVolumeCached`: the cell keeps the last volume
+    /// it was asked for; asking again for the same volume reuses it.
+    fn sample_volume_cached(
+        &self,
+        ctx: &EvalContext,
+        id: u32,
+        input: NodeId,
+        out: &mut [f32],
+        v: &DensityVolume,
+    ) {
+        if !ctx.caching {
+            return self.sample_node(ctx, input, out, v);
+        }
+        let hit = ctx.cell(id, |c| {
+            if c.volume == Some(*v) {
+                Some(c.buffer.clone())
+            } else {
+                None
+            }
+        });
+        let buffer = match hit {
+            Some(b) => b,
+            None => {
+                let mut b = vec![0.0f32; v.size()];
+                self.sample_node(ctx, input, &mut b, v);
+                ctx.cell(id, |c| {
+                    c.volume = Some(*v);
+                    c.buffer = b.clone();
+                });
+                b
+            }
+        };
+        out.copy_from_slice(&buffer);
+    }
+
+    /// `SamplerContext.sampleValueCached`: the last point's value, else the
+    /// cell's cached volume if it contains the block (a volume-mode value),
+    /// else computed in point mode and remembered.
+    fn sample_value_cached(
+        &self,
+        ctx: &EvalContext,
+        id: u32,
+        input: NodeId,
+        x: i32,
+        y: i32,
+        z: i32,
+    ) -> f32 {
+        if !ctx.caching {
+            return self.sample_value(ctx, input, x, y, z);
+        }
+        let key = block_pos_as_long(x, y, z);
+        let cached = ctx.cell(id, |c| {
+            if c.value_key == key && !c.value.is_nan() {
+                return Some(c.value);
+            }
+            let volume = c.volume?;
+            volume.index_of_block(x, y, z).map(|i| c.buffer[i])
+        });
+        if let Some(v) = cached {
+            return v;
+        }
+        let value = self.sample_value(ctx, input, x, y, z);
+        ctx.cell(id, |c| {
+            c.value_key = key;
+            c.value = value;
+        });
+        value
+    }
+
+    /// `FindTopSurfaceFunction.Sampler.findSurfaceFrom`.
+    #[allow(clippy::too_many_arguments)]
+    fn find_surface_from(
+        &self,
+        ctx: &EvalContext,
+        density: NodeId,
+        lower_bound: i32,
+        cell_height: i32,
+        x: i32,
+        z: i32,
+        upper: f32,
+    ) -> i32 {
+        let start = mth::floor((upper / cell_height as f32) as f64) * cell_height;
+        if start <= lower_bound {
+            return lower_bound;
+        }
+        let mut y = start;
+        while y >= lower_bound {
+            if self.sample_value(ctx, density, x, y, z) > 0.0 {
+                return y;
+            }
+            y -= cell_height;
+        }
+        lower_bound
+    }
+
+    /// One node at one block (`DensitySampler.sampleValue`, point mode).
+    pub fn sample_value(&self, ctx: &EvalContext, id: NodeId, x: i32, y: i32, z: i32) -> f32 {
+        let at = |n: NodeId| self.sample_value(ctx, n, x, y, z);
+        match self.tree.nodes[id as usize] {
+            Node::Constant(c) => c,
+            Node::Noise {
+                noise,
+                xz_scale,
+                y_scale,
+            } => self.noises[noise as usize].get(
+                x as f64 * xz_scale,
+                y as f64 * y_scale,
+                z as f64 * xz_scale,
+            ),
+            Node::ShiftedXz {
+                shift_x,
+                shift_z,
+                noise,
+                xz_scale,
+                y_scale,
+            } => {
+                let nx = x as f64 * xz_scale + at(shift_x) as f64;
+                let ny = y as f64 * y_scale;
+                let nz = z as f64 * xz_scale + at(shift_z) as f64;
+                self.noises[noise as usize].get(nx, ny, nz)
+            }
+            Node::ShiftB { noise } => {
+                self.noises[noise as usize].get(z as f64 * 0.25, x as f64 * 0.25, 0.0) * 4.0
+            }
+            Node::ClampedGradient {
+                axis,
+                from_coordinate,
+                min_coordinate,
+                max_coordinate,
+                from_value,
+                coordinate_factor,
+            } => {
+                let c = match axis {
+                    Axis::X => x,
+                    Axis::Y => y,
+                    Axis::Z => z,
+                };
+                from_value
+                    + (c.clamp(min_coordinate, max_coordinate) - from_coordinate) as f32
+                        * coordinate_factor
+            }
+            Node::Add(a, b) => at(a) + at(b),
+            Node::Sub(a, b) => at(a) - at(b),
+            Node::Mul(a, b) => {
+                let l = at(a);
+                if l == 0.0 { 0.0 } else { l * at(b) }
+            }
+            Node::Min {
+                left,
+                right,
+                right_min_value,
+            } => {
+                let l = at(left);
+                if l <= right_min_value {
+                    l
+                } else {
+                    min_f32(l, at(right))
+                }
+            }
+            Node::Max {
+                left,
+                right,
+                right_max_value,
+            } => {
+                let l = at(left);
+                if l >= right_max_value {
+                    l
+                } else {
+                    max_f32(l, at(right))
+                }
+            }
+            Node::ConstAdd(a, c) => at(a) + c,
+            Node::ConstMul(a, c) => at(a) * c,
+            Node::ConstSub(c, a) => c - at(a),
+            Node::ConstDiv(c, a) => c / at(a),
+            Node::ConstMin(a, c) => min_f32(at(a), c),
+            Node::ConstMax(a, c) => max_f32(at(a), c),
+            Node::Abs(a) => at(a).abs(),
+            Node::Cube(a) => {
+                let v = at(a);
+                v * v * v
+            }
+            Node::Square(a) => {
+                let v = at(a);
+                v * v
+            }
+            Node::Squeeze(a) => {
+                let c = clamp(at(a), -1.0, 1.0);
+                c / 2.0 - c * c * c / 24.0
+            }
+            Node::LeakyRelu {
+                input,
+                negative_factor,
+            } => {
+                let v = at(input);
+                if v > 0.0 { v } else { v * negative_factor }
+            }
+            Node::Clamp { input, min, max } => clamp(at(input), min, max),
+            Node::Lerp {
+                alpha,
+                first,
+                second,
+            } => {
+                let a = at(alpha);
+                if a == 0.0 {
+                    at(first)
+                } else if a == 1.0 {
+                    at(second)
+                } else {
+                    mth::lerp(a, at(first), at(second))
+                }
+            }
+            Node::LerpConstFirst {
+                alpha,
+                first,
+                second,
+            } => {
+                let a = at(alpha);
+                if a == 0.0 {
+                    first
+                } else if a == 1.0 {
+                    at(second)
+                } else {
+                    mth::lerp(a, first, at(second))
+                }
+            }
+            Node::RangeChoice {
+                input,
+                min_inclusive,
+                max_exclusive,
+                when_in_range,
+                when_out_of_range,
+            } => {
+                let v = at(input);
+                if v >= min_inclusive && v < max_exclusive {
+                    at(when_in_range)
+                } else {
+                    at(when_out_of_range)
+                }
+            }
+            Node::IntervalSelect {
+                input,
+                thresholds,
+                samplers,
+            } => {
+                let v = at(input);
+                let k = thresholds
+                    .iter()
+                    .position(|&t| v < t)
+                    .unwrap_or(samplers.len() - 1);
+                at(samplers[k])
+            }
+            Node::Interpolated {
+                input,
+                cell_size_xz,
+                cell_size_y,
+                ..
+            } => {
+                let (mx, my, mz) = (
+                    x.rem_euclid(cell_size_xz),
+                    y.rem_euclid(cell_size_y),
+                    z.rem_euclid(cell_size_xz),
+                );
+                if mx == 0 && my == 0 && mz == 0 {
+                    return at(input);
+                }
+                // the 8 corners in volume mode, then lerp3
+                let corners = DensityVolume::with_steps(
+                    2,
+                    2,
+                    2,
+                    x - mx,
+                    y - my,
+                    z - mz,
+                    cell_size_xz,
+                    cell_size_y,
+                    cell_size_xz,
+                );
+                let mut c = vec![0.0f32; 8];
+                self.sample_node(ctx, input, &mut c, &corners);
+                let g = |a: i32, b: i32, d: i32| c[corners.index(a, b, d)];
+                mth::lerp3(
+                    mx as f32 / cell_size_xz as f32,
+                    my as f32 / cell_size_y as f32,
+                    mz as f32 / cell_size_xz as f32,
+                    g(0, 0, 0),
+                    g(1, 0, 0),
+                    g(0, 1, 0),
+                    g(1, 1, 0),
+                    g(0, 0, 1),
+                    g(1, 0, 1),
+                    g(0, 1, 1),
+                    g(1, 1, 1),
+                )
+            }
+            Node::SliceY { input, y: slice_y } => self.sample_value(ctx, input, x, slice_y, z),
+            Node::Cache { input, id } => self.sample_value_cached(ctx, id, input, x, y, z),
+            Node::Blend(a) | Node::ContextBound { fallback: a, .. } => at(a),
+            Node::Spline {
+                coordinates,
+                spline,
+            } => {
+                // coordinates are evaluated lazily (and at most once) per point
+                let values: Vec<std::cell::Cell<Option<f32>>> = coordinates
+                    .iter()
+                    .map(|_| std::cell::Cell::new(None))
+                    .collect();
+                spline.sample(&|c: u16| {
+                    let cell = &values[c as usize];
+                    cell.get().unwrap_or_else(|| {
+                        let v = at(coordinates[c as usize]);
+                        cell.set(Some(v));
+                        v
+                    })
+                })
+            }
+            Node::FindTopSurface {
+                density,
+                upper_bound,
+                lower_bound,
+                cell_height,
+            } => {
+                let upper = at(upper_bound);
+                self.find_surface_from(ctx, density, lower_bound, cell_height, x, z, upper) as f32
+            }
+        }
+    }
+
+    fn map(
+        &self,
+        ctx: &EvalContext,
+        input: NodeId,
+        out: &mut [f32],
+        v: &DensityVolume,
+        f: impl Fn(f32) -> f32,
+    ) {
+        self.sample_node(ctx, input, out, v);
         out.iter_mut().for_each(|o| *o = f(*o));
     }
 
     /// `InterpolatedFunction.Sampler.sampleVolume`.
-    fn interpolate(&self, input: NodeId, cell: &Cell, out: &mut [f32], v: &DensityVolume) {
+    fn interpolate(
+        &self,
+        ctx: &EvalContext,
+        input: NodeId,
+        cell: &Cell,
+        out: &mut [f32],
+        v: &DensityVolume,
+    ) {
         let aligned = (v.step_block_x == cell.xz || v.size_x == 1)
             && (v.step_block_y == cell.y || v.size_y == 1)
             && (v.step_block_z == cell.xz || v.size_z == 1)
@@ -323,9 +757,9 @@ impl DensitySampler {
             && v.min_block_y.rem_euclid(cell.y) == 0
             && v.min_block_z.rem_euclid(cell.xz) == 0;
         if aligned {
-            self.sample_node(input, out, v);
+            self.sample_node(ctx, input, out, v);
         } else if v.step_block_x == 1 && v.step_block_y == 1 && v.step_block_z == 1 {
-            self.interpolate_block_step(input, cell, out, v);
+            self.interpolate_block_step(ctx, input, cell, out, v);
         } else {
             // sampleWithNonBlockStep: interpolate every block, then pick
             let full = DensityVolume::new(
@@ -337,7 +771,7 @@ impl DensitySampler {
                 v.min_block_z,
             );
             let mut b = vec![0.0f32; full.size()];
-            self.interpolate_block_step(input, cell, &mut b, &full);
+            self.interpolate_block_step(ctx, input, cell, &mut b, &full);
             for zi in 0..v.size_z {
                 for xi in 0..v.size_x {
                     for yi in 0..v.size_y {
@@ -355,6 +789,7 @@ impl DensitySampler {
     /// `InterpolatedFunction.Sampler.sampleWithBlockStep`.
     fn interpolate_block_step(
         &self,
+        ctx: &EvalContext,
         input: NodeId,
         cell: &Cell,
         out: &mut [f32],
@@ -395,7 +830,7 @@ impl DensitySampler {
             cell.xz,
         );
         let mut c = vec![0.0f32; corners.size()];
-        self.sample_node(input, &mut c, &corners);
+        self.sample_node(ctx, input, &mut c, &corners);
         let at = |x: i32, y: i32, z: i32| c[corners.index(x, y, z)];
         for z in 0..nz {
             let z1 = (z + 1).min(corners.size_z - 1);
