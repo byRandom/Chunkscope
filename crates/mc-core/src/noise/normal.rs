@@ -219,6 +219,11 @@ pub struct NoiseStack {
 }
 
 impl NoiseStack {
+    /// A stack from explicit layers (`NoiseStack.builder()...build()`).
+    pub fn from_layers(layers: Vec<Layer>) -> Self {
+        Self { layers }
+    }
+
     pub fn layers(&self) -> &[Layer] {
         &self.layers
     }

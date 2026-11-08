@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds; next: terrain height, structure validation, spawn | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld `final_density` per sampler node; next: aquifers, heightmaps, structure validation, spawn | In progress |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -131,6 +131,26 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   `findBiomeHorizontal` scans the whole 57×57 quart square and replaces its
   candidate with probability `1/(n+1)` using the forked ring random. Taking
   the first match moves most strongholds.
+
+- **Terrain uses the compiled density tree, in volume mode.** The oracle
+  exports the overworld `final_density` exactly as the game compiles it for
+  `getBaseHeight`, so the compiler's rewrites (slices, caches, constant
+  folding, `old_blended_noise` expanded into samplers) are reproduced rather
+  than re-derived from JSON. A fixture records every node's output over whole
+  block columns, so a mismatch names the sampler type at fault.
+- **Cell interpolation accumulates along Y.** `InterpolatedFunction` fills a
+  cell with `value += step` per block instead of interpolating each block;
+  interpolating each block changes 140 of the 2,210 node outputs in the
+  fixtures.
+- **Volume and point mode differ in places.** In volume mode `Mul` has no
+  "left is 0" short-circuit, `Lerp` and `RangeChoice` evaluate both branches
+  over the whole volume, and interpolation only exists in volume mode. Noise
+  itself gives the same bits in both modes.
+- **`Mth.clamp(float)` uses Java's `Math.min`**, which handles NaN and `-0.0`
+  differently from `f32::min`; `java-compat` ports it.
+- **Smeared Perlin noise** (`old_blended_noise`) snaps the gradient Y to
+  multiples of a per-octave smear (`computeFudgeY`) while the smoothstep uses
+  the real Y. Dropping the smear changes 236 node outputs.
 
 ## Known non-determinism in the game itself
 

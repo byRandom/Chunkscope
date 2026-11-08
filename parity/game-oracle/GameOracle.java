@@ -91,6 +91,7 @@ public class GameOracle {
         frequencyReduction();
         strongholds(lookup);
         volumeNoise(vanilla);
+        finalDensity(lookup, Path.of(args[5]));
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -857,5 +858,279 @@ public class GameOracle {
                 }
             }
         }
+    }
+    // ---- final_density: compiled tree export + per-node volume fixtures -----------
+    static final String DF = "net.minecraft.world.level.levelgen.densityfunction.";
+
+    static Object fieldAny(Object o, String name) {
+        for (Class<?> k = o.getClass(); k != null; k = k.getSuperclass()) {
+            try {
+                Field f = k.getDeclaredField(name);
+                f.setAccessible(true);
+                return f.get(o);
+            } catch (NoSuchFieldException e) {
+                // superclass
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        throw new IllegalStateException("no field " + name + " in " + o.getClass().getName());
+    }
+
+    /** The NoiseChunk getBaseHeight builds for a column, with its bound final_density sampler. */
+    record Column(net.minecraft.world.level.levelgen.NoiseChunk chunk, DensitySampler.Bound bound,
+            net.minecraft.world.level.levelgen.densityfunction.DensityVolume volume) {}
+
+    static Column column(RandomState rs, NoiseGeneratorSettings settings, int x, int z) throws Exception {
+        Method picker = net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator.class.getDeclaredMethod("createFluidPicker", NoiseGeneratorSettings.class);
+        picker.setAccessible(true);
+        var ns = settings.noiseSettings();
+        var volume = new net.minecraft.world.level.levelgen.densityfunction.DensityVolume(1, ns.height(), 1, x, ns.minY(), z);
+        var chunk = new net.minecraft.world.level.levelgen.NoiseChunk(rs, null, settings,
+                (net.minecraft.world.level.levelgen.Aquifer.FluidPicker) picker.invoke(null, settings),
+                net.minecraft.world.level.levelgen.blending.Blender.empty(), volume);
+        return new Column(chunk, chunk.cachingSamplers().get(settings.noiseRouter().finalDensity()), volume);
+    }
+
+    static final class TreeExport {
+        final Map<Object, Integer> ids = new java.util.IdentityHashMap<>();
+        final List<String> nodes = new ArrayList<>();
+        final Map<Object, Integer> noiseIds = new java.util.IdentityHashMap<>();
+        final List<String> noises = new ArrayList<>();
+        final Map<Object, String> noiseNames;
+        final Map<Object, String> blendedStacks;
+        String blendedParams;
+
+        TreeExport(Map<Object, String> noiseNames, Map<Object, String> blendedStacks) {
+            this.noiseNames = noiseNames;
+            this.blendedStacks = blendedStacks;
+        }
+
+        int noise(Object n) {
+            return noiseIds.computeIfAbsent(n, k -> {
+                String src = noiseNames.get(k) != null ? "NoiseSource::Vanilla(\"" + noiseNames.get(k) + "\")" : blendedStacks.get(k);
+                if (src == null) throw new IllegalStateException("unknown noise " + k);
+                noises.add(src);
+                return noises.size() - 1;
+            });
+        }
+
+        /** Post-order: children get ids first, so the root is last. */
+        int node(Object s) {
+            Integer known = ids.get(s);
+            if (known != null) return known;
+            String cls = s.getClass().getName().replace(DF, "");
+            String def = switch (cls) {
+                case "generator.ConstantFunction$Sampler" -> "Node::Constant(" + rustF32Any((float) fieldAny(s, "value")) + ")";
+                case "generator.NoiseFunction$Sampler" -> "Node::Noise { noise: " + noise(fieldAny(s, "noise")) + ", xz_scale: "
+                        + rustF64((double) fieldAny(s, "xzScale")) + ", y_scale: " + rustF64((double) fieldAny(s, "yScale")) + " }";
+                case "generator.NoiseFunction$ShiftedXzSampler" -> "Node::ShiftedXz { shift_x: " + node(fieldAny(s, "shiftX")) + ", shift_z: "
+                        + node(fieldAny(s, "shiftZ")) + ", noise: " + noise(fieldAny(s, "noise")) + ", xz_scale: "
+                        + rustF64((double) fieldAny(s, "xzScale")) + ", y_scale: " + rustF64((double) fieldAny(s, "yScale")) + " }";
+                case "generator.ShiftNoiseFunction$ShiftB$1" -> "Node::ShiftB { noise: " + noise(fieldAny(s, "val$noise")) + " }";
+                case "generator.GradientFunction$ClampedSampler" -> {
+                    String axis = fieldAny(s, "axis").toString();
+                    yield "Node::ClampedGradient { axis: Axis::" + axis.toUpperCase() + ", from_coordinate: " + fieldAny(s, "fromCoordinate")
+                            + ", min_coordinate: " + fieldAny(s, "minCoordinate") + ", max_coordinate: " + fieldAny(s, "maxCoordinate")
+                            + ", from_value: " + rustF32Any((float) fieldAny(s, "fromValue")) + ", coordinate_factor: "
+                            + rustF32Any((float) fieldAny(s, "coordinateFactor")) + " }";
+                }
+                case "op.BinaryFunction$AddSampler" -> "Node::Add(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$MulSampler" -> "Node::Mul(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$MinSampler" -> "Node::Min(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$MaxSampler" -> "Node::Max(" + node(fieldAny(s, "left")) + ", " + node(fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$ConstAddSampler" -> "Node::ConstAdd(" + node(fieldAny(s, "left")) + ", " + rustF32Any((float) fieldAny(s, "right")) + ")";
+                case "op.BinaryFunction$ConstMulSampler" -> "Node::ConstMul(" + node(fieldAny(s, "left")) + ", " + rustF32Any((float) fieldAny(s, "right")) + ")";
+                case "op.UnaryFunction$AbsSampler" -> "Node::Abs(" + node(fieldAny(s, "input")) + ")";
+                case "op.UnaryFunction$CubeSampler" -> "Node::Cube(" + node(fieldAny(s, "input")) + ")";
+                case "op.UnaryFunction$SquareSampler" -> "Node::Square(" + node(fieldAny(s, "input")) + ")";
+                case "op.UnaryFunction$SqueezeSampler" -> "Node::Squeeze(" + node(fieldAny(s, "input")) + ")";
+                case "op.UnaryFunction$LeakyReLUSampler" -> "Node::LeakyRelu { input: " + node(fieldAny(s, "input")) + ", negative_factor: "
+                        + rustF32Any((float) fieldAny(s, "negativeFactor")) + " }";
+                case "op.ClampFunction$Sampler" -> "Node::Clamp { input: " + node(fieldAny(s, "input")) + ", min: "
+                        + rustF32Any((float) fieldAny(s, "min")) + ", max: " + rustF32Any((float) fieldAny(s, "max")) + " }";
+                case "op.LerpFunction$Sampler" -> "Node::Lerp { alpha: " + node(fieldAny(s, "alpha")) + ", first: " + node(fieldAny(s, "first"))
+                        + ", second: " + node(fieldAny(s, "second")) + " }";
+                case "op.LerpFunction$ConstFirstSampler" -> "Node::LerpConstFirst { alpha: " + node(fieldAny(s, "alpha")) + ", first: "
+                        + rustF32Any((float) fieldAny(s, "first")) + ", second: " + node(fieldAny(s, "second")) + " }";
+                case "op.RangeChoiceFunction$Sampler" -> "Node::RangeChoice { input: " + node(fieldAny(s, "input")) + ", min_inclusive: "
+                        + rustF32Any((float) fieldAny(s, "minInclusive")) + ", max_exclusive: " + rustF32Any((float) fieldAny(s, "maxExclusive"))
+                        + ", when_in_range: " + node(fieldAny(s, "whenInRange")) + ", when_out_of_range: " + node(fieldAny(s, "whenOutOfRange")) + " }";
+                case "op.IntervalSelectFunction$Sampler" -> {
+                    float[] t = (float[]) fieldAny(s, "thresholds");
+                    Object[] ss = (Object[]) fieldAny(s, "samplers");
+                    StringBuilder b = new StringBuilder("Node::IntervalSelect { input: " + node(fieldAny(s, "input")) + ", thresholds: &[");
+                    for (int i = 0; i < t.length; i++) b.append(i == 0 ? "" : ", ").append(rustF32Any(t[i]));
+                    b.append("], samplers: &[");
+                    for (int i = 0; i < ss.length; i++) b.append(i == 0 ? "" : ", ").append(node(ss[i]));
+                    yield b.append("] }").toString();
+                }
+                case "op.InterpolatedFunction$Sampler" -> "Node::Interpolated { input: " + node(fieldAny(s, "input")) + ", cell_size_xz: "
+                        + fieldAny(s, "cellSizeXz") + ", cell_size_y: " + fieldAny(s, "cellSizeY") + ", cell_size_xz_inv: "
+                        + rustF32Any((float) fieldAny(s, "cellSizeXzInv")) + ", cell_size_y_inv: " + rustF32Any((float) fieldAny(s, "cellSizeYInv")) + " }";
+                case "op.SliceFunction$YSampler" -> "Node::SliceY { input: " + node(fieldAny(s, "input")) + ", y: " + fieldAny(s, "y") + " }";
+                case "CachingDensitySampler" -> "Node::Cache(" + node(fieldAny(s, "input")) + ")";
+                case "op.BlendDensityFunction$Sampler" -> "Node::Blend(" + node(fieldAny(s, "input")) + ")";
+                case "ContextBoundSampler" -> "Node::ContextBound { key: \"" + fieldAny(fieldAny(s, "key"), "name") + "\", fallback: "
+                        + node(fieldAny(s, "fallbackSampler")) + " }";
+                case "op.SplineFunction$Sampler" -> {
+                    Map<Integer, Integer> coordinates = new java.util.TreeMap<>();
+                    String spline = spline(fieldAny(s, "sampler"), coordinates);
+                    StringBuilder b = new StringBuilder("Node::Spline { coordinates: &[");
+                    int expected = 0;
+                    for (var e : coordinates.entrySet()) {
+                        if (e.getKey() != expected++) throw new IllegalStateException("sparse spline coordinates");
+                        b.append(e.getKey() == 0 ? "" : ", ").append(e.getValue());
+                    }
+                    yield b.append("], spline: &").append(spline).append(" }").toString();
+                }
+                default -> throw new IllegalStateException("unsupported sampler " + cls);
+            };
+            int id = nodes.size();
+            ids.put(s, id);
+            nodes.add(def);
+            return id;
+        }
+
+        String spline(Object fn, Map<Integer, Integer> coordinates) {
+            Object mp;
+            try {
+                mp = fieldAny(fn, "val$multipoint");
+            } catch (IllegalStateException e) {
+                throw new IllegalStateException("unsupported spline sampler " + fn.getClass().getName());
+            }
+            return multipoint(mp, coordinates);
+        }
+
+        String multipoint(Object mp, Map<Integer, Integer> coordinates) {
+            Object coord = call(mp, "coordinate");
+            int index = (int) fieldAny(coord, "index");
+            coordinates.put(index, node(fieldAny(coord, "sampler")));
+            float[] loc = (float[]) call(mp, "locations");
+            float[] der = (float[]) call(mp, "derivatives");
+            StringBuilder b = new StringBuilder("Spline::Multipoint(&Multipoint { coordinate: " + index + ", locations: &[");
+            for (int i = 0; i < loc.length; i++) b.append(i == 0 ? "" : ", ").append(rustF32Any(loc[i]));
+            b.append("], derivatives: &[");
+            for (int i = 0; i < der.length; i++) b.append(i == 0 ? "" : ", ").append(rustF32Any(der[i]));
+            b.append("], values: &[");
+            boolean first = true;
+            for (Object v : (List<?>) call(mp, "values")) {
+                b.append(first ? "" : ", ");
+                first = false;
+                if (v instanceof CubicSpline.Constant<?> c) b.append("Spline::Constant(").append(rustF32Any(c.value())).append(")");
+                else b.append(multipoint(v, coordinates));
+            }
+            return b.append("] })").toString();
+        }
+    }
+
+    static String rustF32Any(float f) {
+        if (Float.isNaN(f)) return "f32::NAN";
+        if (Float.isInfinite(f)) return f > 0 ? "f32::INFINITY" : "f32::NEG_INFINITY";
+        return Float.toString(f).replace("E", "e");
+    }
+
+    static TreeExport exportFinalDensity(HolderLookup.Provider lookup, RandomState rs, NoiseGeneratorSettings settings, Column col) throws Exception {
+        Map<Object, String> names = new java.util.IdentityHashMap<>();
+        @SuppressWarnings("unchecked")
+        var instances = (Map<ResourceKey<?>, Object>) fieldAny(rs, "noiseInstances");
+        // instantiate every vanilla noise so the compiled tree's instances are named
+        for (var e : lookup.lookupOrThrow(Registries.NOISE).listElementIds().toList()) rs.getOrCreateNoise(e);
+        instances.forEach((k, v) -> names.put(v, k.identifier().toString()));
+        // the three smeared stacks of old_blended_noise, recreated to match by offset
+        var blended = find(settings.noiseRouter().finalDensity(), net.minecraft.world.level.levelgen.synth.BlendedNoise.class);
+        var factory = (PositionalRandomFactory) fieldAny(rs, "random");
+        var fresh = blended.createFbmSet(factory.fromHashOf(net.minecraft.world.level.levelgen.synth.BlendedNoise.NOISE_SEED));
+        Map<Object, String> stacks = new java.util.IdentityHashMap<>();
+        java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        java.util.ArrayDeque<Object> queue = new java.util.ArrayDeque<>(List.of(col.bound().sampler()));
+        while (!queue.isEmpty()) {
+            Object o = queue.poll();
+            if (o == null || !seen.add(o) || !o.getClass().getName().startsWith("net.minecraft")) continue;
+            if (o.getClass().getSimpleName().equals("NoiseStack$SmearedPerlin") || o.getClass().getName().endsWith("NoiseStack$SmearedPerlin")) {
+                double off = firstOffsetX(o);
+                String which = off == firstOffsetX(fresh.minLimitNoise()) ? "NoiseSource::BlendedMinLimit"
+                        : off == firstOffsetX(fresh.maxLimitNoise()) ? "NoiseSource::BlendedMaxLimit"
+                        : off == firstOffsetX(fresh.mainNoise()) ? "NoiseSource::BlendedMain" : null;
+                if (which == null) throw new IllegalStateException("unmatched smeared stack");
+                stacks.put(o, which);
+                continue;
+            }
+            for (Class<?> k = o.getClass(); k != null && k.getName().startsWith("net.minecraft"); k = k.getSuperclass())
+                for (Field f : k.getDeclaredFields()) {
+                    if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || f.getType().isPrimitive()) continue;
+                    f.setAccessible(true);
+                    Object v = f.get(o);
+                    if (v instanceof Object[] arr) queue.addAll(java.util.Arrays.asList(arr));
+                    else if (v instanceof Iterable<?> it) it.forEach(queue::add);
+                    else queue.add(v);
+                }
+        }
+        TreeExport t = new TreeExport(names, stacks);
+        t.node(col.bound().sampler());
+        t.blendedParams = "BlendedNoiseParams { xz_scale: " + rustF64(blended.xzScale()) + ", y_scale: " + rustF64(blended.yScale())
+                + ", xz_factor: " + rustF64(blended.xzFactor()) + ", y_factor: " + rustF64(blended.yFactor())
+                + ", smear_scale_multiplier: " + rustF64(blended.smearScaleMultiplier()) + " }";
+        return t;
+    }
+
+    static double firstOffsetX(Object stack) {
+        Object[] layers = (Object[]) fieldAny(stack, "layers");
+        return (double) fieldAny(call(layers[0], "noise"), "offsetX");
+    }
+
+    static void finalDensity(HolderLookup.Provider lookup, Path rs) throws Exception {
+        NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.OVERWORLD).value();
+        String structure = null;
+        try (PrintWriter w = writer("final_density.txt")) {
+            for (long seed : List.of(0L, INPUTS.nextLong())) {
+                RandomState state = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                List<int[]> columns = new ArrayList<>(List.of(new int[] {0, 0}, new int[] {-1, 1}));
+                for (int i = 0; i < 3; i++) columns.add(new int[] {INPUTS.nextInt(-100_000, 100_000), INPUTS.nextInt(-100_000, 100_000)});
+                for (int[] xz : columns) {
+                    Column col = column(state, settings, xz[0], xz[1]);
+                    TreeExport t = exportFinalDensity(lookup, state, settings, col);
+                    String s = String.join("\n", t.nodes) + String.join("\n", t.noises);
+                    if (structure == null) {
+                        structure = s;
+                        writeDensityTree(t, rs);
+                    } else if (!structure.equals(s)) {
+                        throw new IllegalStateException("compiled tree differs between columns or seeds");
+                    }
+                    // every node over the column, in id order (root last)
+                    List<Object> byId = new ArrayList<>(java.util.Collections.nCopies(t.nodes.size(), null));
+                    t.ids.forEach((o, id) -> byId.set(id, o));
+                    StringBuilder sb = new StringBuilder(seed + " " + xz[0] + " " + xz[1]);
+                    int size = col.volume().sizeY();
+                    for (Object node : byId) {
+                        var buffer = net.minecraft.world.level.levelgen.densityfunction.DensityBuffer.createUnpooled(size);
+                        ((DensitySampler) node).sampleVolume(col.bound().context(), buffer, col.volume());
+                        sb.append(' ').append(Long.toHexString(fnv(buffer, size))).append(',').append(bits(buffer.get(0)))
+                                .append(',').append(bits(buffer.get(size / 2))).append(',').append(bits(buffer.get(size - 1)));
+                    }
+                    w.println(sb);
+                    col.chunk().close();
+                }
+            }
+        }
+    }
+
+    static void writeDensityTree(TreeExport t, Path rs) throws IOException {
+        StringBuilder out = new StringBuilder();
+        out.append("// @generated by parity/game-oracle/GameOracle.java from Minecraft ")
+                .append(Files.readString(out().resolve("VERSION")).trim()).append(". Do not edit.\n");
+        out.append("//! The overworld `final_density` exactly as the game compiles it for\n");
+        out.append("//! `getBaseHeight` (one `NoiseChunk` column).\n\n");
+        out.append("use super::tree::{Axis, Node, NoiseSource, Tree};\n");
+        out.append("use crate::biome::spline::{Multipoint, Spline};\nuse crate::noise::blended::BlendedNoiseParams;\n\n");
+        out.append("static NODES: [Node; ").append(t.nodes.size()).append("] = [\n");
+        for (int i = 0; i < t.nodes.size(); i++) out.append("    /* ").append(i).append(" */ ").append(t.nodes.get(i)).append(",\n");
+        out.append("];\n\nstatic NOISES: [NoiseSource; ").append(t.noises.size()).append("] = [\n");
+        for (String n : t.noises) out.append("    ").append(n).append(",\n");
+        out.append("];\n\n/// `noise_settings/overworld.json` -> `noise_router.final_density`.\n");
+        out.append("pub static OVERWORLD_FINAL_DENSITY: Tree = Tree {\n    nodes: &NODES,\n    root: ").append(t.nodes.size() - 1)
+                .append(",\n    noises: &NOISES,\n    blended: Some(").append(t.blendedParams).append("),\n};\n");
+        Files.writeString(rs, out);
     }
 }

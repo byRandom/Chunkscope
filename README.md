@@ -29,7 +29,7 @@ Bedrock Edition is out of scope for now.
 | Crate                  | Purpose                                                                                 |
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | `crates/java-compat`   | Bit-exact ports of the JDK behaviour Minecraft relies on: `java.util.Random`, `StrictMath.log`, `Math.round`, `DoubleStream.sum`, `String.hashCode`, `String.trim`, `Long.parseLong` |
-| `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), noise (Perlin, normal noise, all vanilla noise parameters), overworld climate and biomes, structure placement, seed text → world seed, slime chunks |
+| `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), noise (Perlin, normal noise, all vanilla noise parameters), overworld climate and biomes, overworld `final_density` (volume mode), structure placement, seed text → world seed, slime chunks |
 | `parity/oracle`        | JDK oracle: reference fixtures from a real JDK                                          |
 | `parity/game-oracle`   | Game oracle: reference fixtures from the real game classes (downloads the official server jar) |
 
@@ -48,8 +48,8 @@ Bedrock Edition is out of scope for now.
 - [x] Strongholds (concentric rings with their biome search)
 - [ ] Terrain height (needed to validate structures), in steps:
   - [x] Volume-mode noise (`NoiseStack.addToVolume`)
-  - [ ] Volume-mode density samplers, cell interpolation, smeared Perlin noise
-  - [ ] Overworld `final_density` (the game's compiled sampler tree)
+  - [x] Volume-mode density samplers, cell interpolation, smeared Perlin noise
+  - [x] Overworld `final_density` (the game's compiled sampler tree)
   - [ ] Aquifers
   - [ ] Heightmaps (`getBaseHeight`)
 - [ ] Structure validation (biome and terrain height)
