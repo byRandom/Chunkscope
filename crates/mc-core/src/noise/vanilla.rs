@@ -164,17 +164,7 @@ pub const GRAVEL_LAYER: NoiseParameters = NoiseParameters {
     base_octave: -8,
     octave_count: 9,
     normalize: Normalization::Enabled,
-    amplitude_modifiers: Cow::Borrowed(&[
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.013333333333333334,
-    ]),
+    amplitude_modifiers: Cow::Borrowed(&[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.013333333333333334]),
 };
 
 /// `minecraft:ice`
@@ -426,17 +416,7 @@ pub const SOUL_SAND_LAYER: NoiseParameters = NoiseParameters {
     base_octave: -8,
     octave_count: 9,
     normalize: Normalization::Enabled,
-    amplitude_modifiers: Cow::Borrowed(&[
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.013333333333333334,
-    ]),
+    amplitude_modifiers: Cow::Borrowed(&[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.013333333333333334]),
 };
 
 /// `minecraft:spaghetti_2d`
@@ -604,14 +584,8 @@ pub const VEGETATION_LARGE: NoiseParameters = NoiseParameters {
 /// All vanilla noises by registry name.
 pub const ALL: [(&str, NoiseParameters); 64] = [
     ("minecraft:aquifer_barrier", AQUIFER_BARRIER),
-    (
-        "minecraft:aquifer_fluid_level_floodedness",
-        AQUIFER_FLUID_LEVEL_FLOODEDNESS,
-    ),
-    (
-        "minecraft:aquifer_fluid_level_spread",
-        AQUIFER_FLUID_LEVEL_SPREAD,
-    ),
+    ("minecraft:aquifer_fluid_level_floodedness", AQUIFER_FLUID_LEVEL_FLOODEDNESS),
+    ("minecraft:aquifer_fluid_level_spread", AQUIFER_FLUID_LEVEL_SPREAD),
     ("minecraft:aquifer_lava", AQUIFER_LAVA),
     ("minecraft:badlands_pillar", BADLANDS_PILLAR),
     ("minecraft:badlands_pillar_roof", BADLANDS_PILLAR_ROOF),
@@ -664,10 +638,7 @@ pub const ALL: [(&str, NoiseParameters); 64] = [
     ("minecraft:spaghetti_3d_rarity", SPAGHETTI_3D_RARITY),
     ("minecraft:spaghetti_3d_thickness", SPAGHETTI_3D_THICKNESS),
     ("minecraft:spaghetti_roughness", SPAGHETTI_ROUGHNESS),
-    (
-        "minecraft:spaghetti_roughness_modulator",
-        SPAGHETTI_ROUGHNESS_MODULATOR,
-    ),
+    ("minecraft:spaghetti_roughness_modulator", SPAGHETTI_ROUGHNESS_MODULATOR),
     ("minecraft:sulfur_cave_gradient", SULFUR_CAVE_GRADIENT),
     ("minecraft:surface", SURFACE),
     ("minecraft:surface_secondary", SURFACE_SECONDARY),
