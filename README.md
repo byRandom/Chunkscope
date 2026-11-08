@@ -6,8 +6,8 @@ structures and slime chunks for any seed, and can search millions of seeds for
 the features you care about.
 
 **Status:** early. The foundation (Java and Minecraft random number
-generators, seed handling) is done and verified against the real JDK and the
-real game classes. World generation is next.
+generators, seed handling, Perlin / normal noise) is done and verified
+against the real JDK and the real game classes. Biome generation is next.
 
 Target: Minecraft **26.3** (Java 25).
 
@@ -25,8 +25,8 @@ Bedrock Edition is out of scope for now.
 
 | Crate                  | Purpose                                                                                 |
 | ---------------------- | --------------------------------------------------------------------------------------- |
-| `crates/java-compat`   | Bit-exact ports of the JDK behaviour Minecraft relies on: `java.util.Random`, `StrictMath.log`, `String.hashCode`, `String.trim`, `Long.parseLong` |
-| `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), seed text → world seed, slime chunks |
+| `crates/java-compat`   | Bit-exact ports of the JDK behaviour Minecraft relies on: `java.util.Random`, `StrictMath.log`, `DoubleStream.sum`, `String.hashCode`, `String.trim`, `Long.parseLong` |
+| `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), noise (Perlin, normal noise, all vanilla noise parameters), seed text → world seed, slime chunks |
 | `parity/oracle`        | JDK oracle: reference fixtures from a real JDK                                          |
 | `parity/game-oracle`   | Game oracle: reference fixtures from the real game classes (downloads the official server jar) |
 
@@ -37,7 +37,8 @@ Bedrock Edition is out of scope for now.
 - [x] Slime chunks
 - [x] Xoroshiro128++, `RandomSupport` seeding and positional random factories
 - [x] `WorldgenRandom` decoration / feature / structure seeding
-- [ ] Perlin / octave / double-Perlin noise
+- [x] Perlin noise and normal (double-Perlin) noise, with all vanilla noise parameters
+- [ ] Smeared Perlin, blended and simplex noise (terrain, End islands)
 - [ ] Biome generation (starting with 1.21)
 - [ ] Structure placement and biome validation
 - [ ] Strongholds and world spawn

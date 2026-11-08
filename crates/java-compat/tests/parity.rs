@@ -105,3 +105,23 @@ fn strict_math_log_matches_jdk() {
         &failures[..failures.len().min(5)]
     );
 }
+
+const STREAM_SUM: &str = include_str!("../../../parity/fixtures/stream_sum.txt");
+
+#[test]
+fn double_stream_sum_matches_jdk() {
+    for line in STREAM_SUM.lines() {
+        let mut bits = line
+            .split(' ')
+            .map(|t| f64::from_bits(u64::from_str_radix(t, 16).unwrap()));
+        let want = bits.next().unwrap();
+        let values: Vec<f64> = bits.collect();
+        let got = java_compat::stream::double_sum(values.iter().copied());
+        let ok = if want.is_nan() {
+            got.is_nan()
+        } else {
+            got.to_bits() == want.to_bits()
+        };
+        assert!(ok, "sum of {values:?}: rust {got:?}, java {want:?}");
+    }
+}

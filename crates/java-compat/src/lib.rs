@@ -4,6 +4,7 @@
 
 mod digit_table;
 pub mod random;
+pub mod stream;
 pub mod strict_math;
 pub mod string;
 

@@ -14,6 +14,20 @@ import java.util.List;
 import java.util.SplittableRandom;
 import java.util.function.LongFunction;
 
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
@@ -21,6 +35,9 @@ import net.minecraft.world.level.levelgen.PositionalRandomFactory;
 import net.minecraft.world.level.levelgen.RandomSupport;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
+import net.minecraft.world.level.levelgen.synth.Noise;
+import net.minecraft.world.level.levelgen.synth.NormalNoise;
+import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 
 public class GameOracle {
     static Path out;
@@ -39,6 +56,12 @@ public class GameOracle {
         worldgen("worldgen_legacy.txt", LegacyRandomSource::new);
         worldgen("worldgen_xoroshiro.txt", XoroshiroRandomSource::new);
         slime();
+        // Added after the RNG fixtures so their inputs stay unchanged.
+        Map<String, NormalNoise> vanilla = loadVanillaNoises();
+        perlin();
+        normalNoiseOctaves(vanilla);
+        vanillaNoiseSamples(vanilla);
+        writeVanillaTable(vanilla, Path.of(args[2]));
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -184,5 +207,202 @@ public class GameOracle {
 
     static PrintWriter writer(String name) throws IOException {
         return new PrintWriter(Files.newBufferedWriter(out.resolve(name)));
+    }
+
+    // ---- noise (levelgen.synth) ---------------------------------------------
+    static final double[] SPECIAL_COORDS = {0.0, 0.5, -0.5, 1.0, -1.0, 15.999, 1e-9, -1e-9, 1_000.25, -12_345.678,
+            16_777_215.5, 16_777_216.0, -16_777_216.0, 16_777_216.5, 33_554_432.0, 30_000_000.0, -30_000_000.0,
+            29_999_999.999, 1e9, -1e9};
+
+    static double[][] samplePoints(int random) {
+        List<double[]> pts = new ArrayList<>();
+        for (double c : SPECIAL_COORDS) pts.add(new double[] {c, c * 0.25, -c});
+        for (int i = 0; i < random; i++) {
+            double scale = switch (i % 3) { case 0 -> 64.0; case 1 -> 10_000.0; default -> 3.0e7; };
+            pts.add(new double[] {(INPUTS.nextDouble() * 2 - 1) * scale, (INPUTS.nextDouble() * 2 - 1) * 320.0,
+                    (INPUTS.nextDouble() * 2 - 1) * scale});
+        }
+        return pts.toArray(new double[0][]);
+    }
+
+    static String bits(float f) {
+        return Integer.toHexString(Float.floatToRawIntBits(f));
+    }
+
+    static String bits(double d) {
+        return Long.toHexString(Double.doubleToRawLongBits(d));
+    }
+
+    static void perlin() throws IOException {
+        try (PrintWriter w = writer("perlin.txt")) {
+            for (String kind : List.of("xoroshiro", "legacy")) {
+                for (long seed : seeds(12)) {
+                    RandomSource r = kind.equals("xoroshiro") ? new XoroshiroRandomSource(seed) : new LegacyRandomSource(seed);
+                    PerlinNoise p = new PerlinNoise(r);
+                    StringBuilder sb = new StringBuilder(kind + " " + seed);
+                    sb.append(" next=").append(r.nextLong()); // RNG state after construction
+                    for (double[] pt : samplePoints(30)) {
+                        sb.append(' ').append(pt[0]).append(',').append(pt[1]).append(',').append(pt[2])
+                                .append('=').append(bits(p.get(pt[0], pt[1], pt[2])))
+                                .append('/').append(bits(p.get(pt[0], pt[2])));
+                    }
+                    w.println(sb);
+                }
+            }
+        }
+    }
+
+    // NormalNoise and its Parameters record are not constructible from outside
+    // the package; reflection keeps the oracle on the game's own code paths.
+    static Object field(Object o, String name) {
+        try {
+            Field f = o.getClass().getDeclaredField(name);
+            f.setAccessible(true);
+            return f.get(o);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static Object call(Object o, String name) {
+        try {
+            Method m = o.getClass().getDeclaredMethod(name);
+            m.setAccessible(true);
+            return m.invoke(o);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static NormalNoise normalNoise(double baseAmplitude, int baseOctave, int octaveCount, String normalize, double... modifiers) {
+        try {
+            Class<?> params = Class.forName("net.minecraft.world.level.levelgen.synth.NormalNoise$Parameters");
+            Class<?> norm = Class.forName("net.minecraft.world.level.levelgen.synth.NormalNoise$Normalization");
+            Constructor<?> pc = params.getDeclaredConstructor(double.class, int.class, int.class, norm, DoubleList.class);
+            pc.setAccessible(true);
+            Object p = pc.newInstance(baseAmplitude, baseOctave, octaveCount, norm.getField(normalize).get(null),
+                    new DoubleArrayList(modifiers));
+            Constructor<NormalNoise> nc = NormalNoise.class.getDeclaredConstructor(params);
+            nc.setAccessible(true);
+            return nc.newInstance(p);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Every worldgen/noise/*.json shipped in the game jar, decoded with the game's own codec. */
+    static Map<String, NormalNoise> loadVanillaNoises() throws IOException {
+        Map<String, NormalNoise> noises = new LinkedHashMap<>();
+        String prefix = "data/minecraft/worldgen/noise/";
+        try (ZipFile jar = new ZipFile(Path.of(NormalNoise.class.getProtectionDomain().getCodeSource().getLocation()
+                .getPath()).toFile())) {
+            List<ZipEntry> entries = new ArrayList<>();
+            for (Enumeration<? extends ZipEntry> e = jar.entries(); e.hasMoreElements(); ) {
+                ZipEntry z = e.nextElement();
+                if (z.getName().startsWith(prefix) && z.getName().endsWith(".json")) entries.add(z);
+            }
+            entries.sort((a, b) -> a.getName().compareTo(b.getName()));
+            for (ZipEntry z : entries) {
+                String json = new String(jar.getInputStream(z).readAllBytes(), StandardCharsets.UTF_8);
+                NormalNoise n = NormalNoise.DIRECT_CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json)).getOrThrow();
+                String path = z.getName().substring(prefix.length(), z.getName().length() - ".json".length());
+                noises.put("minecraft:" + path, n);
+            }
+        }
+        return noises;
+    }
+
+    static void normalNoiseOctaves(Map<String, NormalNoise> vanilla) throws IOException {
+        Map<String, NormalNoise> all = new LinkedHashMap<>(vanilla);
+        all.put("custom:disabled", normalNoise(1.5, -7, 5, "DISABLED"));
+        all.put("custom:legacy", normalNoise(1.0, -8, 6, "LEGACY", 1.0, 0.0, 2.0, 0.0, 1.0, 0.0));
+        all.put("custom:legacy_single", normalNoise(0.7, 0, 1, "LEGACY"));
+        all.put("custom:zero_mods", normalNoise(2.0, -4, 4, "ENABLED", 0.0, 0.0, 0.0, 0.0));
+        all.put("custom:negative_mods", normalNoise(1.0, -6, 3, "ENABLED", -1.0, 0.5, 3.0));
+        try (PrintWriter w = writer("normal_octaves.txt")) {
+            for (var e : all.entrySet()) {
+                NormalNoise n = e.getValue();
+                Object p = field(n, "parameters");
+                StringBuilder sb = new StringBuilder(e.getKey());
+                sb.append(' ').append(bits((double) call(p, "baseAmplitude"))).append(' ').append(call(p, "baseOctave"))
+                        .append(' ').append(call(p, "octaveCount")).append(' ').append(call(p, "normalize"))
+                        .append(" [");
+                for (double m : (DoubleList) call(p, "amplitudeModifiers")) sb.append(bits(m)).append(',');
+                sb.append("] factor=").append(bits((double) field(n, "normalizationFactor")));
+                for (Object o : (List<?>) field(n, "octaves")) {
+                    sb.append(' ').append(call(o, "octaveIndex")).append(':').append(bits((double) call(o, "frequency")))
+                            .append(':').append(bits((double) call(o, "amplitude")));
+                }
+                // sample the custom ones too, seeded like world noises
+                Noise s = n.create(new XoroshiroRandomSource(42L).forkPositional().fromHashOf(e.getKey()));
+                sb.append(" sample=").append(bits(s.get(12.5, -40.0, 7_000.75))).append('/').append(bits(s.get(-3.25, 99.0)));
+                w.println(sb);
+            }
+        }
+    }
+
+    static void vanillaNoiseSamples(Map<String, NormalNoise> vanilla) throws IOException {
+        double[][] pts = samplePoints(16);
+        try (PrintWriter w = writer("noise.txt")) {
+            StringBuilder header = new StringBuilder("points");
+            for (double[] pt : pts) header.append(' ').append(pt[0]).append(',').append(pt[1]).append(',').append(pt[2]);
+            w.println(header);
+            for (long seed : List.of(0L, 1L, -1L, Long.MIN_VALUE, 123456789L, INPUTS.nextLong())) {
+                // exactly what RandomState + Noises.instantiate do for XOROSHIRO worlds
+                PositionalRandomFactory factory = new XoroshiroRandomSource(seed).forkPositional();
+                for (var e : vanilla.entrySet()) {
+                    Noise n = e.getValue().create(factory.fromHashOf(e.getKey()));
+                    StringBuilder sb = new StringBuilder(seed + " " + e.getKey());
+                    for (double[] pt : pts) sb.append(' ').append(bits(n.get(pt[0], pt[1], pt[2]))).append('/')
+                            .append(bits(n.get(pt[0], pt[2])));
+                    w.println(sb);
+                }
+            }
+        }
+    }
+
+    /** Emits the vanilla noise parameters as Rust source. */
+    static void writeVanillaTable(Map<String, NormalNoise> vanilla, Path rs) throws IOException {
+        try (PrintWriter w = new PrintWriter(Files.newBufferedWriter(rs))) {
+            w.println("// @generated by parity/game-oracle/GameOracle.java from the Minecraft "
+                    + Files.readString(out.resolve("VERSION")).trim() + " data files. Do not edit.");
+            w.println("//! Parameters of every vanilla `worldgen/noise` entry.");
+            w.println();
+            w.println("use std::borrow::Cow;");
+            w.println();
+            w.println("use super::{NoiseParameters, Normalization};");
+            w.println();
+            List<String[]> consts = new ArrayList<>();
+            for (var e : vanilla.entrySet()) {
+                Object p = field(e.getValue(), "parameters");
+                String constName = e.getKey().substring("minecraft:".length()).replace('/', '_').toUpperCase();
+                consts.add(new String[] {e.getKey(), constName});
+                StringBuilder mods = new StringBuilder();
+                for (double m : (DoubleList) call(p, "amplitudeModifiers")) {
+                    if (mods.length() > 0) mods.append(", ");
+                    mods.append(rustF64(m));
+                }
+                String normalize = call(p, "normalize").toString();
+                w.println("/// `" + e.getKey() + "`");
+                w.println("pub const " + constName + ": NoiseParameters = NoiseParameters {");
+                w.println("    base_amplitude: " + rustF64((double) call(p, "baseAmplitude")) + ",");
+                w.println("    base_octave: " + call(p, "baseOctave") + ",");
+                w.println("    octave_count: " + call(p, "octaveCount") + ",");
+                w.println("    normalize: Normalization::" + normalize.charAt(0) + normalize.substring(1).toLowerCase() + ",");
+                w.println("    amplitude_modifiers: Cow::Borrowed(&[" + mods + "]),");
+                w.println("};");
+                w.println();
+            }
+            w.println("/// All vanilla noises by registry name.");
+            w.println("pub const ALL: [(&str, NoiseParameters); " + consts.size() + "] = [");
+            for (String[] c : consts) w.println("    (\"" + c[0] + "\", " + c[1] + "),");
+            w.println("];");
+        }
+    }
+
+    /** Shortest round-trip decimal (JDK 19+ Double.toString), always with a decimal point. */
+    static String rustF64(double d) {
+        String s = Double.toString(d);
+        return s.replace("E", "e");
     }
 }

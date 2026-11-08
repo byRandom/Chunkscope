@@ -27,6 +27,7 @@ public class Oracle {
         seeds();
         slime();
         digitTable();
+        streamSum(); // after the others so their inputs stay unchanged
         System.out.println("fixtures written by Java " + System.getProperty("java.version"));
     }
 
@@ -143,6 +144,33 @@ public class Oracle {
                     int x = INPUTS.nextInt(-1875000, 1875001), z = INPUTS.nextInt(-1875000, 1875001);
                     out.println("at " + seed + " " + x + " " + z + " " + (isSlimeChunk(seed, x, z) ? 1 : 0));
                 }
+            }
+        }
+    }
+
+    // ---- DoubleStream.sum (Kahan compensated) -----------------------------
+    static void streamSum() throws IOException {
+        List<double[]> cases = new ArrayList<>(List.of(new double[0], new double[] {1e100, 1.0, -1e100},
+                new double[] {Double.POSITIVE_INFINITY, 1.0}, new double[] {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY},
+                new double[] {Double.NaN, 1.0}, new double[] {0.1, 0.2, 0.3}, new double[] {-0.0}, new double[] {-0.0, -0.0}));
+        for (int i = 0; i < 2000; i++) {
+            double[] xs = new double[INPUTS.nextInt(1, 40)];
+            for (int j = 0; j < xs.length; j++) {
+                xs[j] = switch (INPUTS.nextInt(4)) {
+                    case 0 -> INPUTS.nextDouble();
+                    case 1 -> (INPUTS.nextDouble() - 0.5) * Math.pow(2, INPUTS.nextInt(-60, 60));
+                    case 2 -> Math.pow(0.5, INPUTS.nextInt(12)) * INPUTS.nextInt(1, 4);
+                    default -> Double.longBitsToDouble(INPUTS.nextLong());
+                };
+            }
+            cases.add(xs);
+        }
+        try (PrintWriter out = writer("stream_sum.txt")) {
+            for (double[] xs : cases) {
+                StringBuilder sb = new StringBuilder(Long.toHexString(Double.doubleToRawLongBits(
+                        java.util.Arrays.stream(xs).sum())));
+                for (double x : xs) sb.append(' ').append(Long.toHexString(Double.doubleToRawLongBits(x)));
+                out.println(sb);
             }
         }
     }

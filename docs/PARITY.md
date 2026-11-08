@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks; next: noise, biomes, structures, spawn  | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises); next: biomes, structures, spawn | In progress |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -47,7 +47,10 @@ writes `parity/fixtures/game/`.
 parity/game-oracle/run.sh          # or: parity/game-oracle/run.sh <version>
 ```
 
-Only the generated data is committed, never game code. Since 26.1 the game is
+Only the generated data is committed, never game code. The oracle also
+generates `crates/mc-core/src/noise/vanilla.rs`: the parameters of every
+vanilla `worldgen/noise` file, decoded with the game's own codec. These are
+numeric parameters, not code. Since 26.1 the game is
 shipped without obfuscation, so the oracle can use the real class and method
 names.
 
@@ -78,6 +81,22 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
 - **Positional factories differ.** Xoroshiro's `fromHashOf` uses MD5. Legacy's
   uses `String.hashCode`. Legacy's `fromSeed` ignores the factory seed
   entirely.
+
+- **Noise is `float` since 26.1.** `PerlinNoise.get` finds the lattice cell in
+  `double`, then does the gradients, smoothstep, interpolation and the octave
+  sum in `float`. A port of the older all-`double` noise (cubiomes, Amidst and
+  others) gives different values for 26.x worlds.
+- **Coordinates are wrapped to a 2^25 window** (`GradientNoise.wrap`) before
+  sampling, so far-out coordinates keep their precision. The window edge is
+  `Math.nextDown(2^24)`.
+- **Normal noise is normalized by the octaves' total amplitude**, not by
+  `base_amplitude`. That total is computed with `DoubleStream.sum()`, which
+  uses Kahan compensated summation. A plain sum changes the normalization
+  factor in the last bit.
+- **Each octave uses two Perlin noises**, seeded by hashing `"octave_<index>"`
+  with two separate positional factories. The second one samples at
+  `frequency * 1.0181268882175227`. Layers are summed in the order A0, B0, A1,
+  B1, ...
 
 ## Known non-determinism in the game itself
 
