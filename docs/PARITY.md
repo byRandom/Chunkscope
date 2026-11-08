@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes; next: structures, spawn | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement; next: terrain height, structure validation, strongholds, spawn | In progress |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -53,7 +53,8 @@ vanilla `worldgen/noise` file, decoded with the game's own codec. These are
 numeric parameters, not code. For biomes it bootstraps the game's registries
 (`VanillaRegistries.createWorldLookup()`, no world or server needed) and
 generates `crates/mc-core/src/biome/generated.rs`: the overworld terrain
-offset spline and the overworld biome parameter list. Since 26.1 the game is
+offset spline and the overworld biome parameter list. It also generates
+`crates/mc-core/src/structure/generated.rs`, every vanilla structure set. Since 26.1 the game is
 shipped without obfuscation, so the oracle can use the real class and method
 names.
 
@@ -113,6 +114,14 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   changes `depth` by one ulp.
 - **Climate values are quantized with `(long) (v * 10000f)`**, a float
   multiply followed by truncation.
+
+- **The `default` frequency reducer passes its arguments in the wrong
+  order.** `probabilityReducer` calls
+  `setLargeFeatureWithSalt(seed, salt, chunkX, chunkZ)`, where the method
+  expects `(seed, regionX, regionZ, salt)`. Chunkscope keeps the game's order.
+  No vanilla structure set uses `default` with a frequency below 1, so the
+  placement fixtures cannot catch this. A separate fixture calls all four
+  reducers directly.
 
 ## Known non-determinism in the game itself
 

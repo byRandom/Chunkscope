@@ -7,8 +7,10 @@ the features you care about.
 
 **Status:** early. Overworld biomes already match the game: the random
 number generators, seed handling, noise, climate sampling and biome lookup
-are all verified against the real JDK and the real game classes. Structures
-are next.
+are all verified against the real JDK and the real game classes. Structure
+placement (where each structure set attempts to generate) matches too; the
+biome and terrain checks that decide whether a structure really generates
+there are next.
 
 Target: Minecraft **26.3** (Java 25).
 
@@ -27,7 +29,7 @@ Bedrock Edition is out of scope for now.
 | Crate                  | Purpose                                                                                 |
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | `crates/java-compat`   | Bit-exact ports of the JDK behaviour Minecraft relies on: `java.util.Random`, `StrictMath.log`, `DoubleStream.sum`, `String.hashCode`, `String.trim`, `Long.parseLong` |
-| `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), noise (Perlin, normal noise, all vanilla noise parameters), overworld climate and biomes, seed text → world seed, slime chunks |
+| `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), noise (Perlin, normal noise, all vanilla noise parameters), overworld climate and biomes, structure placement, seed text → world seed, slime chunks |
 | `parity/oracle`        | JDK oracle: reference fixtures from a real JDK                                          |
 | `parity/game-oracle`   | Game oracle: reference fixtures from the real game classes (downloads the official server jar) |
 
@@ -42,7 +44,9 @@ Bedrock Edition is out of scope for now.
 - [ ] Smeared Perlin, blended and simplex noise (terrain, End islands)
 - [x] Overworld biomes (climate sampling, terrain offset spline, biome R-tree)
 - [ ] Large biomes / amplified presets, Nether and End biomes
-- [ ] Structure placement and biome validation
+- [x] Structure placement: candidate chunks, frequency rolls, exclusion zones (all vanilla structure sets)
+- [ ] Strongholds (concentric rings)
+- [ ] Structure validation (biome and terrain height), which needs terrain generation
 - [ ] Strongholds and world spawn
 - [ ] Seed search CLI with filters
 - [ ] Map viewer GUI
@@ -51,6 +55,10 @@ Bedrock Edition is out of scope for now.
 
 ```bash
 cargo run --release -p mc-core --example biome -- <seed> <x> <z> [y]
+```
+
+```bash
+cargo run --release -p mc-core --example structures -- <seed> <x> <z> [radius]
 ```
 
 ## Development
