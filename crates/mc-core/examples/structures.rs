@@ -6,8 +6,10 @@
 //! cargo run -p mc-core --example structures -- <seed text> <x> <z> [radius in blocks]
 //! ```
 
+use mc_core::biome::OverworldBiomeSource;
 use mc_core::parse_seed;
-use mc_core::structure::{STRUCTURE_SETS, StructurePlacement};
+use mc_core::structure::stronghold::ring_positions;
+use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSets};
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -25,7 +27,7 @@ fn main() {
     let mut found = Vec::new();
     for set in &STRUCTURE_SETS {
         let StructurePlacement::RandomSpread(p) = &set.placement else {
-            continue; // strongholds: not implemented yet
+            continue; // strongholds are listed below
         };
         // Sets don't record their dimension (their structures' biomes do, and
         // structure biome checks are not implemented yet), so skip these by name.
@@ -57,6 +59,20 @@ fn main() {
                 if d <= radius as f64 {
                     found.push((d, set.name, bx, bz));
                 }
+            }
+        }
+    }
+    // Strongholds: exact positions (they need the biome search, ~1 s).
+    if let Some(rings) = STRUCTURE_SETS
+        .find_set("minecraft:strongholds")
+        .and_then(|s| s.concentric_rings())
+    {
+        for (cx, cz) in ring_positions(seed, &rings, &OverworldBiomeSource::new(seed)) {
+            // what /locate reports: the chunk's minimum corner (no locate offset)
+            let (bx, bz) = (cx << 4, cz << 4);
+            let d = (((bx - x) as f64).powi(2) + ((bz - z) as f64).powi(2)).sqrt();
+            if d <= radius as f64 {
+                found.push((d, "minecraft:strongholds", bx, bz));
             }
         }
     }

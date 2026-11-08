@@ -166,14 +166,17 @@ impl RandomSpreadPlacement {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum StructurePlacement {
     RandomSpread(RandomSpreadPlacement),
-    /// `ConcentricRingsStructurePlacement` (strongholds). Positions depend on
-    /// a biome search; not implemented yet.
+    /// `ConcentricRingsStructurePlacement` (strongholds); see
+    /// [`super::stronghold`].
     ConcentricRings {
         distance: i32,
         spread: i32,
         count: i32,
         salt: i32,
+        /// The `preferred_biomes` tag, e.g. `#minecraft:stronghold_biased_to`.
         preferred_biomes: &'static str,
+        /// That tag resolved to biome names.
+        preferred_biome_list: &'static [&'static str],
     },
 }
 
@@ -200,8 +203,8 @@ impl StructureSets for [StructureSet] {
 
 impl StructureSet {
     /// `StructurePlacement.isStructureChunk`: will this set *attempt* to
-    /// generate in this chunk? Returns `None` for placements that are not
-    /// supported yet (concentric rings).
+    /// generate in this chunk? Returns `None` for concentric rings, whose
+    /// positions need a biome search: use [`super::stronghold::ring_positions`].
     pub fn is_structure_chunk(
         &self,
         sets: &(impl StructureSets + ?Sized),

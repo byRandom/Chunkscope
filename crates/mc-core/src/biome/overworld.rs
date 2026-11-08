@@ -214,6 +214,11 @@ impl OverworldBiomeSource {
         &self.climate
     }
 
+    /// Forget the biome R-tree's previous result, like a fresh game thread.
+    pub fn reset_search(&self) {
+        self.parameters.reset();
+    }
+
     /// `MultiNoiseBiomeSource.getNoiseBiome(quartX, quartY, quartZ, sampler)`.
     pub fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome {
         *self

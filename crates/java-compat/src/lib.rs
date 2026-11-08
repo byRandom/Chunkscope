@@ -3,6 +3,7 @@
 //! (see `parity/` at the workspace root).
 
 mod digit_table;
+pub mod math;
 pub mod random;
 pub mod stream;
 pub mod strict_math;

@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement; next: terrain height, structure validation, strongholds, spawn | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds; next: terrain height, structure validation, spawn | In progress |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -123,6 +123,15 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   placement fixtures cannot catch this. A separate fixture calls all four
   reducers directly.
 
+- **`Math.round` is not `f64::round`.** Java rounds halves up, so `-2.5`
+  becomes `-2`; Rust rounds them away from zero, so it gives `-3`. Strongholds
+  use the JDK's bit-level `Math.round`, ported in `java-compat` and checked by
+  the JDK oracle.
+- **Stronghold biome search keeps a random match, not the first.**
+  `findBiomeHorizontal` scans the whole 57×57 quart square and replaces its
+  candidate with probability `1/(n+1)` using the forked ring random. Taking
+  the first match moves most strongholds.
+
 ## Known non-determinism in the game itself
 
 Minecraft's own `RandomSource.nextGaussian()` (`MarsagliaPolarGaussian`) uses
@@ -136,6 +145,16 @@ x86_64 HotSpot result and document the caveat.
 
 `java.util.Random.nextGaussian()` uses `StrictMath` and is deterministic; it is
 implemented in `java-compat`.
+
+### `Math.sin` / `Math.cos` in stronghold rings
+
+Stronghold ring positions use `Math.cos` and `Math.sin`, which are HotSpot
+intrinsics like `Math.log`. On x86_64 HotSpot they differ from `StrictMath` in
+about 3.4% of inputs, and Rust's `f64::sin`/`cos` differ from HotSpot's in
+about 0.2%, always in the last bit. The result is multiplied by a distance of
+at most a few thousand chunks and rounded to a whole chunk, so a last-bit
+difference only matters within about 1e-13 of a half. Chunkscope uses Rust's
+functions. All 512 stronghold positions in the fixtures match.
 
 ### Biome lookup depends on query order
 
@@ -155,3 +174,8 @@ Chunkscope reproduces the game's search exactly, including that state.
 query order on a fresh tree. A map rendered in a different order can
 therefore differ from the game in rare border cells. The game itself is not
 deterministic there either.
+
+Stronghold positions are computed by the game on background threads, each
+with its own search state. Chunkscope uses a fresh search per position. In
+the fixtures (4 seeds × 128 strongholds), sharing one search state across all
+positions gives the same result, so no tie affected them.

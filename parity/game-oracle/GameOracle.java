@@ -62,7 +62,7 @@ public class GameOracle {
     // Deterministic generator for the *inputs*; never part of what is tested.
     static final SplittableRandom INPUTS = new SplittableRandom(0xC4A7_5C0BEL);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         out = Path.of(args[0]);
         Files.createDirectories(out);
         try (PrintWriter w = writer("VERSION")) {
@@ -89,6 +89,7 @@ public class GameOracle {
         writeStructureSets(lookup, Path.of(args[4]));
         structurePlacement(lookup);
         frequencyReduction();
+        strongholds(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -646,9 +647,14 @@ public class GameOracle {
                         .append("            spread_type: SpreadType::").append(r.spreadType().name().charAt(0)).append(r.spreadType().name().substring(1).toLowerCase()).append(",\n")
                         .append("        }),\n");
             } else if (p instanceof net.minecraft.world.level.levelgen.structure.placement.ConcentricRingsStructurePlacement c) {
-                out.append("StructurePlacement::ConcentricRings { distance: ").append(c.distance()).append(", spread: ").append(c.spread())
-                        .append(", count: ").append(c.count()).append(", salt: ").append(call(c, "salt"))
-                        .append(", preferred_biomes: \"#").append(c.preferredBiomes().unwrapKey().orElseThrow().location()).append("\" },\n");
+                String tag = c.preferredBiomes().unwrapKey().orElseThrow().location().toString();
+                StringBuilder biomes = new StringBuilder();
+                for (String b : biomeTag(tag)) biomes.append(biomes.length() == 0 ? "" : ", ").append('"').append(b).append('"');
+                out.append("StructurePlacement::ConcentricRings {\n            distance: ").append(c.distance())
+                        .append(",\n            spread: ").append(c.spread())
+                        .append(",\n            count: ").append(c.count()).append(",\n            salt: ").append(call(c, "salt"))
+                        .append(",\n            preferred_biomes: \"#").append(tag).append("\",\n            preferred_biome_list: &[")
+                        .append(biomes).append("],\n        },\n");
             } else {
                 throw new IllegalStateException("unsupported placement " + p);
             }
@@ -735,6 +741,65 @@ public class GameOracle {
                         sb.append(Integer.toHexString(hits)).append(',');
                     }
                 }
+                w.println(sb);
+            }
+        }
+    }
+    // ---- strongholds -----------------------------------------------------------
+    /** A biome tag from the game jar's data, nested tags resolved, in file order. */
+    static List<String> biomeTag(String tag) {
+        try (ZipFile jar = new ZipFile(Path.of(NormalNoise.class.getProtectionDomain().getCodeSource().getLocation().getPath()).toFile())) {
+            List<String> out = new ArrayList<>();
+            resolveTag(jar, Identifier.parse(tag), out);
+            return out;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static void resolveTag(ZipFile jar, Identifier tag, List<String> out) throws IOException {
+        ZipEntry e = jar.getEntry("data/" + tag.getNamespace() + "/tags/worldgen/biome/" + tag.getPath() + ".json");
+        var json = JsonParser.parseString(new String(jar.getInputStream(e).readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject();
+        for (var v : json.getAsJsonArray("values")) {
+            String s = v.isJsonObject() ? v.getAsJsonObject().get("id").getAsString() : v.getAsString();
+            if (s.startsWith("#")) resolveTag(jar, Identifier.parse(s.substring(1)), out);
+            else if (!out.contains(s)) out.add(s);
+        }
+    }
+
+    /** Ring positions from the game's own ChunkGeneratorStructureState.generateRingPositions. */
+    static void strongholds(HolderLookup.Provider lookup) throws Exception {
+        NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.OVERWORLD).value();
+        var biomeLookup = lookup.lookupOrThrow(Registries.BIOME);
+        var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                        .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.OVERWORLD));
+        var set = lookup.lookupOrThrow(Registries.STRUCTURE_SET).getOrThrow(
+                ResourceKey.create(Registries.STRUCTURE_SET, Identifier.parse("minecraft:strongholds")));
+        var vanilla = (net.minecraft.world.level.levelgen.structure.placement.ConcentricRingsStructurePlacement) set.value().placement();
+        // The tag is not bound in a world-less lookup: use the same biomes as a direct set.
+        String tag = vanilla.preferredBiomes().unwrapKey().orElseThrow().location().toString();
+        List<Holder<Biome>> preferred = new ArrayList<>();
+        for (String b : biomeTag(tag)) preferred.add(biomeLookup.getOrThrow(ResourceKey.create(Registries.BIOME, Identifier.parse(b))));
+        var placement = new net.minecraft.world.level.levelgen.structure.placement.ConcentricRingsStructurePlacement(
+                vanilla.distance(), vanilla.spread(), vanilla.count(), net.minecraft.core.HolderSet.direct(preferred));
+        var ctor = net.minecraft.world.level.chunk.ChunkGeneratorStructureState.class.getDeclaredConstructor(
+                RandomState.class, net.minecraft.world.level.biome.BiomeSource.class, long.class,
+                net.minecraft.world.level.ChunkPos.class, long.class, List.class);
+        ctor.setAccessible(true);
+        Method generate = net.minecraft.world.level.chunk.ChunkGeneratorStructureState.class.getDeclaredMethod(
+                "generateRingPositions", Holder.class, placement.getClass());
+        generate.setAccessible(true);
+        try (PrintWriter w = writer("strongholds.txt")) {
+            for (long seed : List.of(0L, 1L, -4172144997902289642L, INPUTS.nextLong())) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                Object state = ctor.newInstance(rs, biomeSource, seed, new net.minecraft.world.level.ChunkPos(0, 0), seed, List.of());
+                @SuppressWarnings("unchecked")
+                var positions = ((java.util.concurrent.CompletableFuture<List<net.minecraft.world.level.ChunkPos>>)
+                        generate.invoke(state, set, placement)).join();
+                StringBuilder sb = new StringBuilder(String.valueOf(seed));
+                for (var p : positions) sb.append(' ').append(p.x()).append(',').append(p.z());
                 w.println(sb);
             }
         }

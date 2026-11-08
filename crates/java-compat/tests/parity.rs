@@ -125,3 +125,18 @@ fn double_stream_sum_matches_jdk() {
         assert!(ok, "sum of {values:?}: rust {got:?}, java {want:?}");
     }
 }
+
+const MATH_ROUND: &str = include_str!("../../../parity/fixtures/math_round.txt");
+
+#[test]
+fn math_round_matches_jdk() {
+    for line in MATH_ROUND.lines() {
+        let (x, want) = line.split_once(' ').unwrap();
+        let x = f64::from_bits(u64::from_str_radix(x, 16).unwrap());
+        assert_eq!(
+            java_compat::math::round(x).to_string(),
+            want,
+            "Math.round({x:?})"
+        );
+    }
+}
