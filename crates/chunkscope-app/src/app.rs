@@ -732,7 +732,8 @@ impl ChunkscopeApp {
         }
         self.hover_marker = hovered.map(|(_, m)| m);
         for (m, color) in [(self.hover_marker, Color32::WHITE), (self.selected, ACCENT)] {
-            if let Some(m) = m {
+            // Only ring markers that are drawn at this zoom.
+            if let Some(m) = m.filter(|m| visible.contains(m)) {
                 let p = self.to_screen(rect, m.x as f64, m.z as f64);
                 painter.circle_stroke(p, r + 3.0, Stroke::new(2.0, color));
             }
@@ -857,6 +858,8 @@ fn about_panel(ui: &mut egui::Ui) {
             .color(TEXT_WEAK),
         );
         ui.add_space(6.0);
+        theme::field_label(ui, "Version");
+        field_box(ui, concat!("Chunkscope ", env!("CARGO_PKG_VERSION")));
         theme::field_label(ui, "Matches");
         field_box(ui, GAME_VERSION);
         theme::field_label(ui, "License");

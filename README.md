@@ -1,5 +1,11 @@
 # Chunkscope
 
+[![CI](https://github.com/byRandom/Chunkscope/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/byRandom/Chunkscope/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/byRandom/Chunkscope?include_prereleases&sort=semver)](https://github.com/byRandom/Chunkscope/releases)
+[![Minecraft](https://img.shields.io/badge/Minecraft_Java-26.3-62b47a)](docs/PARITY.md)
+[![Rust](https://img.shields.io/badge/Rust-2024_edition-b7410e)](https://www.rust-lang.org)
+[![License](https://img.shields.io/badge/license-MIT_OR_Apache--2.0-blue)](#license)
+
 A fast, local, open-source seed map and seed finder for **Minecraft: Java
 Edition**, written in Rust. Think of an offline tool that shows biomes,
 structures and slime chunks for any seed, and can search millions of seeds for
@@ -13,6 +19,12 @@ positions match too; the biome and terrain checks that decide whether a structur
 there are next.
 
 Target: Minecraft **26.3** (Java 25).
+
+![Chunkscope showing the biome map of a seed, with villages, ocean monuments and a selected village in the inspector](docs/images/map.png)
+
+| Slime chunks, zoomed in | Strongholds, zoomed out |
+| --- | --- |
+| ![Slime chunks drawn over the biome map](docs/images/slime-chunks.png) | ![The ring of strongholds around the world origin](docs/images/strongholds.png) |
 
 ## Goals
 
@@ -59,11 +71,22 @@ Bedrock Edition is out of scope for now.
 - [ ] Map viewer GUI
   - [x] Biome map (tiled, computed in parallel), structure layers, strongholds, slime chunks, grid, inspector
   - [ ] Structure markers validated by biome and terrain
-  - [ ] Saved settings, screenshots, release builds for Windows, macOS and Linux
+  - [x] Release builds for Windows, macOS and Linux
+  - [ ] Saved settings, signed builds
+
+## Download
+
+Prebuilt binaries for Windows, macOS and Linux are on the
+[releases page](https://github.com/byRandom/Chunkscope/releases). Unpack the
+archive and run `chunkscope` (`chunkscope.exe` on Windows).
+
+The binaries are not signed yet. On Windows, SmartScreen may ask for
+confirmation ("More info", then "Run anyway"). On macOS, remove the quarantine
+flag first: `xattr -d com.apple.quarantine chunkscope`.
 
 ## Try it
 
-The desktop app:
+The desktop app, from source:
 
 ```bash
 cargo run --release -p chunkscope-app
@@ -104,6 +127,25 @@ java parity/oracle/Oracle.java
 ```bash
 parity/game-oracle/run.sh
 ```
+
+## Versioning
+
+Chunkscope uses [semantic versioning](https://semver.org), independent of
+Minecraft's version numbers. The game version a release matches is shown in
+the app and in the release notes.
+
+- **0.x**: the parity promise is not complete yet. Each minor version is a
+  milestone: 0.1 the map viewer, 0.2 structures validated by biome and
+  terrain, 0.3 world spawn and the seed finder, 0.4 saved settings and signed
+  builds.
+- **1.0** comes when everything Chunkscope shows for the overworld (biomes,
+  every structure, strongholds, spawn, slime chunks) matches the game bit for
+  bit and is verified by oracle tests, with no "possible" markers left, the
+  large-scale cross-check is clean, and the command line and saved formats
+  are stable.
+- After 1.0: patch versions fix bugs, minor versions add features or support
+  for a new Minecraft version, and major versions break the command line or
+  saved formats, or drop a Minecraft version.
 
 ## License
 
