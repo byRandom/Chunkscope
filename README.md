@@ -57,8 +57,11 @@ Bedrock Edition is out of scope for now.
 - [x] Perlin noise and normal (double-Perlin) noise, with all vanilla noise parameters
 - [ ] Smeared Perlin, blended and simplex noise (terrain, End islands)
 - [x] Overworld biomes (climate sampling, terrain offset spline, biome R-tree)
-- [ ] Nether: biomes, fortresses, bastions, fossils (0.4)
+- [ ] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
 - [ ] End: biomes, islands, end cities (0.5)
+- [ ] Mineshafts, no "possible" markers left, saved settings (0.6)
+- [ ] Large-scale verification against the game (0.7)
+- [ ] Stable command line and formats, signed builds (0.8)
 - [ ] Large biomes and amplified presets
 - [x] Structure placement: candidate chunks, frequency rolls, exclusion zones (all vanilla structure sets)
 - [x] Strongholds (concentric rings with their biome search)
@@ -151,8 +154,10 @@ the app and in the release notes.
 
 - **0.x**: the parity promise is not complete yet. Each minor version is a
   milestone: 0.1 the map viewer, 0.2 structures validated by biome and
-  terrain, 0.3 world spawn and the seed finder, 0.4 the Nether (biomes,
-  fortresses, bastions, fossils), 0.5 the End (biomes, islands, end cities).
+  terrain, 0.3 world spawn and the seed finder, 0.4 the Nether and ruined
+  portals, 0.5 the End, 0.6 mineshafts and saved settings, 0.7 large-scale
+  verification, 0.8 a stable command line and formats, and signed builds.
+  The full plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
 - **1.0** comes when everything Chunkscope shows for the Overworld, the
   Nether and the End matches the game bit for bit and is verified by oracle
   tests: biomes, every structure (mineshafts and ruined portals included,
