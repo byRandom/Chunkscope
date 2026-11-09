@@ -281,7 +281,8 @@ impl ChunkscopeApp {
             });
             let numeric = self.seed_text.trim().parse::<i64>().ok() == Some(self.seed);
             if !numeric && !self.seed_text.is_empty() {
-                ui.label(
+                fit_label(
+                    ui,
                     RichText::new(format!("Text seed, hashes to {}", self.seed))
                         .color(TEXT_WEAK)
                         .small(),
@@ -363,11 +364,8 @@ impl ChunkscopeApp {
             match self.hover {
                 Some((x, z)) => {
                     xz_row(ui, ("X", &x.to_string()), ("Z", &z.to_string()));
-                    xz_row(
-                        ui,
-                        ("Chunk", &format!("{}, {}", x >> 4, z >> 4)),
-                        ("Region", &format!("{}, {}", x >> 9, z >> 9)),
-                    );
+                    labelled_box(ui, "Chunk", &format!("{}, {}", x >> 4, z >> 4));
+                    labelled_box(ui, "Region", &format!("{}, {}", x >> 9, z >> 9));
                     if let Some((_, biome)) = self.hover_biome {
                         theme::field_label(ui, "Biome");
                         let color = biome_colors::color_of(biome.name());
@@ -978,7 +976,7 @@ fn field_box(ui: &mut egui::Ui, text: &str) {
         .inner_margin(Margin::symmetric(8, 5))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
-            ui.label(RichText::new(text).color(TEXT));
+            fit_label(ui, RichText::new(text).color(TEXT));
         });
 }
 
@@ -998,7 +996,30 @@ fn swatch_box(ui: &mut egui::Ui, color: Color32, text: &str) {
                     Stroke::new(1.0, Color32::from_white_alpha(40)),
                     StrokeKind::Inside,
                 );
-                ui.label(RichText::new(text).color(TEXT));
+                fit_label(ui, RichText::new(text).color(TEXT));
+            });
+        });
+}
+
+/// A label cut to the width left in `ui` (with an ellipsis), so a long value
+/// never makes a side panel wider than it is. egui gives the extra width of
+/// an overflowing right panel to the map, which then draws over the panel.
+/// Selecting and copying the label still copies the whole text.
+fn fit_label(ui: &mut egui::Ui, text: RichText) -> egui::Response {
+    ui.add(egui::Label::new(text).truncate())
+}
+
+/// A full-width value with its label inside the box.
+fn labelled_box(ui: &mut egui::Ui, label: &str, value: &str) {
+    egui::Frame::new()
+        .fill(FIELD)
+        .corner_radius(CornerRadius::same(theme::RADIUS))
+        .inner_margin(Margin::symmetric(8, 5))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal(|ui| {
+                ui.label(RichText::new(label).color(TEXT_WEAK).small());
+                fit_label(ui, RichText::new(value).color(TEXT));
             });
         });
 }
@@ -1015,7 +1036,7 @@ fn xz_row(ui: &mut egui::Ui, a: (&str, &str), b: (&str, &str)) {
                     ui.set_width(ui.available_width());
                     ui.horizontal(|ui| {
                         ui.label(RichText::new(label).color(TEXT_WEAK).small());
-                        ui.label(RichText::new(value).color(TEXT));
+                        fit_label(ui, RichText::new(value).color(TEXT));
                     });
                 });
         }
