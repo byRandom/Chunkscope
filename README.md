@@ -21,7 +21,7 @@ portals).
 
 Target: Minecraft **26.3** (Java 25).
 
-![Chunkscope showing the biome map of a seed, with villages, ocean monuments and a selected village in the inspector](docs/images/map.png)
+![Chunkscope showing the biome map of a seed, with villages, ocean monuments and a selected desert village in the inspector](docs/images/map.png)
 
 | Slime chunks, zoomed in | Strongholds, zoomed out |
 | --- | --- |
@@ -71,7 +71,7 @@ Bedrock Edition is out of scope for now.
 - [ ] Seed search CLI with filters
 - [ ] Map viewer GUI
   - [x] Biome map (tiled, computed in parallel), structure layers, strongholds, slime chunks, grid, inspector
-  - [ ] Structure markers validated by biome and terrain
+  - [x] Structure markers validated by biome and terrain (0.2)
   - [x] Release builds for Windows, macOS and Linux
   - [ ] Saved settings, signed builds
 
@@ -94,10 +94,9 @@ cargo run --release -p chunkscope-app
 ```
 
 Drag to pan, scroll to zoom, click a marker to select it, right-click the map
-to copy a position or a `/tp` command. Structure markers
-other than strongholds are positions where the game *attempts* a structure;
-biome and terrain checks are not implemented yet, so some of them do not
-generate. On Linux the app needs the usual X11 or Wayland libraries
+to copy a position or a `/tp` command. Structures are checked against biome
+and terrain like the game does; mineshafts and ruined portals are not checked
+yet and are marked as possible. On Linux the app needs the usual X11 or Wayland libraries
 (for example `libxkbcommon-x11-0` on X11).
 
 Command-line examples:
