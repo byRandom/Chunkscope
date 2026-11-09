@@ -57,7 +57,9 @@ Bedrock Edition is out of scope for now.
 - [x] Perlin noise and normal (double-Perlin) noise, with all vanilla noise parameters
 - [ ] Smeared Perlin, blended and simplex noise (terrain, End islands)
 - [x] Overworld biomes (climate sampling, terrain offset spline, biome R-tree)
-- [ ] Large biomes / amplified presets, Nether and End biomes
+- [ ] Nether: biomes, fortresses, bastions, fossils (0.4)
+- [ ] End: biomes, islands, end cities (0.5)
+- [ ] Large biomes and amplified presets
 - [x] Structure placement: candidate chunks, frequency rolls, exclusion zones (all vanilla structure sets)
 - [x] Strongholds (concentric rings with their biome search)
 - [ ] Terrain height (needed to validate structures), in steps:
@@ -149,13 +151,15 @@ the app and in the release notes.
 
 - **0.x**: the parity promise is not complete yet. Each minor version is a
   milestone: 0.1 the map viewer, 0.2 structures validated by biome and
-  terrain, 0.3 world spawn and the seed finder, 0.4 saved settings and signed
-  builds.
-- **1.0** comes when everything Chunkscope shows for the overworld (biomes,
-  every structure, strongholds, spawn, slime chunks) matches the game bit for
-  bit and is verified by oracle tests, with no "possible" markers left, the
-  large-scale cross-check is clean, and the command line and saved formats
-  are stable.
+  terrain, 0.3 world spawn and the seed finder, 0.4 the Nether (biomes,
+  fortresses, bastions, fossils), 0.5 the End (biomes, islands, end cities).
+- **1.0** comes when everything Chunkscope shows for the Overworld, the
+  Nether and the End matches the game bit for bit and is verified by oracle
+  tests: biomes, every structure (mineshafts and ruined portals included,
+  with no "possible" markers left), strongholds, slime chunks, and the world
+  spawn as far as the game itself is deterministic. The large-scale
+  cross-check must be clean, settings are saved, the builds are signed, and
+  the command line and saved formats are stable.
 - After 1.0: patch versions fix bugs, minor versions add features or support
   for a new Minecraft version, and major versions break the command line or
   saved formats, or drop a Minecraft version.
