@@ -18,6 +18,7 @@ pub enum Icon {
     Slime,
     Dice,
     Pin,
+    Copy,
 }
 
 /// Draw `icon` inside `rect` with a 1.4 px stroke of `color`.
@@ -144,6 +145,16 @@ pub fn paint(painter: &Painter, rect: Rect, icon: Icon, color: Color32) {
             ] {
                 painter.circle_filled(p(x, y), 0.9 * s, color);
             }
+        }
+        Icon::Copy => {
+            rect_at(5.5, 5.5, 13.5, 13.5, 1.5);
+            line(&[
+                (10.5, 5.5),
+                (10.5, 2.5),
+                (2.5, 2.5),
+                (2.5, 10.5),
+                (5.5, 10.5),
+            ]);
         }
         Icon::Pin => {
             let mut pts = Vec::new();

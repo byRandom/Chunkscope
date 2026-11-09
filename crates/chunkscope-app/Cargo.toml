@@ -14,8 +14,10 @@ path = "src/main.rs"
 mc-core = { path = "../mc-core" }
 eframe = { version = "0.37", default-features = false, features = [
     "accesskit",
+    "clipboard",
     "default_fonts",
     "glow",
+    "links",
     "wayland",
     "x11",
 ] }

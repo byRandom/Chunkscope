@@ -62,6 +62,8 @@ pub struct ChunkscopeApp {
     hover_marker: Option<Marker>,
     selected: Option<Marker>,
     goto: (String, String),
+    /// Block position the map's context menu was opened at.
+    menu_at: Option<(i64, i64)>,
     toast: Option<(String, f64)>,
 }
 
@@ -91,6 +93,7 @@ impl ChunkscopeApp {
             selected: None,
             goto: (String::new(), String::new()),
             toast: None,
+            menu_at: None,
         }
     }
 
@@ -209,6 +212,7 @@ impl ChunkscopeApp {
             hint(ui, "Drag", "to pan");
             hint(ui, "Scroll", "to zoom");
             hint(ui, "Click", "a marker to select it");
+            hint(ui, "Right-click", "to copy a position");
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 let pending = self.tiles.pending();
                 let text = format!(
@@ -255,12 +259,19 @@ impl ChunkscopeApp {
             theme::field_label(ui, "Seed");
             ui.horizontal(|ui| {
                 let edit = egui::TextEdit::singleline(&mut self.seed_text)
-                    .desired_width(ui.available_width() - 36.0)
+                    .desired_width(ui.available_width() - 72.0)
                     .hint_text("Number or text");
                 if ui.add(edit).changed()
                     && let Some(seed) = parse_seed(&self.seed_text)
                 {
                     self.set_seed(seed, &ctx);
+                }
+                if icon_button(ui, Icon::Copy, false)
+                    .on_hover_text("Copy the numeric seed")
+                    .clicked()
+                {
+                    ctx.copy_text(self.seed.to_string());
+                    self.notify(&ctx, format!("Copied seed {}", self.seed));
                 }
                 if icon_button(ui, Icon::Dice, false)
                     .on_hover_text("Random seed")
@@ -528,11 +539,13 @@ impl ChunkscopeApp {
         }
         self.draw_markers(ui, rect, &response);
 
-        // Hover readout.
-        self.hover = response.hover_pos().map(|p| {
+        // Hover readout. It keeps the last position when the pointer leaves
+        // the map, so the values can be selected and copied in the inspector.
+        if let Some(p) = response.hover_pos() {
             let (x, z) = self.to_world(rect, p);
-            (x.floor() as i64, z.floor() as i64)
-        });
+            self.hover = Some((x.floor() as i64, z.floor() as i64));
+        }
+        self.context_menu(&response, rect);
         if let Some((x, z)) = self.hover {
             let quart = ((x >> 2) as i32, self.y >> 2, (z >> 2) as i32);
             if self.hover_biome.is_none_or(|(q, _)| q != quart) {
@@ -543,6 +556,37 @@ impl ChunkscopeApp {
 
         self.floating_toolbar(ui, rect);
         self.draw_toast(ui, rect);
+    }
+
+    /// Right click on the map: copy the position or a teleport command.
+    fn context_menu(&mut self, response: &egui::Response, rect: Rect) {
+        if response.secondary_clicked()
+            && let Some(p) = response.interact_pointer_pos()
+        {
+            let (x, z) = self.to_world(rect, p);
+            self.menu_at = Some((x.floor() as i64, z.floor() as i64));
+        }
+        let Some((x, z)) = self.menu_at else {
+            return;
+        };
+        let ctx = response.ctx.clone();
+        response.context_menu(|ui| {
+            ui.label(RichText::new(format!("{x}, {z}")).color(TEXT_WEAK).small());
+            if ui.button("Copy coordinates").clicked() {
+                ctx.copy_text(format!("{x} {z}"));
+                self.notify(&ctx, "Copied coordinates");
+                ui.close();
+            }
+            if ui.button("Copy /tp command").clicked() {
+                ctx.copy_text(format!("/tp @s {x} ~ {z}"));
+                self.notify(&ctx, "Copied teleport command");
+                ui.close();
+            }
+            if ui.button("Center here").clicked() {
+                self.center = (x as f64 + 0.5, z as f64 + 0.5);
+                ui.close();
+            }
+        });
     }
 
     fn level(&self, ppp: f32) -> u8 {
