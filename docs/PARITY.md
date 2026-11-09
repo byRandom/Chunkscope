@@ -15,7 +15,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
 | 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
-| 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
+| 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
 
 In every tier, the Rust tests recompute the same values and must match **bit
 for bit**. Floats are compared by their raw bits, never with a tolerance. CI
