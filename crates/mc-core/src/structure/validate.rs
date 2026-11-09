@@ -65,13 +65,45 @@ pub enum StructureKind {
         min_inclusive: VerticalAnchor,
         max_inclusive: VerticalAnchor,
     },
+    /// `RuinedPortalStructure`, with its setups (one per placement it can
+    /// take, chosen by weight).
+    RuinedPortal(&'static [PortalSetup]),
     /// `WoodlandMansionStructure`
     WoodlandMansion,
     /// `OceanMonumentStructure`
     OceanMonument,
-    /// Not ported yet (mineshafts, ruined portals).
+    /// Not ported yet (mineshafts).
     NotImplemented,
 }
+
+/// `RuinedPortalPiece.VerticalPlacement`
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PortalPlacement {
+    OnLandSurface,
+    PartlyBuried,
+    OnOceanFloor,
+    InMountain,
+    Underground,
+    InNether,
+}
+
+/// `RuinedPortalStructure.Setup`, the parts that decide where it goes.
+#[derive(Clone, Copy, Debug)]
+pub struct PortalSetup {
+    pub placement: PortalPlacement,
+    pub weight: f32,
+    pub air_pocket_probability: f32,
+}
+
+impl PartialEq for PortalSetup {
+    fn eq(&self, other: &Self) -> bool {
+        self.placement == other.placement
+            && self.weight.to_bits() == other.weight.to_bits()
+            && self.air_pocket_probability.to_bits() == other.air_pocket_probability.to_bits()
+    }
+}
+
+impl Eq for PortalSetup {}
 
 /// Where a start piece is anchored.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -368,6 +400,27 @@ impl<'a> StructureGenerator<'a> {
         chunk_x: i32,
         chunk_z: i32,
     ) -> Option<Option<(i32, i32, i32)>> {
+        self.generation_point(structure, chunk_x, chunk_z, true)
+    }
+
+    /// `Structure.findGenerationPoint`, without the final biome check:
+    /// where the structure would start if its biome allowed it.
+    pub fn generation_point_any_biome(
+        &self,
+        structure: &'static Structure,
+        chunk_x: i32,
+        chunk_z: i32,
+    ) -> Option<Option<(i32, i32, i32)>> {
+        self.generation_point(structure, chunk_x, chunk_z, false)
+    }
+
+    fn generation_point(
+        &self,
+        structure: &'static Structure,
+        chunk_x: i32,
+        chunk_z: i32,
+        check_biome: bool,
+    ) -> Option<Option<(i32, i32, i32)>> {
         let valid = &tables().structures[structure.index()];
         let mut ctx = Context {
             generator: self,
@@ -399,6 +452,7 @@ impl<'a> StructureGenerator<'a> {
             } => ctx.nether_fossil(min_inclusive, max_inclusive),
             StructureKind::SinglePiece { width, depth } => ctx.single_piece(width, depth),
             StructureKind::OnTopOfChunkCenter(heightmap) => ctx.on_top_of_chunk_center(heightmap),
+            StructureKind::RuinedPortal(setups) => ctx.ruined_portal(setups),
             StructureKind::WoodlandMansion => ctx.woodland_mansion(),
             StructureKind::OceanMonument => ctx.ocean_monument(),
             StructureKind::Jigsaw {
@@ -415,7 +469,7 @@ impl<'a> StructureGenerator<'a> {
             ),
             StructureKind::NotImplemented => return None,
         };
-        Some(point.filter(|&p| ctx.is_valid_biome(p)))
+        Some(point.filter(|&p| !check_biome || ctx.is_valid_biome(p)))
     }
 }
 
@@ -506,6 +560,132 @@ impl Context<'_, '_> {
             }
         }
         (y > sea).then_some((x, y, z))
+    }
+
+    /// `RuinedPortalStructure.findGenerationPoint`: a setup by weight, then
+    /// the template, rotation and mirror, and a height from
+    /// [`Self::portal_suitable_y`] at the chunk's corner.
+    fn ruined_portal(&mut self, setups: &[PortalSetup]) -> Option<(i32, i32, i32)> {
+        let setup = if setups.len() > 1 {
+            let total = setups.iter().fold(0.0f32, |sum, s| sum + s.weight);
+            let mut f = self.random.next_float();
+            // The game throws if rounding leaves nothing picked.
+            *setups.iter().find(|s| {
+                f -= s.weight / total;
+                f < 0.0
+            })?
+        } else {
+            setups[0]
+        };
+        // `sample`: 0 and 1 draw nothing.
+        let p = setup.air_pocket_probability;
+        let air_pocket = if p == 0.0 {
+            false
+        } else if p == 1.0 {
+            true
+        } else {
+            self.random.next_float() < p
+        };
+        let templates: &[[i32; 3]] = if self.random.next_float() < 0.05 {
+            &super::generated::GIANT_RUINED_PORTALS
+        } else {
+            &super::generated::RUINED_PORTALS
+        };
+        let [sx, sy, sz] = templates[self.random.next_int_bounded(templates.len() as i32) as usize];
+        let rotation = self.random.next_int_bounded(4);
+        let mirror = self.random.next_float() >= 0.5; // FRONT_BACK
+        // StructureTemplate.getBoundingBox at the chunk's corner, pivoting
+        // around the template's center.
+        let (ox, oz) = (self.chunk_x << 4, self.chunk_z << 4);
+        let (px, pz) = (sx / 2, sz / 2);
+        let transform = |x: i32, z: i32| {
+            let x = if mirror { -x } else { x };
+            match rotation {
+                1 => (px + pz - z, pz - px + x), // CLOCKWISE_90
+                2 => (px + px - x, pz + pz - z), // CLOCKWISE_180
+                3 => (px - pz + z, px + pz - x), // COUNTERCLOCKWISE_90
+                _ => (x, z),
+            }
+        };
+        let (a, b) = (transform(0, 0), transform(sx - 1, sz - 1));
+        let bbox = [
+            ox + a.0.min(b.0),
+            oz + a.1.min(b.1),
+            ox + a.0.max(b.0),
+            oz + a.1.max(b.1),
+        ];
+        let center = (
+            bbox[0] + (bbox[2] - bbox[0] + 1) / 2,
+            bbox[1] + (bbox[3] - bbox[1] + 1) / 2,
+        );
+        let heightmap = if setup.placement == PortalPlacement::OnOceanFloor {
+            Heightmap::OceanFloor
+        } else {
+            Heightmap::WorldSurface
+        };
+        let surface = self.first_occupied_height(center.0, center.1, heightmap);
+        let y = self.portal_suitable_y(setup.placement, air_pocket, surface, sy, bbox, heightmap);
+        Some((ox, y, oz))
+    }
+
+    /// `RuinedPortalStructure.findSuitableY`: a starting height for the
+    /// placement, then down to the first height where at least three of
+    /// the bounding box's corners are in the ground.
+    fn portal_suitable_y(
+        &mut self,
+        placement: PortalPlacement,
+        air_pocket: bool,
+        surface: i32,
+        y_span: i32,
+        [min_x, min_z, max_x, max_z]: [i32; 4],
+        heightmap: Heightmap,
+    ) -> i32 {
+        let min_y = self.generator.min_y + 15;
+        // `getRandomWithinInterval`: the upper end for an empty interval.
+        let within = |ctx: &mut Self, lo: i32, hi: i32| {
+            if lo < hi { ctx.uniform(lo, hi) } else { hi }
+        };
+        let start = match placement {
+            PortalPlacement::InNether if air_pocket => self.uniform(32, 100),
+            PortalPlacement::InNether if self.random.next_float() < 0.5 => self.uniform(27, 29),
+            PortalPlacement::InNether => self.uniform(29, 100),
+            PortalPlacement::InMountain => within(self, 70, surface - y_span),
+            PortalPlacement::Underground => within(self, min_y, surface - y_span),
+            PortalPlacement::PartlyBuried => surface - y_span + self.uniform(2, 8),
+            PortalPlacement::OnLandSurface | PortalPlacement::OnOceanFloor => surface,
+        };
+        let columns: Vec<(Vec<Substance>, i32)> = [
+            (min_x, min_z),
+            (max_x, min_z),
+            (min_x, max_z),
+            (max_x, max_z),
+        ]
+        .iter()
+        .map(|&(x, z)| self.terrain().base_column(x, z))
+        .collect();
+        let opaque = |s: Substance| match heightmap {
+            Heightmap::WorldSurface => s.is_world_surface(),
+            Heightmap::OceanFloor => s.is_ocean_floor(),
+        };
+        let mut y = start;
+        while y > min_y {
+            let solid = columns
+                .iter()
+                .filter(|(column, bottom)| {
+                    // NoiseColumn.getBlock: air outside the column.
+                    let block = usize::try_from(y - bottom)
+                        .ok()
+                        .and_then(|i| column.get(i).copied())
+                        .unwrap_or(Substance::Air);
+                    opaque(block)
+                })
+                .count();
+            if solid >= 3 {
+                break;
+            }
+            y -= 1;
+        }
+        y
     }
 
     /// `ChunkGenerator.getFirstOccupiedHeight`

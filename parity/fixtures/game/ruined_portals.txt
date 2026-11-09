@@ -1,0 +1,948 @@
+0 minecraft:ruined_portals -299 -299 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-4784,62,-4784
+0 minecraft:ruined_portals -260 -303 ruined_portal_jungle:no ruined_portal_nether:-4160,29,-4848
+0 minecraft:ruined_portals -221 -308 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-3536,29,-4928
+0 minecraft:ruined_portals -179 -310 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-2864,28,-4960
+0 minecraft:ruined_portals -152 -301 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-2432,28,-4816
+0 minecraft:ruined_portals -98 -319 ruined_portal_nether:-1568,31,-5104
+0 minecraft:ruined_portals -67 -318 ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-1072,27,-5088
+0 minecraft:ruined_portals -39 -305 ruined_portal_swamp:no ruined_portal_nether:-624,97,-4880
+0 minecraft:ruined_portals 20 -311 ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:320,28,-4976
+0 minecraft:ruined_portals 60 -315 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:960,28,-5040
+0 minecraft:ruined_portals 97 -307 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:1552,29,-4912
+0 minecraft:ruined_portals 135 -319 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:2160,60,-5104
+0 minecraft:ruined_portals 179 -306 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:2864,28,-4896
+0 minecraft:ruined_portals 216 -320 ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:3456,92,-5120
+0 minecraft:ruined_portals 247 -318 ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:3952,76,-5088
+0 minecraft:ruined_portals 289 -315 ruined_portal:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:4624,35,-5040
+0 minecraft:ruined_portals -308 -275 ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-4928,29,-4400
+0 minecraft:ruined_portals -272 -271 ruined_portal_nether:-4352,61,-4336
+0 minecraft:ruined_portals -231 -267 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:-3696,63,-4272
+0 minecraft:ruined_portals -182 -257 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:-2912,29,-4112
+0 minecraft:ruined_portals -151 -257 ruined_portal_nether:-2416,98,-4112
+0 minecraft:ruined_portals -96 -271 ruined_portal_mountain:no ruined_portal_nether:-1536,48,-4336
+0 minecraft:ruined_portals -75 -262 ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-1200,29,-4192
+0 minecraft:ruined_portals -33 -277 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-528,67,-4432
+0 minecraft:ruined_portals 9 -266 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:144,27,-4256
+0 minecraft:ruined_portals 56 -266 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:896,31,-4256
+0 minecraft:ruined_portals 103 -280 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:1648,29,-4480
+0 minecraft:ruined_portals 123 -271 ruined_portal_jungle:no ruined_portal_nether:1968,29,-4336
+0 minecraft:ruined_portals 181 -263 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:2896,27,-4208
+0 minecraft:ruined_portals 222 -270 ruined_portal:no ruined_portal_desert:no ruined_portal_nether:3552,34,-4320
+0 minecraft:ruined_portals 264 -268 ruined_portal_jungle:no ruined_portal_nether:4224,84,-4288
+0 minecraft:ruined_portals 299 -264 ruined_portal_nether:4784,92,-4224
+0 minecraft:ruined_portals -318 -227 ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-5088,51,-3632
+0 minecraft:ruined_portals -262 -227 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-4192,28,-3632
+0 minecraft:ruined_portals -228 -227 ruined_portal_nether:-3648,28,-3632
+0 minecraft:ruined_portals -193 -223 ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-3088,29,-3568
+0 minecraft:ruined_portals -154 -216 ruined_portal_mountain:no ruined_portal_nether:-2464,41,-3456
+0 minecraft:ruined_portals -110 -223 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-1760,42,-3568
+0 minecraft:ruined_portals -70 -237 ruined_portal_nether:-1120,28,-3792
+0 minecraft:ruined_portals -28 -237 ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-448,31,-3792
+0 minecraft:ruined_portals 0 -224 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:0,82,-3584
+0 minecraft:ruined_portals 55 -235 ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:880,46,-3760
+0 minecraft:ruined_portals 84 -235 ruined_portal_nether:1344,46,-3760
+0 minecraft:ruined_portals 120 -240 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:1920,40,-3840
+0 minecraft:ruined_portals 169 -234 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:2704,29,-3744
+0 minecraft:ruined_portals 215 -227 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:3440,27,-3632
+0 minecraft:ruined_portals 257 -235 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:4112,28,-3760
+0 minecraft:ruined_portals 283 -239 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:4528,29,-3824
+0 minecraft:ruined_portals -320 -189 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-5120,93,-3024
+0 minecraft:ruined_portals -256 -179 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-4096,27,-2864
+0 minecraft:ruined_portals -229 -177 ruined_portal_ocean:no ruined_portal_nether:-3664,28,-2832
+0 minecraft:ruined_portals -185 -186 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-2960,66,-2976
+0 minecraft:ruined_portals -140 -180 ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-2240,29,-2880
+0 minecraft:ruined_portals -118 -185 ruined_portal:no ruined_portal_nether:-1888,38,-2960
+0 minecraft:ruined_portals -80 -189 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-1280,31,-3024
+0 minecraft:ruined_portals -23 -181 ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-368,28,-2896
+0 minecraft:ruined_portals 12 -194 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:192,28,-3104
+0 minecraft:ruined_portals 46 -188 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:736,36,-3008
+0 minecraft:ruined_portals 94 -187 ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:1504,41,-2992
+0 minecraft:ruined_portals 135 -179 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:2160,47,-2864
+0 minecraft:ruined_portals 175 -187 ruined_portal_nether:2800,88,-2992
+0 minecraft:ruined_portals 215 -200 ruined_portal_mountain:no ruined_portal_nether:3440,27,-3200
+0 minecraft:ruined_portals 249 -194 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:3984,91,-3104
+0 minecraft:ruined_portals 284 -197 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:4544,29,-3152
+0 minecraft:ruined_portals -296 -149 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-4736,27,-2384
+0 minecraft:ruined_portals -275 -140 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-4400,27,-2240
+0 minecraft:ruined_portals -232 -153 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-3712,31,-2448
+0 minecraft:ruined_portals -183 -136 ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-2928,27,-2176
+0 minecraft:ruined_portals -144 -155 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-2304,29,-2480
+0 minecraft:ruined_portals -97 -142 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-1552,29,-2272
+0 minecraft:ruined_portals -68 -159 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-1088,35,-2544
+0 minecraft:ruined_portals -30 -147 ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-480,27,-2352
+0 minecraft:ruined_portals 7 -156 ruined_portal_desert:no ruined_portal:no ruined_portal_nether:112,27,-2496
+0 minecraft:ruined_portals 53 -136 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:848,29,-2176
+0 minecraft:ruined_portals 82 -152 ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:1312,79,-2432
+0 minecraft:ruined_portals 136 -140 ruined_portal_nether:2176,27,-2240
+0 minecraft:ruined_portals 170 -155 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:2720,59,-2480
+0 minecraft:ruined_portals 202 -155 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:3232,28,-2480
+0 minecraft:ruined_portals 255 -141 ruined_portal_nether:4080,39,-2256
+0 minecraft:ruined_portals 297 -138 ruined_portal:no ruined_portal_nether:4752,71,-2208
+0 minecraft:ruined_portals -306 -104 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-4896,68,-1664
+0 minecraft:ruined_portals -262 -114 ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-4192,29,-1824
+0 minecraft:ruined_portals -238 -108 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-3808,27,-1728
+0 minecraft:ruined_portals -196 -112 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-3136,29,-1792
+0 minecraft:ruined_portals -157 -112 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-2512,43,-1792
+0 minecraft:ruined_portals -116 -97 ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-1856,29,-1552
+0 minecraft:ruined_portals -75 -104 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-1200,27,-1664
+0 minecraft:ruined_portals -29 -103 ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-464,27,-1648
+0 minecraft:ruined_portals 8 -111 ruined_portal_desert:no ruined_portal:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:128,92,-1776
+0 minecraft:ruined_portals 55 -119 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:880,31,-1904
+0 minecraft:ruined_portals 91 -97 ruined_portal:no ruined_portal_desert:no ruined_portal_nether:1456,94,-1552
+0 minecraft:ruined_portals 140 -114 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:2240,27,-1824
+0 minecraft:ruined_portals 168 -114 ruined_portal_nether:2688,29,-1824
+0 minecraft:ruined_portals 204 -96 ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:3264,29,-1536
+0 minecraft:ruined_portals 262 -113 ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:4192,28,-1808
+0 minecraft:ruined_portals 292 -112 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:4672,31,-1792
+0 minecraft:ruined_portals -296 -65 ruined_portal_nether:-4736,28,-1040
+0 minecraft:ruined_portals -279 -67 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-4464,28,-1072
+0 minecraft:ruined_portals -240 -59 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-3840,27,-944
+0 minecraft:ruined_portals -189 -75 ruined_portal_nether:-3024,83,-1200
+0 minecraft:ruined_portals -151 -67 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-2416,82,-1072
+0 minecraft:ruined_portals -116 -79 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-1856,27,-1264
+0 minecraft:ruined_portals -56 -64 ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-896,58,-1024
+0 minecraft:ruined_portals -34 -70 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-544,51,-1120
+0 minecraft:ruined_portals 6 -69 ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:96,27,-1104
+0 minecraft:ruined_portals 56 -77 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:896,31,-1232
+0 minecraft:ruined_portals 91 -66 ruined_portal_swamp:no ruined_portal:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:1456,38,-1056
+0 minecraft:ruined_portals 125 -57 ruined_portal_nether:2000,29,-912
+0 minecraft:ruined_portals 160 -59 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:2560,29,-944
+0 minecraft:ruined_portals 212 -69 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:3392,27,-1104
+0 minecraft:ruined_portals 243 -69 ruined_portal_ocean:no ruined_portal_nether:3888,27,-1104
+0 minecraft:ruined_portals 295 -61 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:4720,31,-976
+0 minecraft:ruined_portals -308 -40 ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-4928,52,-640
+0 minecraft:ruined_portals -274 -35 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-4384,29,-560
+0 minecraft:ruined_portals -227 -28 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-3632,27,-448
+0 minecraft:ruined_portals -193 -32 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:-3088,29,-512
+0 minecraft:ruined_portals -138 -17 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-2208,31,-272
+0 minecraft:ruined_portals -113 -23 ruined_portal_nether:-1808,27,-368
+0 minecraft:ruined_portals -66 -26 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-1056,28,-416
+0 minecraft:ruined_portals -17 -24 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-272,27,-384
+0 minecraft:ruined_portals 14 -28 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:224,29,-448
+0 minecraft:ruined_portals 64 -38 ruined_portal_jungle:no ruined_portal_nether:1024,27,-608
+0 minecraft:ruined_portals 104 -23 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:1664,28,-368
+0 minecraft:ruined_portals 136 -28 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:2176,45,-448
+0 minecraft:ruined_portals 184 -36 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:2944,29,-576
+0 minecraft:ruined_portals 222 -31 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:3552,34,-496
+0 minecraft:ruined_portals 242 -18 ruined_portal_nether:3872,45,-288
+0 minecraft:ruined_portals 289 -25 ruined_portal_mountain:no ruined_portal_nether:4624,28,-400
+0 minecraft:ruined_portals -303 7 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-4848,58,112
+0 minecraft:ruined_portals -276 10 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:-4416,98,160
+0 minecraft:ruined_portals -226 1 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-3616,28,16
+0 minecraft:ruined_portals -179 18 ruined_portal:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-2864,28,288
+0 minecraft:ruined_portals -145 0 ruined_portal_mountain:no ruined_portal_nether:-2320,31,0
+0 minecraft:ruined_portals -103 8 ruined_portal_nether:-1648,29,128
+0 minecraft:ruined_portals -63 14 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-1008,48,224
+0 minecraft:ruined_portals -22 6 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-352,28,96
+0 minecraft:ruined_portals 20 9 ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:320,44,144
+0 minecraft:ruined_portals 62 8 ruined_portal_jungle:no ruined_portal_nether:992,28,128
+0 minecraft:ruined_portals 91 7 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:1456,27,112
+0 minecraft:ruined_portals 135 22 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:2160,31,352
+0 minecraft:ruined_portals 167 13 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:2672,27,208
+0 minecraft:ruined_portals 215 3 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:3440,29,48
+0 minecraft:ruined_portals 241 20 ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:3856,28,320
+0 minecraft:ruined_portals 299 11 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:4784,29,176
+0 minecraft:ruined_portals -318 58 ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-5088,28,928
+0 minecraft:ruined_portals -262 54 ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-4192,31,864
+0 minecraft:ruined_portals -238 42 ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-3808,28,672
+0 minecraft:ruined_portals -200 44 ruined_portal:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-3200,44,704
+0 minecraft:ruined_portals -138 56 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-2208,75,896
+0 minecraft:ruined_portals -105 50 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-1680,27,800
+0 minecraft:ruined_portals -80 60 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-1280,30,960
+0 minecraft:ruined_portals -39 61 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-624,31,976
+0 minecraft:ruined_portals 0 48 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:0,29,768
+0 minecraft:ruined_portals 61 52 ruined_portal_nether:976,29,832
+0 minecraft:ruined_portals 89 47 ruined_portal_nether:1424,28,752
+0 minecraft:ruined_portals 130 41 ruined_portal_desert:no ruined_portal_nether:2080,99,656
+0 minecraft:ruined_portals 162 45 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:2592,59,720
+0 minecraft:ruined_portals 223 49 ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:3568,29,784
+0 minecraft:ruined_portals 253 63 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:4048,58,1008
+0 minecraft:ruined_portals 282 63 ruined_portal_nether:4512,28,1008
+0 minecraft:ruined_portals -318 96 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-5088,36,1536
+0 minecraft:ruined_portals -257 89 ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-4112,60,1424
+0 minecraft:ruined_portals -225 82 ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:-3600,31,1312
+0 minecraft:ruined_portals -181 98 ruined_portal_nether:-2896,60,1568
+0 minecraft:ruined_portals -136 91 ruined_portal_nether:-2176,29,1456
+0 minecraft:ruined_portals -97 82 ruined_portal_desert:no ruined_portal_nether:-1552,51,1312
+0 minecraft:ruined_portals -60 83 ruined_portal_nether:-960,27,1328
+0 minecraft:ruined_portals -22 95 ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-352,31,1520
+0 minecraft:ruined_portals 21 102 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:336,31,1632
+0 minecraft:ruined_portals 56 93 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:896,61,1488
+0 minecraft:ruined_portals 104 86 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:1664,30,1376
+0 minecraft:ruined_portals 120 92 ruined_portal:no ruined_portal_desert:no ruined_portal_nether:1920,27,1472
+0 minecraft:ruined_portals 171 104 ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:2736,29,1664
+0 minecraft:ruined_portals 221 96 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:3536,85,1536
+0 minecraft:ruined_portals 242 97 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:3872,29,1552
+0 minecraft:ruined_portals 293 90 ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:4688,91,1440
+0 minecraft:ruined_portals -302 142 ruined_portal_nether:-4832,29,2272
+0 minecraft:ruined_portals -273 134 ruined_portal_nether:-4368,28,2144
+0 minecraft:ruined_portals -236 142 ruined_portal_nether:-3776,63,2272
+0 minecraft:ruined_portals -196 129 ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-3136,27,2064
+0 minecraft:ruined_portals -153 122 ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-2448,27,1952
+0 minecraft:ruined_portals -110 121 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-1760,61,1936
+0 minecraft:ruined_portals -65 125 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-1040,70,2000
+0 minecraft:ruined_portals -33 123 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-528,29,1968
+0 minecraft:ruined_portals 11 138 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:176,41,2208
+0 minecraft:ruined_portals 51 122 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:816,29,1952
+0 minecraft:ruined_portals 90 136 ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:1440,27,2176
+0 minecraft:ruined_portals 127 135 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:2032,38,2160
+0 minecraft:ruined_portals 160 120 ruined_portal_nether:2560,27,1920
+0 minecraft:ruined_portals 220 125 ruined_portal_nether:3520,44,2000
+0 minecraft:ruined_portals 262 134 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:4192,42,2144
+0 minecraft:ruined_portals 284 124 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:4544,40,1984
+0 minecraft:ruined_portals -308 180 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-4928,27,2880
+0 minecraft:ruined_portals -264 160 ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-4224,93,2560
+0 minecraft:ruined_portals -219 173 ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-3504,28,2768
+0 minecraft:ruined_portals -188 160 ruined_portal_nether:-3008,27,2560
+0 minecraft:ruined_portals -156 178 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-2496,27,2848
+0 minecraft:ruined_portals -101 183 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-1616,31,2928
+0 minecraft:ruined_portals -74 169 ruined_portal_nether:-1184,58,2704
+0 minecraft:ruined_portals -23 182 ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-368,29,2912
+0 minecraft:ruined_portals 0 168 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:0,46,2688
+0 minecraft:ruined_portals 59 180 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:944,89,2880
+0 minecraft:ruined_portals 81 168 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:1296,29,2688
+0 minecraft:ruined_portals 120 182 ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:1920,78,2912
+0 minecraft:ruined_portals 175 176 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:2800,31,2816
+0 minecraft:ruined_portals 201 173 ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:3216,96,2768
+0 minecraft:ruined_portals 262 184 ruined_portal_nether:4192,99,2944
+0 minecraft:ruined_portals 290 161 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:4640,27,2576
+0 minecraft:ruined_portals -307 223 ruined_portal_nether:-4912,65,3568
+0 minecraft:ruined_portals -268 212 ruined_portal_jungle:no ruined_portal_nether:-4288,31,3392
+0 minecraft:ruined_portals -216 209 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-3456,37,3344
+0 minecraft:ruined_portals -187 210 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-2992,63,3360
+0 minecraft:ruined_portals -155 217 ruined_portal_nether:-2480,31,3472
+0 minecraft:ruined_portals -101 204 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-1616,29,3264
+0 minecraft:ruined_portals -71 206 ruined_portal_mountain:no ruined_portal_nether:-1136,87,3296
+0 minecraft:ruined_portals -40 213 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-640,28,3408
+0 minecraft:ruined_portals 20 202 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:320,61,3232
+0 minecraft:ruined_portals 57 207 ruined_portal_desert:no ruined_portal_nether:912,28,3312
+0 minecraft:ruined_portals 82 210 ruined_portal_nether:1312,29,3360
+0 minecraft:ruined_portals 126 220 ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:2016,28,3520
+0 minecraft:ruined_portals 161 218 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:2576,29,3488
+0 minecraft:ruined_portals 209 224 ruined_portal_ocean:no ruined_portal_nether:3344,94,3584
+0 minecraft:ruined_portals 258 214 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:4128,31,3424
+0 minecraft:ruined_portals 296 213 ruined_portal_nether:4736,31,3408
+0 minecraft:ruined_portals -310 259 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-4960,44,4144
+0 minecraft:ruined_portals -263 251 ruined_portal:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-4208,31,4016
+0 minecraft:ruined_portals -237 251 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:-3792,29,4016
+0 minecraft:ruined_portals -196 256 ruined_portal_nether:-3136,27,4096
+0 minecraft:ruined_portals -154 255 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-2464,87,4080
+0 minecraft:ruined_portals -103 256 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-1648,40,4096
+0 minecraft:ruined_portals -64 245 ruined_portal_nether:-1024,29,3920
+0 minecraft:ruined_portals -18 264 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-288,30,4224
+0 minecraft:ruined_portals 0 250 ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:0,29,4000
+0 minecraft:ruined_portals 50 258 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:800,29,4128
+0 minecraft:ruined_portals 101 255 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:1616,99,4080
+0 minecraft:ruined_portals 139 252 ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:2224,27,4032
+0 minecraft:ruined_portals 168 250 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:2688,29,4000
+0 minecraft:ruined_portals 208 240 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:3328,28,3840
+0 minecraft:ruined_portals 243 247 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:3888,28,3952
+0 minecraft:ruined_portals 300 246 ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:4800,28,3936
+0 minecraft:ruined_portals -316 297 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-5056,87,4752
+0 minecraft:ruined_portals -264 287 ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-4224,28,4592
+0 minecraft:ruined_portals -224 287 ruined_portal:no ruined_portal_nether:-3584,28,4592
+0 minecraft:ruined_portals -196 293 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-3136,31,4688
+0 minecraft:ruined_portals -153 281 ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-2448,27,4496
+0 minecraft:ruined_portals -119 281 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-1904,27,4496
+0 minecraft:ruined_portals -74 285 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-1184,48,4560
+0 minecraft:ruined_portals -24 302 ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-384,28,4832
+0 minecraft:ruined_portals 17 283 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:272,27,4528
+0 minecraft:ruined_portals 59 289 ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:944,93,4624
+0 minecraft:ruined_portals 89 286 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:1424,66,4576
+0 minecraft:ruined_portals 128 284 ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:2048,29,4544
+0 minecraft:ruined_portals 163 300 ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:2608,28,4800
+0 minecraft:ruined_portals 213 301 ruined_portal_jungle:no ruined_portal_nether:3408,27,4816
+0 minecraft:ruined_portals 244 288 ruined_portal_nether:3904,99,4608
+0 minecraft:ruined_portals 304 284 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:4864,33,4544
+0 minecraft:ruined_portals -42900 84063 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-686400,29,1345008
+0 minecraft:ruined_portals 59326 -91142 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:949216,91,-1458272
+0 minecraft:ruined_portals -100670 -45145 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-1610720,29,-722320
+0 minecraft:ruined_portals 48965 70091 ruined_portal_ocean:no ruined_portal_nether:783440,27,1121456
+0 minecraft:ruined_portals 65183 7768 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:1042928,29,124288
+0 minecraft:ruined_portals -23178 7763 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-370848,28,124208
+0 minecraft:ruined_portals -27620 -49296 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-441920,28,-788736
+0 minecraft:ruined_portals 35582 -72427 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:569312,29,-1158832
+0 minecraft:ruined_portals -11195 -11462 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-179120,40,-183392
+0 minecraft:ruined_portals 123324 -12177 ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:1973184,31,-194832
+0 minecraft:ruined_portals 106128 122621 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:1698048,28,1961936
+0 minecraft:ruined_portals -90024 114457 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-1440384,29,1831312
+0 minecraft:ruined_portals -66617 118281 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-1065872,31,1892496
+0 minecraft:ruined_portals -71790 -56816 ruined_portal_mountain:no ruined_portal_nether:-1148640,31,-909056
+0 minecraft:ruined_portals -25018 -19463 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-400288,60,-311408
+0 minecraft:ruined_portals 119610 -106659 ruined_portal_ocean:no ruined_portal_nether:1913760,29,-1706544
+0 minecraft:ruined_portals 80496 10502 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:1287936,29,168032
+0 minecraft:ruined_portals 111488 55904 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:1783808,44,894464
+0 minecraft:ruined_portals -5537 103602 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-88592,27,1657632
+0 minecraft:ruined_portals 4122 85140 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:65952,27,1362240
+0 minecraft:ruined_portals -7674 -5501 ruined_portal_nether:-122784,27,-88016
+0 minecraft:ruined_portals -69180 -11819 ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-1106880,96,-189104
+0 minecraft:ruined_portals -16465 -76390 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:-263440,37,-1222240
+0 minecraft:ruined_portals 94503 -124789 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:1512048,31,-1996624
+0 minecraft:ruined_portals -29672 89701 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:-474752,31,1435216
+0 minecraft:ruined_portals 65522 -93459 ruined_portal_mountain:no ruined_portal_nether:1048352,50,-1495344
+0 minecraft:ruined_portals 68602 34452 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:1097632,38,551232
+0 minecraft:ruined_portals 44605 48977 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:713680,28,783632
+0 minecraft:ruined_portals 34384 81741 ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:550144,29,1307856
+0 minecraft:ruined_portals -26474 79765 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-423584,27,1276240
+0 minecraft:ruined_portals 119442 -8995 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:1911072,27,-143920
+0 minecraft:ruined_portals 25262 88491 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:404192,29,1415856
+0 minecraft:ruined_portals -87417 -8160 ruined_portal:no ruined_portal_nether:-1398672,82,-130560
+0 minecraft:ruined_portals -104787 -41425 ruined_portal:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-1676592,50,-662800
+0 minecraft:ruined_portals -98671 -95502 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-1578736,28,-1528032
+0 minecraft:ruined_portals -96276 27164 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-1540416,28,434624
+0 minecraft:ruined_portals 112844 122495 ruined_portal_desert:no ruined_portal_nether:1805504,27,1959920
+0 minecraft:ruined_portals -93619 57961 ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-1497904,28,927376
+0 minecraft:ruined_portals -54757 -54956 ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-876112,27,-879296
+0 minecraft:ruined_portals -3400 46023 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-54400,29,736368
+0 minecraft:ruined_portals 109483 -96060 ruined_portal_nether:1751728,71,-1536960
+0 minecraft:ruined_portals 93133 -89303 ruined_portal_swamp:no ruined_portal_nether:1490128,82,-1428848
+0 minecraft:ruined_portals -13355 -16621 ruined_portal_jungle:no ruined_portal_nether:-213680,38,-265936
+0 minecraft:ruined_portals -32941 -122502 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-527056,88,-1960032
+0 minecraft:ruined_portals 94860 -11659 ruined_portal_ocean:no ruined_portal_nether:1517760,27,-186544
+0 minecraft:ruined_portals 85880 111050 ruined_portal_swamp:no ruined_portal_nether:1374080,28,1776800
+0 minecraft:ruined_portals -60675 45218 ruined_portal_ocean:no ruined_portal_nether:-970800,37,723488
+0 minecraft:ruined_portals -14233 33364 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-227728,27,533824
+0 minecraft:ruined_portals 26211 88104 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:419376,37,1409664
+0 minecraft:ruined_portals -21466 90766 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-343456,27,1452256
+0 minecraft:ruined_portals 38520 81455 ruined_portal:no ruined_portal_nether:616320,28,1303280
+0 minecraft:ruined_portals 41360 -21222 ruined_portal_jungle:no ruined_portal_nether:661760,28,-339552
+0 minecraft:ruined_portals -14305 -96599 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-228880,28,-1545584
+0 minecraft:ruined_portals 13248 -63310 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:211968,45,-1012960
+0 minecraft:ruined_portals 98942 -80304 ruined_portal_nether:1583072,31,-1284864
+0 minecraft:ruined_portals -117554 -97816 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-1880864,99,-1565056
+0 minecraft:ruined_portals -36378 -60631 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-582048,29,-970096
+0 minecraft:ruined_portals -64228 115299 ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-1027648,31,1844784
+0 minecraft:ruined_portals -42235 123932 ruined_portal_desert:no ruined_portal_nether:-675760,31,1982912
+0 minecraft:ruined_portals -108039 79048 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-1728624,29,1264768
+-4172144997902289642 minecraft:ruined_portals -296 -312 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-4736,83,-4992
+-4172144997902289642 minecraft:ruined_portals -273 -300 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-4368,27,-4800
+-4172144997902289642 minecraft:ruined_portals -234 -304 ruined_portal_nether:-3744,27,-4864
+-4172144997902289642 minecraft:ruined_portals -194 -296 ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-3104,50,-4736
+-4172144997902289642 minecraft:ruined_portals -157 -313 ruined_portal_jungle:no ruined_portal_nether:-2512,28,-5008
+-4172144997902289642 minecraft:ruined_portals -110 -316 ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-1760,28,-5056
+-4172144997902289642 minecraft:ruined_portals -62 -309 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-992,32,-4944
+-4172144997902289642 minecraft:ruined_portals -18 -298 ruined_portal_nether:-288,40,-4768
+-4172144997902289642 minecraft:ruined_portals 23 -305 ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:368,27,-4880
+-4172144997902289642 minecraft:ruined_portals 53 -309 ruined_portal:no ruined_portal_nether:848,41,-4944
+-4172144997902289642 minecraft:ruined_portals 81 -312 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:1296,31,-4992
+-4172144997902289642 minecraft:ruined_portals 127 -301 ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:2032,27,-4816
+-4172144997902289642 minecraft:ruined_portals 180 -314 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:2880,31,-5024
+-4172144997902289642 minecraft:ruined_portals 214 -315 ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:3424,82,-5040
+-4172144997902289642 minecraft:ruined_portals 248 -315 ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:3968,29,-5040
+-4172144997902289642 minecraft:ruined_portals 286 -319 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:4576,40,-5104
+-4172144997902289642 minecraft:ruined_portals -316 -276 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-5056,27,-4416
+-4172144997902289642 minecraft:ruined_portals -279 -272 ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-4464,73,-4352
+-4172144997902289642 minecraft:ruined_portals -228 -266 ruined_portal_jungle:no ruined_portal_nether:-3648,55,-4256
+-4172144997902289642 minecraft:ruined_portals -193 -273 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-3088,46,-4368
+-4172144997902289642 minecraft:ruined_portals -145 -269 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-2320,31,-4304
+-4172144997902289642 minecraft:ruined_portals -107 -265 ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-1712,27,-4240
+-4172144997902289642 minecraft:ruined_portals -68 -261 ruined_portal:no ruined_portal_nether:-1088,46,-4176
+-4172144997902289642 minecraft:ruined_portals -26 -260 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-416,28,-4160
+-4172144997902289642 minecraft:ruined_portals 24 -262 ruined_portal_nether:384,29,-4192
+-4172144997902289642 minecraft:ruined_portals 60 -278 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:960,29,-4448
+-4172144997902289642 minecraft:ruined_portals 83 -275 ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:1328,40,-4400
+-4172144997902289642 minecraft:ruined_portals 135 -260 ruined_portal_nether:2160,28,-4160
+-4172144997902289642 minecraft:ruined_portals 171 -267 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:2736,29,-4272
+-4172144997902289642 minecraft:ruined_portals 215 -266 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:3440,28,-4256
+-4172144997902289642 minecraft:ruined_portals 254 -266 ruined_portal_swamp:no ruined_portal_nether:4064,28,-4256
+-4172144997902289642 minecraft:ruined_portals 285 -263 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:4560,31,-4208
+-4172144997902289642 minecraft:ruined_portals -307 -221 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-4912,77,-3536
+-4172144997902289642 minecraft:ruined_portals -258 -225 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-4128,49,-3600
+-4172144997902289642 minecraft:ruined_portals -235 -237 ruined_portal_desert:no ruined_portal_nether:-3760,27,-3792
+-4172144997902289642 minecraft:ruined_portals -195 -222 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-3120,67,-3552
+-4172144997902289642 minecraft:ruined_portals -159 -229 ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-2544,31,-3664
+-4172144997902289642 minecraft:ruined_portals -96 -235 ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:-1536,55,-3760
+-4172144997902289642 minecraft:ruined_portals -67 -216 ruined_portal_nether:-1072,27,-3456
+-4172144997902289642 minecraft:ruined_portals -27 -221 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-432,73,-3536
+-4172144997902289642 minecraft:ruined_portals 7 -217 ruined_portal_nether:112,42,-3472
+-4172144997902289642 minecraft:ruined_portals 41 -228 ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:656,27,-3648
+-4172144997902289642 minecraft:ruined_portals 87 -221 ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:1392,31,-3536
+-4172144997902289642 minecraft:ruined_portals 125 -240 ruined_portal_mountain:no ruined_portal_nether:2000,27,-3840
+-4172144997902289642 minecraft:ruined_portals 161 -220 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:2576,31,-3520
+-4172144997902289642 minecraft:ruined_portals 200 -226 ruined_portal_desert:no ruined_portal_nether:3200,31,-3616
+-4172144997902289642 minecraft:ruined_portals 253 -227 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:4048,29,-3632
+-4172144997902289642 minecraft:ruined_portals 299 -226 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:4784,32,-3616
+-4172144997902289642 minecraft:ruined_portals -316 -194 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-5056,29,-3104
+-4172144997902289642 minecraft:ruined_portals -256 -186 ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-4096,28,-2976
+-4172144997902289642 minecraft:ruined_portals -223 -176 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-3568,28,-2816
+-4172144997902289642 minecraft:ruined_portals -188 -191 ruined_portal:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-3008,81,-3056
+-4172144997902289642 minecraft:ruined_portals -154 -184 ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-2464,29,-2944
+-4172144997902289642 minecraft:ruined_portals -104 -197 ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-1664,28,-3152
+-4172144997902289642 minecraft:ruined_portals -75 -181 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-1200,69,-2896
+-4172144997902289642 minecraft:ruined_portals -30 -179 ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-480,29,-2864
+-4172144997902289642 minecraft:ruined_portals 1 -198 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:16,27,-3168
+-4172144997902289642 minecraft:ruined_portals 53 -194 ruined_portal_desert:no ruined_portal_nether:848,50,-3104
+-4172144997902289642 minecraft:ruined_portals 85 -190 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:1360,28,-3040
+-4172144997902289642 minecraft:ruined_portals 123 -198 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:1968,27,-3168
+-4172144997902289642 minecraft:ruined_portals 161 -176 ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:2576,28,-2816
+-4172144997902289642 minecraft:ruined_portals 221 -193 ruined_portal_swamp:no ruined_portal_nether:3536,29,-3088
+-4172144997902289642 minecraft:ruined_portals 264 -200 ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:4224,27,-3200
+-4172144997902289642 minecraft:ruined_portals 291 -197 ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:4656,28,-3152
+-4172144997902289642 minecraft:ruined_portals -314 -144 ruined_portal_swamp:no ruined_portal_nether:-5024,29,-2304
+-4172144997902289642 minecraft:ruined_portals -261 -156 ruined_portal_ocean:no ruined_portal_nether:-4176,29,-2496
+-4172144997902289642 minecraft:ruined_portals -240 -150 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-3840,27,-2400
+-4172144997902289642 minecraft:ruined_portals -176 -137 ruined_portal_desert:no ruined_portal_nether:-2816,57,-2192
+-4172144997902289642 minecraft:ruined_portals -150 -157 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-2400,31,-2512
+-4172144997902289642 minecraft:ruined_portals -110 -137 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-1760,29,-2192
+-4172144997902289642 minecraft:ruined_portals -67 -139 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-1072,75,-2224
+-4172144997902289642 minecraft:ruined_portals -22 -138 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-352,28,-2208
+-4172144997902289642 minecraft:ruined_portals 7 -160 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:112,48,-2560
+-4172144997902289642 minecraft:ruined_portals 51 -142 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:816,28,-2272
+-4172144997902289642 minecraft:ruined_portals 88 -151 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:1408,60,-2416
+-4172144997902289642 minecraft:ruined_portals 120 -150 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:1920,28,-2400
+-4172144997902289642 minecraft:ruined_portals 164 -146 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:2624,31,-2336
+-4172144997902289642 minecraft:ruined_portals 200 -139 ruined_portal:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:3200,31,-2224
+-4172144997902289642 minecraft:ruined_portals 253 -138 ruined_portal_ocean:no ruined_portal_nether:4048,29,-2208
+-4172144997902289642 minecraft:ruined_portals 290 -147 ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:4640,29,-2352
+-4172144997902289642 minecraft:ruined_portals -319 -104 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-5104,83,-1664
+-4172144997902289642 minecraft:ruined_portals -261 -107 ruined_portal_nether:-4176,31,-1712
+-4172144997902289642 minecraft:ruined_portals -233 -105 ruined_portal_nether:-3728,58,-1680
+-4172144997902289642 minecraft:ruined_portals -178 -101 ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-2848,29,-1616
+-4172144997902289642 minecraft:ruined_portals -152 -114 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-2432,28,-1824
+-4172144997902289642 minecraft:ruined_portals -98 -111 ruined_portal_jungle:no ruined_portal_nether:-1568,50,-1776
+-4172144997902289642 minecraft:ruined_portals -75 -108 ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-1200,28,-1728
+-4172144997902289642 minecraft:ruined_portals -28 -97 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-448,65,-1552
+-4172144997902289642 minecraft:ruined_portals 14 -117 ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:224,35,-1872
+-4172144997902289642 minecraft:ruined_portals 43 -100 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:688,27,-1600
+-4172144997902289642 minecraft:ruined_portals 82 -101 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:1312,29,-1616
+-4172144997902289642 minecraft:ruined_portals 134 -105 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:2144,29,-1680
+-4172144997902289642 minecraft:ruined_portals 171 -115 ruined_portal_nether:2736,67,-1840
+-4172144997902289642 minecraft:ruined_portals 220 -102 ruined_portal_nether:3520,31,-1632
+-4172144997902289642 minecraft:ruined_portals 240 -104 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:3840,31,-1664
+-4172144997902289642 minecraft:ruined_portals 289 -107 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:4624,52,-1712
+-4172144997902289642 minecraft:ruined_portals -302 -56 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-4832,31,-896
+-4172144997902289642 minecraft:ruined_portals -268 -78 ruined_portal_ocean:no ruined_portal_nether:-4288,27,-1248
+-4172144997902289642 minecraft:ruined_portals -232 -74 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-3712,78,-1184
+-4172144997902289642 minecraft:ruined_portals -184 -65 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-2944,27,-1040
+-4172144997902289642 minecraft:ruined_portals -142 -79 ruined_portal_nether:-2272,100,-1264
+-4172144997902289642 minecraft:ruined_portals -107 -61 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-1712,28,-976
+-4172144997902289642 minecraft:ruined_portals -78 -63 ruined_portal_mountain:no ruined_portal_nether:-1248,28,-1008
+-4172144997902289642 minecraft:ruined_portals -20 -57 ruined_portal_jungle:no ruined_portal_nether:-320,31,-912
+-4172144997902289642 minecraft:ruined_portals 20 -63 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:320,31,-1008
+-4172144997902289642 minecraft:ruined_portals 56 -57 ruined_portal_nether:896,49,-912
+-4172144997902289642 minecraft:ruined_portals 102 -64 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:1632,28,-1024
+-4172144997902289642 minecraft:ruined_portals 142 -56 ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:2272,84,-896
+-4172144997902289642 minecraft:ruined_portals 166 -56 ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:2656,29,-896
+-4172144997902289642 minecraft:ruined_portals 216 -72 ruined_portal_nether:3456,29,-1152
+-4172144997902289642 minecraft:ruined_portals 249 -60 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:3984,28,-960
+-4172144997902289642 minecraft:ruined_portals 294 -76 ruined_portal_swamp:no ruined_portal_nether:4704,77,-1216
+-4172144997902289642 minecraft:ruined_portals -310 -28 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-4960,31,-448
+-4172144997902289642 minecraft:ruined_portals -274 -20 ruined_portal_nether:-4384,99,-320
+-4172144997902289642 minecraft:ruined_portals -231 -18 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-3696,27,-288
+-4172144997902289642 minecraft:ruined_portals -187 -38 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-2992,29,-608
+-4172144997902289642 minecraft:ruined_portals -139 -30 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-2224,46,-480
+-4172144997902289642 minecraft:ruined_portals -104 -25 ruined_portal_nether:-1664,74,-400
+-4172144997902289642 minecraft:ruined_portals -70 -21 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-1120,58,-336
+-4172144997902289642 minecraft:ruined_portals -17 -20 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-272,30,-320
+-4172144997902289642 minecraft:ruined_portals 3 -30 ruined_portal_ocean:no ruined_portal_nether:48,74,-480
+-4172144997902289642 minecraft:ruined_portals 50 -36 ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:800,63,-576
+-4172144997902289642 minecraft:ruined_portals 83 -24 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:1328,73,-384
+-4172144997902289642 minecraft:ruined_portals 125 -19 ruined_portal_swamp:no ruined_portal_nether:2000,27,-304
+-4172144997902289642 minecraft:ruined_portals 160 -32 ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:2560,29,-512
+-4172144997902289642 minecraft:ruined_portals 216 -40 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:3456,61,-640
+-4172144997902289642 minecraft:ruined_portals 258 -20 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:4128,32,-320
+-4172144997902289642 minecraft:ruined_portals 296 -27 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:4736,32,-432
+-4172144997902289642 minecraft:ruined_portals -310 20 ruined_portal_nether:-4960,31,320
+-4172144997902289642 minecraft:ruined_portals -257 19 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-4112,31,304
+-4172144997902289642 minecraft:ruined_portals -220 23 ruined_portal_nether:-3520,31,368
+-4172144997902289642 minecraft:ruined_portals -186 10 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-2976,67,160
+-4172144997902289642 minecraft:ruined_portals -157 3 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-2512,29,48
+-4172144997902289642 minecraft:ruined_portals -100 14 ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-1600,69,224
+-4172144997902289642 minecraft:ruined_portals -59 13 ruined_portal:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-944,73,208
+-4172144997902289642 minecraft:ruined_portals -29 3 ruined_portal_ocean:no ruined_portal_nether:-464,39,48
+-4172144997902289642 minecraft:ruined_portals 17 4 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:272,28,64
+-4172144997902289642 minecraft:ruined_portals 51 6 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:816,28,96
+-4172144997902289642 minecraft:ruined_portals 81 1 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:1296,31,16
+-4172144997902289642 minecraft:ruined_portals 133 5 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:2128,68,80
+-4172144997902289642 minecraft:ruined_portals 174 7 ruined_portal_mountain:no ruined_portal_nether:2784,29,112
+-4172144997902289642 minecraft:ruined_portals 216 13 ruined_portal_nether:3456,29,208
+-4172144997902289642 minecraft:ruined_portals 263 12 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:4208,28,192
+-4172144997902289642 minecraft:ruined_portals 295 23 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:4720,31,368
+-4172144997902289642 minecraft:ruined_portals -319 52 ruined_portal_nether:-5104,31,832
+-4172144997902289642 minecraft:ruined_portals -271 57 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-4336,28,912
+-4172144997902289642 minecraft:ruined_portals -230 53 ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:-3680,27,848
+-4172144997902289642 minecraft:ruined_portals -189 62 ruined_portal_nether:-3024,27,992
+-4172144997902289642 minecraft:ruined_portals -141 60 ruined_portal_nether:-2256,31,960
+-4172144997902289642 minecraft:ruined_portals -117 52 ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-1872,29,832
+-4172144997902289642 minecraft:ruined_portals -56 43 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-896,31,688
+-4172144997902289642 minecraft:ruined_portals -37 55 ruined_portal_ocean:no ruined_portal_nether:-592,28,880
+-4172144997902289642 minecraft:ruined_portals 12 45 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:192,29,720
+-4172144997902289642 minecraft:ruined_portals 48 64 ruined_portal_nether:768,28,1024
+-4172144997902289642 minecraft:ruined_portals 90 41 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:1440,27,656
+-4172144997902289642 minecraft:ruined_portals 140 63 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:2240,28,1008
+-4172144997902289642 minecraft:ruined_portals 170 51 ruined_portal_jungle:no ruined_portal_nether:2720,83,816
+-4172144997902289642 minecraft:ruined_portals 208 55 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:3328,53,880
+-4172144997902289642 minecraft:ruined_portals 262 64 ruined_portal:no ruined_portal_desert:no ruined_portal_nether:4192,31,1024
+-4172144997902289642 minecraft:ruined_portals 288 56 ruined_portal:no ruined_portal_nether:4608,27,896
+-4172144997902289642 minecraft:ruined_portals -301 82 ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-4816,28,1312
+-4172144997902289642 minecraft:ruined_portals -258 90 ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-4128,27,1440
+-4172144997902289642 minecraft:ruined_portals -218 96 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:-3488,31,1536
+-4172144997902289642 minecraft:ruined_portals -179 84 ruined_portal_nether:-2864,69,1344
+-4172144997902289642 minecraft:ruined_portals -147 94 ruined_portal_nether:-2352,29,1504
+-4172144997902289642 minecraft:ruined_portals -97 100 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-1552,29,1600
+-4172144997902289642 minecraft:ruined_portals -60 99 ruined_portal_jungle:no ruined_portal_nether:-960,77,1584
+-4172144997902289642 minecraft:ruined_portals -27 88 ruined_portal_desert:no ruined_portal_nether:-432,57,1408
+-4172144997902289642 minecraft:ruined_portals 10 103 ruined_portal_nether:160,91,1648
+-4172144997902289642 minecraft:ruined_portals 58 89 ruined_portal_nether:928,28,1424
+-4172144997902289642 minecraft:ruined_portals 86 94 ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:1376,59,1504
+-4172144997902289642 minecraft:ruined_portals 127 103 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:2032,31,1648
+-4172144997902289642 minecraft:ruined_portals 163 84 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:2608,31,1344
+-4172144997902289642 minecraft:ruined_portals 211 97 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:3376,29,1552
+-4172144997902289642 minecraft:ruined_portals 259 100 ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:4144,65,1600
+-4172144997902289642 minecraft:ruined_portals 303 103 ruined_portal_swamp:no ruined_portal_nether:4848,52,1648
+-4172144997902289642 minecraft:ruined_portals -305 123 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-4880,28,1968
+-4172144997902289642 minecraft:ruined_portals -276 128 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-4416,37,2048
+-4172144997902289642 minecraft:ruined_portals -237 142 ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-3792,74,2272
+-4172144997902289642 minecraft:ruined_portals -189 128 ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-3024,31,2048
+-4172144997902289642 minecraft:ruined_portals -150 140 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-2400,43,2240
+-4172144997902289642 minecraft:ruined_portals -98 121 ruined_portal_nether:-1568,96,1936
+-4172144997902289642 minecraft:ruined_portals -62 131 ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-992,29,2096
+-4172144997902289642 minecraft:ruined_portals -26 123 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-416,61,1968
+-4172144997902289642 minecraft:ruined_portals 23 127 ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:368,27,2032
+-4172144997902289642 minecraft:ruined_portals 43 131 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:688,29,2096
+-4172144997902289642 minecraft:ruined_portals 86 123 ruined_portal_nether:1376,27,1968
+-4172144997902289642 minecraft:ruined_portals 141 137 ruined_portal_jungle:no ruined_portal_nether:2256,29,2192
+-4172144997902289642 minecraft:ruined_portals 164 144 ruined_portal_desert:no ruined_portal_nether:2624,78,2304
+-4172144997902289642 minecraft:ruined_portals 206 128 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:3296,100,2048
+-4172144997902289642 minecraft:ruined_portals 247 120 ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:3952,31,1920
+-4172144997902289642 minecraft:ruined_portals 282 126 ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:4512,28,2016
+-4172144997902289642 minecraft:ruined_portals -301 169 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-4816,27,2704
+-4172144997902289642 minecraft:ruined_portals -273 174 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-4368,72,2784
+-4172144997902289642 minecraft:ruined_portals -221 161 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-3536,51,2576
+-4172144997902289642 minecraft:ruined_portals -181 167 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-2896,27,2672
+-4172144997902289642 minecraft:ruined_portals -147 177 ruined_portal_nether:-2352,31,2832
+-4172144997902289642 minecraft:ruined_portals -114 164 ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-1824,27,2624
+-4172144997902289642 minecraft:ruined_portals -77 162 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-1232,28,2592
+-4172144997902289642 minecraft:ruined_portals -36 166 ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-576,28,2656
+-4172144997902289642 minecraft:ruined_portals 5 168 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:80,31,2688
+-4172144997902289642 minecraft:ruined_portals 42 172 ruined_portal:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:672,29,2752
+-4172144997902289642 minecraft:ruined_portals 86 182 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:1376,27,2912
+-4172144997902289642 minecraft:ruined_portals 132 160 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:2112,27,2560
+-4172144997902289642 minecraft:ruined_portals 179 164 ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:2864,69,2624
+-4172144997902289642 minecraft:ruined_portals 212 160 ruined_portal_mountain:no ruined_portal_nether:3392,29,2560
+-4172144997902289642 minecraft:ruined_portals 257 169 ruined_portal_nether:4112,31,2704
+-4172144997902289642 minecraft:ruined_portals 300 164 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:4800,28,2624
+-4172144997902289642 minecraft:ruined_portals -315 205 ruined_portal_swamp:no ruined_portal_nether:-5040,42,3280
+-4172144997902289642 minecraft:ruined_portals -277 212 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-4432,29,3392
+-4172144997902289642 minecraft:ruined_portals -223 218 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-3568,29,3488
+-4172144997902289642 minecraft:ruined_portals -187 217 ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-2992,27,3472
+-4172144997902289642 minecraft:ruined_portals -139 211 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-2224,29,3376
+-4172144997902289642 minecraft:ruined_portals -117 213 ruined_portal_nether:-1872,27,3408
+-4172144997902289642 minecraft:ruined_portals -65 220 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-1040,28,3520
+-4172144997902289642 minecraft:ruined_portals -31 210 ruined_portal_nether:-496,28,3360
+-4172144997902289642 minecraft:ruined_portals 24 211 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:384,29,3376
+-4172144997902289642 minecraft:ruined_portals 46 216 ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:736,27,3456
+-4172144997902289642 minecraft:ruined_portals 91 211 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:1456,74,3376
+-4172144997902289642 minecraft:ruined_portals 137 206 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:2192,27,3296
+-4172144997902289642 minecraft:ruined_portals 178 203 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:2848,31,3248
+-4172144997902289642 minecraft:ruined_portals 219 206 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:3504,28,3296
+-4172144997902289642 minecraft:ruined_portals 256 207 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:4096,29,3312
+-4172144997902289642 minecraft:ruined_portals 283 216 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:4528,30,3456
+-4172144997902289642 minecraft:ruined_portals -300 249 ruined_portal_swamp:no ruined_portal_nether:-4800,72,3984
+-4172144997902289642 minecraft:ruined_portals -278 256 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-4448,52,4096
+-4172144997902289642 minecraft:ruined_portals -218 240 ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-3488,27,3840
+-4172144997902289642 minecraft:ruined_portals -187 242 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-2992,29,3872
+-4172144997902289642 minecraft:ruined_portals -153 248 ruined_portal_jungle:no ruined_portal_nether:-2448,43,3968
+-4172144997902289642 minecraft:ruined_portals -116 247 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-1856,67,3952
+-4172144997902289642 minecraft:ruined_portals -67 263 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-1072,31,4208
+-4172144997902289642 minecraft:ruined_portals -24 252 ruined_portal_desert:no ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-384,28,4032
+-4172144997902289642 minecraft:ruined_portals 13 248 ruined_portal:no ruined_portal_nether:208,27,3968
+-4172144997902289642 minecraft:ruined_portals 58 258 ruined_portal_mountain:no ruined_portal_nether:928,27,4128
+-4172144997902289642 minecraft:ruined_portals 96 241 ruined_portal_nether:1536,31,3856
+-4172144997902289642 minecraft:ruined_portals 123 240 ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:1968,44,3840
+-4172144997902289642 minecraft:ruined_portals 181 248 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:2896,52,3968
+-4172144997902289642 minecraft:ruined_portals 218 261 ruined_portal_desert:no ruined_portal_nether:3488,28,4176
+-4172144997902289642 minecraft:ruined_portals 263 242 ruined_portal_nether:4208,28,3872
+-4172144997902289642 minecraft:ruined_portals 299 245 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:4784,37,3920
+-4172144997902289642 minecraft:ruined_portals -298 296 ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-4768,29,4736
+-4172144997902289642 minecraft:ruined_portals -273 281 ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-4368,29,4496
+-4172144997902289642 minecraft:ruined_portals -218 282 ruined_portal_nether:-3488,53,4512
+-4172144997902289642 minecraft:ruined_portals -176 284 ruined_portal_nether:-2816,79,4544
+-4172144997902289642 minecraft:ruined_portals -138 303 ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-2208,29,4848
+-4172144997902289642 minecraft:ruined_portals -104 280 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:-1664,29,4480
+-4172144997902289642 minecraft:ruined_portals -77 302 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-1232,28,4832
+-4172144997902289642 minecraft:ruined_portals -28 286 ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:-448,30,4576
+-4172144997902289642 minecraft:ruined_portals 5 282 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:80,77,4512
+-4172144997902289642 minecraft:ruined_portals 63 297 ruined_portal_nether:1008,31,4752
+-4172144997902289642 minecraft:ruined_portals 82 292 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:1312,90,4672
+-4172144997902289642 minecraft:ruined_portals 124 281 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:1984,47,4496
+-4172144997902289642 minecraft:ruined_portals 160 283 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:2560,95,4528
+-4172144997902289642 minecraft:ruined_portals 210 281 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:3360,28,4496
+-4172144997902289642 minecraft:ruined_portals 258 300 ruined_portal_nether:4128,27,4800
+-4172144997902289642 minecraft:ruined_portals 304 299 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:4864,49,4784
+-4172144997902289642 minecraft:ruined_portals 49128 117120 ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:786048,69,1873920
+-4172144997902289642 minecraft:ruined_portals 64739 35045 ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:1035824,33,560720
+-4172144997902289642 minecraft:ruined_portals 79493 33980 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:1271888,47,543680
+-4172144997902289642 minecraft:ruined_portals 14764 -100350 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:236224,44,-1605600
+-4172144997902289642 minecraft:ruined_portals -54394 -20840 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-870304,28,-333440
+-4172144997902289642 minecraft:ruined_portals -8159 -91097 ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-130544,47,-1457552
+-4172144997902289642 minecraft:ruined_portals 25017 85213 ruined_portal_nether:400272,94,1363408
+-4172144997902289642 minecraft:ruined_portals 29933 -94616 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:478928,31,-1513856
+-4172144997902289642 minecraft:ruined_portals 44689 -1519 ruined_portal_nether:715024,28,-24304
+-4172144997902289642 minecraft:ruined_portals -43620 -6796 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-697920,29,-108736
+-4172144997902289642 minecraft:ruined_portals 41774 101857 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:668384,28,1629712
+-4172144997902289642 minecraft:ruined_portals 117765 -37784 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:1884240,31,-604544
+-4172144997902289642 minecraft:ruined_portals 19562 107440 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:312992,29,1719040
+-4172144997902289642 minecraft:ruined_portals -114345 55682 ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-1829520,28,890912
+-4172144997902289642 minecraft:ruined_portals -99587 -92548 ruined_portal_desert:no ruined_portal_nether:-1593392,29,-1480768
+-4172144997902289642 minecraft:ruined_portals 664 -31955 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:10624,28,-511280
+-4172144997902289642 minecraft:ruined_portals -121540 -55816 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-1944640,28,-893056
+-4172144997902289642 minecraft:ruined_portals 15735 84576 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:251760,27,1353216
+-4172144997902289642 minecraft:ruined_portals -56238 -80064 ruined_portal_mountain:no ruined_portal_nether:-899808,28,-1281024
+-4172144997902289642 minecraft:ruined_portals -111021 42462 ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-1776336,43,679392
+-4172144997902289642 minecraft:ruined_portals -54795 -121875 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-876720,28,-1950000
+-4172144997902289642 minecraft:ruined_portals -59797 -118554 ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-956752,28,-1896864
+-4172144997902289642 minecraft:ruined_portals 37644 -88992 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:602304,97,-1423872
+-4172144997902289642 minecraft:ruined_portals 1927 -32031 ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:30832,27,-512496
+-4172144997902289642 minecraft:ruined_portals -18981 49569 ruined_portal:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:-303696,29,793104
+-4172144997902289642 minecraft:ruined_portals 33693 50901 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:539088,27,814416
+-4172144997902289642 minecraft:ruined_portals -80356 12142 ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-1285696,27,194272
+-4172144997902289642 minecraft:ruined_portals -80298 115863 ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-1284768,29,1853808
+-4172144997902289642 minecraft:ruined_portals -114626 20321 ruined_portal_desert:no ruined_portal_nether:-1834016,31,325136
+-4172144997902289642 minecraft:ruined_portals 19303 105090 ruined_portal_nether:308848,29,1681440
+-4172144997902289642 minecraft:ruined_portals -101638 69202 ruined_portal:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-1626208,34,1107232
+-4172144997902289642 minecraft:ruined_portals -42395 -30499 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-678320,29,-487984
+-4172144997902289642 minecraft:ruined_portals 46295 -28593 ruined_portal_nether:740720,29,-457488
+-4172144997902289642 minecraft:ruined_portals -82358 108773 ruined_portal:no ruined_portal_nether:-1317728,61,1740368
+-4172144997902289642 minecraft:ruined_portals -4279 -114439 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-68464,27,-1831024
+-4172144997902289642 minecraft:ruined_portals 122286 115850 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:1956576,31,1853600
+-4172144997902289642 minecraft:ruined_portals -104680 -32257 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-1674880,28,-516112
+-4172144997902289642 minecraft:ruined_portals -58836 -92623 ruined_portal_ocean:no ruined_portal_nether:-941376,65,-1481968
+-4172144997902289642 minecraft:ruined_portals -1479 101935 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-23664,74,1630960
+-4172144997902289642 minecraft:ruined_portals 3420 -121097 ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:54720,28,-1937552
+-4172144997902289642 minecraft:ruined_portals 58880 49054 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:942080,29,784864
+-4172144997902289642 minecraft:ruined_portals -25358 64724 ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-405728,28,1035584
+-4172144997902289642 minecraft:ruined_portals 109083 -49180 ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:1745328,54,-786880
+-4172144997902289642 minecraft:ruined_portals -84145 -29817 ruined_portal_nether:-1346320,27,-477072
+-4172144997902289642 minecraft:ruined_portals -28905 -43223 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-462480,28,-691568
+-4172144997902289642 minecraft:ruined_portals 76488 77972 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:1223808,61,1247552
+-4172144997902289642 minecraft:ruined_portals -87137 -113107 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-1394192,28,-1809712
+-4172144997902289642 minecraft:ruined_portals 87482 -49077 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:1399712,29,-785232
+-4172144997902289642 minecraft:ruined_portals -42263 9739 ruined_portal_jungle:no ruined_portal_nether:-676208,28,155824
+-4172144997902289642 minecraft:ruined_portals 21764 -101097 ruined_portal_nether:348224,31,-1617552
+-4172144997902289642 minecraft:ruined_portals 120609 -120520 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:1929744,28,-1928320
+-4172144997902289642 minecraft:ruined_portals 103087 72859 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:1649392,28,1165744
+-4172144997902289642 minecraft:ruined_portals 74423 -123876 ruined_portal_desert:no ruined_portal_nether:1190768,44,-1982016
+-4172144997902289642 minecraft:ruined_portals 34405 108244 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:550480,27,1731904
+-4172144997902289642 minecraft:ruined_portals -19032 -43619 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-304512,41,-697904
+-4172144997902289642 minecraft:ruined_portals -53502 -96556 ruined_portal_nether:-856032,27,-1544896
+-4172144997902289642 minecraft:ruined_portals -37943 94061 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-607088,43,1504976
+-4172144997902289642 minecraft:ruined_portals 18421 -104179 ruined_portal:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:294736,28,-1666864
+-4172144997902289642 minecraft:ruined_portals 106302 -62388 ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:1700832,28,-998208
+-4172144997902289642 minecraft:ruined_portals -87669 -1955 ruined_portal_nether:-1402704,31,-31280
+-2524844574374566417 minecraft:ruined_portals -303 -304 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-4848,27,-4864
+-2524844574374566417 minecraft:ruined_portals -268 -313 ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-4288,29,-5008
+-2524844574374566417 minecraft:ruined_portals -216 -316 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-3456,28,-5056
+-2524844574374566417 minecraft:ruined_portals -188 -316 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-3008,44,-5056
+-2524844574374566417 minecraft:ruined_portals -138 -320 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-2208,99,-5120
+-2524844574374566417 minecraft:ruined_portals -109 -306 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-1744,29,-4896
+-2524844574374566417 minecraft:ruined_portals -64 -320 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-1024,69,-5120
+-2524844574374566417 minecraft:ruined_portals -22 -297 ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-352,31,-4752
+-2524844574374566417 minecraft:ruined_portals 18 -297 ruined_portal_jungle:no ruined_portal_nether:288,29,-4752
+-2524844574374566417 minecraft:ruined_portals 45 -297 ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:720,28,-4752
+-2524844574374566417 minecraft:ruined_portals 103 -308 ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:1648,29,-4928
+-2524844574374566417 minecraft:ruined_portals 136 -318 ruined_portal_nether:2176,27,-5088
+-2524844574374566417 minecraft:ruined_portals 173 -304 ruined_portal_nether:2768,29,-4864
+-2524844574374566417 minecraft:ruined_portals 211 -313 ruined_portal_nether:3376,28,-5008
+-2524844574374566417 minecraft:ruined_portals 262 -309 ruined_portal_ocean:no ruined_portal_nether:4192,27,-4944
+-2524844574374566417 minecraft:ruined_portals 280 -307 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:4480,72,-4912
+-2524844574374566417 minecraft:ruined_portals -313 -257 ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-5008,28,-4112
+-2524844574374566417 minecraft:ruined_portals -278 -258 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-4448,69,-4128
+-2524844574374566417 minecraft:ruined_portals -233 -271 ruined_portal_swamp:no ruined_portal_nether:-3728,29,-4336
+-2524844574374566417 minecraft:ruined_portals -198 -261 ruined_portal_nether:-3168,27,-4176
+-2524844574374566417 minecraft:ruined_portals -136 -274 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-2176,29,-4384
+-2524844574374566417 minecraft:ruined_portals -97 -270 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-1552,31,-4320
+-2524844574374566417 minecraft:ruined_portals -68 -268 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:-1088,93,-4288
+-2524844574374566417 minecraft:ruined_portals -33 -278 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:-528,28,-4448
+-2524844574374566417 minecraft:ruined_portals 13 -263 ruined_portal_nether:208,92,-4208
+-2524844574374566417 minecraft:ruined_portals 61 -277 ruined_portal:no ruined_portal_nether:976,27,-4432
+-2524844574374566417 minecraft:ruined_portals 93 -268 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:1488,28,-4288
+-2524844574374566417 minecraft:ruined_portals 128 -260 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:2048,29,-4160
+-2524844574374566417 minecraft:ruined_portals 172 -266 ruined_portal_nether:2752,35,-4256
+-2524844574374566417 minecraft:ruined_portals 212 -266 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:3392,28,-4256
+-2524844574374566417 minecraft:ruined_portals 242 -276 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:3872,54,-4416
+-2524844574374566417 minecraft:ruined_portals 300 -261 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:4800,98,-4176
+-2524844574374566417 minecraft:ruined_portals -296 -223 ruined_portal_desert:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-4736,29,-3568
+-2524844574374566417 minecraft:ruined_portals -260 -231 ruined_portal:no ruined_portal_nether:-4160,27,-3696
+-2524844574374566417 minecraft:ruined_portals -219 -234 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-3504,57,-3744
+-2524844574374566417 minecraft:ruined_portals -184 -230 ruined_portal_nether:-2944,29,-3680
+-2524844574374566417 minecraft:ruined_portals -156 -228 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-2496,27,-3648
+-2524844574374566417 minecraft:ruined_portals -106 -231 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-1696,27,-3696
+-2524844574374566417 minecraft:ruined_portals -64 -227 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-1024,77,-3632
+-2524844574374566417 minecraft:ruined_portals -29 -239 ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-464,29,-3824
+-2524844574374566417 minecraft:ruined_portals 23 -235 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:368,87,-3760
+-2524844574374566417 minecraft:ruined_portals 45 -221 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:720,34,-3536
+-2524844574374566417 minecraft:ruined_portals 95 -237 ruined_portal_desert:no ruined_portal_nether:1520,27,-3792
+-2524844574374566417 minecraft:ruined_portals 137 -223 ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:2192,28,-3568
+-2524844574374566417 minecraft:ruined_portals 164 -229 ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:2624,27,-3664
+-2524844574374566417 minecraft:ruined_portals 204 -233 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:3264,29,-3728
+-2524844574374566417 minecraft:ruined_portals 258 -236 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:4128,67,-3776
+-2524844574374566417 minecraft:ruined_portals 283 -237 ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:4528,27,-3792
+-2524844574374566417 minecraft:ruined_portals -301 -192 ruined_portal_nether:-4816,27,-3072
+-2524844574374566417 minecraft:ruined_portals -269 -189 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-4304,27,-3024
+-2524844574374566417 minecraft:ruined_portals -219 -196 ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-3504,49,-3136
+-2524844574374566417 minecraft:ruined_portals -199 -188 ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-3184,28,-3008
+-2524844574374566417 minecraft:ruined_portals -160 -189 ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-2560,28,-3024
+-2524844574374566417 minecraft:ruined_portals -120 -193 ruined_portal:no ruined_portal_nether:-1920,28,-3088
+-2524844574374566417 minecraft:ruined_portals -77 -177 ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-1232,91,-2832
+-2524844574374566417 minecraft:ruined_portals -28 -200 ruined_portal_desert:no ruined_portal_nether:-448,27,-3200
+-2524844574374566417 minecraft:ruined_portals 7 -186 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:112,33,-2976
+-2524844574374566417 minecraft:ruined_portals 41 -182 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:656,31,-2912
+-2524844574374566417 minecraft:ruined_portals 95 -178 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:1520,29,-2848
+-2524844574374566417 minecraft:ruined_portals 134 -185 ruined_portal_nether:2144,90,-2960
+-2524844574374566417 minecraft:ruined_portals 167 -179 ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:2672,28,-2864
+-2524844574374566417 minecraft:ruined_portals 218 -179 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:3488,28,-2864
+-2524844574374566417 minecraft:ruined_portals 240 -186 ruined_portal_jungle:no ruined_portal_nether:3840,69,-2976
+-2524844574374566417 minecraft:ruined_portals 295 -179 ruined_portal_mountain:no ruined_portal_nether:4720,28,-2864
+-2524844574374566417 minecraft:ruined_portals -315 -138 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-5040,86,-2208
+-2524844574374566417 minecraft:ruined_portals -257 -136 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-4112,79,-2176
+-2524844574374566417 minecraft:ruined_portals -232 -150 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-3712,29,-2400
+-2524844574374566417 minecraft:ruined_portals -191 -143 ruined_portal_nether:-3056,48,-2288
+-2524844574374566417 minecraft:ruined_portals -139 -149 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-2224,28,-2384
+-2524844574374566417 minecraft:ruined_portals -108 -147 ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-1728,27,-2352
+-2524844574374566417 minecraft:ruined_portals -74 -156 ruined_portal_nether:-1184,29,-2496
+-2524844574374566417 minecraft:ruined_portals -17 -141 ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-272,28,-2256
+-2524844574374566417 minecraft:ruined_portals 0 -137 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:0,70,-2192
+-2524844574374566417 minecraft:ruined_portals 54 -140 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:864,28,-2240
+-2524844574374566417 minecraft:ruined_portals 103 -154 ruined_portal:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:1648,31,-2464
+-2524844574374566417 minecraft:ruined_portals 120 -159 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:1920,28,-2544
+-2524844574374566417 minecraft:ruined_portals 179 -148 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:2864,27,-2368
+-2524844574374566417 minecraft:ruined_portals 212 -140 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:3392,31,-2240
+-2524844574374566417 minecraft:ruined_portals 253 -155 ruined_portal_jungle:no ruined_portal_nether:4048,47,-2480
+-2524844574374566417 minecraft:ruined_portals 286 -150 ruined_portal_jungle:no ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:4576,69,-2400
+-2524844574374566417 minecraft:ruined_portals -299 -104 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-4784,29,-1664
+-2524844574374566417 minecraft:ruined_portals -256 -97 ruined_portal_nether:-4096,29,-1552
+-2524844574374566417 minecraft:ruined_portals -224 -119 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-3584,92,-1904
+-2524844574374566417 minecraft:ruined_portals -189 -106 ruined_portal_mountain:no ruined_portal_nether:-3024,28,-1696
+-2524844574374566417 minecraft:ruined_portals -155 -96 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-2480,28,-1536
+-2524844574374566417 minecraft:ruined_portals -116 -106 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-1856,31,-1696
+-2524844574374566417 minecraft:ruined_portals -70 -105 ruined_portal_nether:-1120,27,-1680
+-2524844574374566417 minecraft:ruined_portals -22 -96 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-352,85,-1536
+-2524844574374566417 minecraft:ruined_portals 8 -109 ruined_portal_ocean:no ruined_portal_nether:128,73,-1744
+-2524844574374566417 minecraft:ruined_portals 42 -102 ruined_portal_desert:no ruined_portal_nether:672,28,-1632
+-2524844574374566417 minecraft:ruined_portals 89 -97 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:1424,51,-1552
+-2524844574374566417 minecraft:ruined_portals 122 -108 ruined_portal_mountain:no ruined_portal_nether:1952,28,-1728
+-2524844574374566417 minecraft:ruined_portals 178 -96 ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:2848,90,-1536
+-2524844574374566417 minecraft:ruined_portals 209 -105 ruined_portal_desert:no ruined_portal_nether:3344,31,-1680
+-2524844574374566417 minecraft:ruined_portals 261 -108 ruined_portal_nether:4176,70,-1728
+-2524844574374566417 minecraft:ruined_portals 290 -117 ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:4640,29,-1872
+-2524844574374566417 minecraft:ruined_portals -316 -77 ruined_portal_nether:-5056,28,-1232
+-2524844574374566417 minecraft:ruined_portals -267 -75 ruined_portal_jungle:no ruined_portal_nether:-4272,27,-1200
+-2524844574374566417 minecraft:ruined_portals -219 -68 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:-3504,28,-1088
+-2524844574374566417 minecraft:ruined_portals -197 -69 ruined_portal_nether:-3152,28,-1104
+-2524844574374566417 minecraft:ruined_portals -160 -75 ruined_portal_desert:no ruined_portal_nether:-2560,93,-1200
+-2524844574374566417 minecraft:ruined_portals -103 -59 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-1648,29,-944
+-2524844574374566417 minecraft:ruined_portals -67 -60 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:-1072,27,-960
+-2524844574374566417 minecraft:ruined_portals -37 -66 ruined_portal_nether:-592,27,-1056
+-2524844574374566417 minecraft:ruined_portals 20 -68 ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:320,40,-1088
+-2524844574374566417 minecraft:ruined_portals 40 -71 ruined_portal_ocean:no ruined_portal_nether:640,29,-1136
+-2524844574374566417 minecraft:ruined_portals 85 -70 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:1360,62,-1120
+-2524844574374566417 minecraft:ruined_portals 130 -71 ruined_portal_nether:2080,29,-1136
+-2524844574374566417 minecraft:ruined_portals 178 -76 ruined_portal_nether:2848,28,-1216
+-2524844574374566417 minecraft:ruined_portals 203 -77 ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:3248,27,-1232
+-2524844574374566417 minecraft:ruined_portals 257 -72 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:4112,29,-1152
+-2524844574374566417 minecraft:ruined_portals 303 -73 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:4848,43,-1168
+-2524844574374566417 minecraft:ruined_portals -303 -36 ruined_portal_mountain:no ruined_portal_nether:-4848,71,-576
+-2524844574374566417 minecraft:ruined_portals -274 -32 ruined_portal_jungle:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-4384,90,-512
+-2524844574374566417 minecraft:ruined_portals -235 -23 ruined_portal_nether:-3760,50,-368
+-2524844574374566417 minecraft:ruined_portals -179 -16 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-2864,28,-256
+-2524844574374566417 minecraft:ruined_portals -158 -33 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-2528,27,-528
+-2524844574374566417 minecraft:ruined_portals -99 -24 ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-1584,40,-384
+-2524844574374566417 minecraft:ruined_portals -77 -35 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-1232,31,-560
+-2524844574374566417 minecraft:ruined_portals -24 -18 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-384,28,-288
+-2524844574374566417 minecraft:ruined_portals 1 -32 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:16,31,-512
+-2524844574374566417 minecraft:ruined_portals 42 -33 ruined_portal:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:672,29,-528
+-2524844574374566417 minecraft:ruined_portals 101 -39 ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:1616,31,-624
+-2524844574374566417 minecraft:ruined_portals 132 -18 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:2112,29,-288
+-2524844574374566417 minecraft:ruined_portals 166 -40 ruined_portal:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:2656,31,-640
+-2524844574374566417 minecraft:ruined_portals 212 -20 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:3392,47,-320
+-2524844574374566417 minecraft:ruined_portals 241 -36 ruined_portal_ocean:no ruined_portal_nether:3856,44,-576
+-2524844574374566417 minecraft:ruined_portals 300 -23 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:4800,29,-368
+-2524844574374566417 minecraft:ruined_portals -296 16 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-4736,91,256
+-2524844574374566417 minecraft:ruined_portals -263 5 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-4208,72,80
+-2524844574374566417 minecraft:ruined_portals -217 2 ruined_portal_desert:no ruined_portal_nether:-3472,31,32
+-2524844574374566417 minecraft:ruined_portals -181 1 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:-2896,42,16
+-2524844574374566417 minecraft:ruined_portals -147 22 ruined_portal_swamp:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-2352,96,352
+-2524844574374566417 minecraft:ruined_portals -98 10 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:-1568,28,160
+-2524844574374566417 minecraft:ruined_portals -66 13 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_nether:-1056,61,208
+-2524844574374566417 minecraft:ruined_portals -33 3 ruined_portal_jungle:no ruined_portal_nether:-528,29,48
+-2524844574374566417 minecraft:ruined_portals 24 6 ruined_portal_nether:384,46,96
+-2524844574374566417 minecraft:ruined_portals 58 15 ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:928,27,240
+-2524844574374566417 minecraft:ruined_portals 102 14 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:1632,29,224
+-2524844574374566417 minecraft:ruined_portals 143 17 ruined_portal_nether:2288,31,272
+-2524844574374566417 minecraft:ruined_portals 179 18 ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:2864,59,288
+-2524844574374566417 minecraft:ruined_portals 214 14 ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:3424,57,224
+-2524844574374566417 minecraft:ruined_portals 260 16 ruined_portal:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:4160,28,256
+-2524844574374566417 minecraft:ruined_portals 291 2 ruined_portal:no ruined_portal_nether:4656,56,32
+-2524844574374566417 minecraft:ruined_portals -297 56 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-4752,29,896
+-2524844574374566417 minecraft:ruined_portals -273 56 ruined_portal_nether:-4368,96,896
+-2524844574374566417 minecraft:ruined_portals -233 42 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-3728,31,672
+-2524844574374566417 minecraft:ruined_portals -181 54 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-2896,58,864
+-2524844574374566417 minecraft:ruined_portals -160 63 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-2560,29,1008
+-2524844574374566417 minecraft:ruined_portals -112 43 ruined_portal_desert:no ruined_portal_nether:-1792,31,688
+-2524844574374566417 minecraft:ruined_portals -65 64 ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-1040,29,1024
+-2524844574374566417 minecraft:ruined_portals -39 46 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-624,34,736
+-2524844574374566417 minecraft:ruined_portals 4 58 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:64,31,928
+-2524844574374566417 minecraft:ruined_portals 56 52 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:896,28,832
+-2524844574374566417 minecraft:ruined_portals 96 54 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:1536,31,864
+-2524844574374566417 minecraft:ruined_portals 124 53 ruined_portal_nether:1984,29,848
+-2524844574374566417 minecraft:ruined_portals 167 53 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:2672,34,848
+-2524844574374566417 minecraft:ruined_portals 210 57 ruined_portal_swamp:no ruined_portal_nether:3360,27,912
+-2524844574374566417 minecraft:ruined_portals 259 48 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:4144,29,768
+-2524844574374566417 minecraft:ruined_portals 302 54 ruined_portal_nether:4832,29,864
+-2524844574374566417 minecraft:ruined_portals -312 95 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-4992,27,1520
+-2524844574374566417 minecraft:ruined_portals -266 86 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-4256,27,1376
+-2524844574374566417 minecraft:ruined_portals -220 82 ruined_portal_nether:-3520,31,1312
+-2524844574374566417 minecraft:ruined_portals -177 97 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-2832,29,1552
+-2524844574374566417 minecraft:ruined_portals -142 104 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-2272,28,1664
+-2524844574374566417 minecraft:ruined_portals -113 100 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-1808,82,1600
+-2524844574374566417 minecraft:ruined_portals -76 102 ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-1216,27,1632
+-2524844574374566417 minecraft:ruined_portals -32 98 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-512,29,1568
+-2524844574374566417 minecraft:ruined_portals 17 85 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:272,28,1360
+-2524844574374566417 minecraft:ruined_portals 47 92 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:752,29,1472
+-2524844574374566417 minecraft:ruined_portals 80 84 ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:1280,29,1344
+-2524844574374566417 minecraft:ruined_portals 133 95 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:2128,27,1520
+-2524844574374566417 minecraft:ruined_portals 167 82 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:2672,56,1312
+-2524844574374566417 minecraft:ruined_portals 216 94 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:3456,95,1504
+-2524844574374566417 minecraft:ruined_portals 263 101 ruined_portal_desert:no ruined_portal_nether:4208,31,1616
+-2524844574374566417 minecraft:ruined_portals 304 96 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:4864,27,1536
+-2524844574374566417 minecraft:ruined_portals -315 122 ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_nether:-5040,28,1952
+-2524844574374566417 minecraft:ruined_portals -262 142 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:-4192,45,2272
+-2524844574374566417 minecraft:ruined_portals -230 143 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:-3680,29,2288
+-2524844574374566417 minecraft:ruined_portals -194 136 ruined_portal_mountain:no ruined_portal_nether:-3104,31,2176
+-2524844574374566417 minecraft:ruined_portals -145 140 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-2320,88,2240
+-2524844574374566417 minecraft:ruined_portals -107 133 ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:-1712,54,2128
+-2524844574374566417 minecraft:ruined_portals -67 142 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-1072,28,2272
+-2524844574374566417 minecraft:ruined_portals -28 143 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_nether:-448,29,2288
+-2524844574374566417 minecraft:ruined_portals 0 141 ruined_portal_jungle:no ruined_portal_nether:0,28,2256
+-2524844574374566417 minecraft:ruined_portals 55 132 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:880,27,2112
+-2524844574374566417 minecraft:ruined_portals 91 136 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:1456,29,2176
+-2524844574374566417 minecraft:ruined_portals 137 141 ruined_portal_nether:2192,52,2256
+-2524844574374566417 minecraft:ruined_portals 160 144 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:2560,81,2304
+-2524844574374566417 minecraft:ruined_portals 210 128 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:3360,28,2048
+-2524844574374566417 minecraft:ruined_portals 259 143 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:4144,78,2288
+-2524844574374566417 minecraft:ruined_portals 301 121 ruined_portal:no ruined_portal_desert:no ruined_portal_nether:4816,29,1936
+-2524844574374566417 minecraft:ruined_portals -314 176 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-5024,29,2816
+-2524844574374566417 minecraft:ruined_portals -263 166 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:-4208,28,2656
+-2524844574374566417 minecraft:ruined_portals -218 168 ruined_portal:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-3488,29,2688
+-2524844574374566417 minecraft:ruined_portals -194 184 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-3104,27,2944
+-2524844574374566417 minecraft:ruined_portals -150 174 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:-2400,28,2784
+-2524844574374566417 minecraft:ruined_portals -98 167 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-1568,28,2672
+-2524844574374566417 minecraft:ruined_portals -57 184 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-912,28,2944
+-2524844574374566417 minecraft:ruined_portals -32 162 ruined_portal_desert:no ruined_portal:no ruined_portal_nether:-512,28,2592
+-2524844574374566417 minecraft:ruined_portals 18 177 ruined_portal_nether:288,28,2832
+-2524844574374566417 minecraft:ruined_portals 50 162 ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:800,29,2592
+-2524844574374566417 minecraft:ruined_portals 87 166 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:1392,27,2656
+-2524844574374566417 minecraft:ruined_portals 142 180 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:2272,31,2880
+-2524844574374566417 minecraft:ruined_portals 180 172 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:2880,29,2752
+-2524844574374566417 minecraft:ruined_portals 216 171 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:3456,74,2736
+-2524844574374566417 minecraft:ruined_portals 250 177 ruined_portal_desert:no ruined_portal_nether:4000,28,2832
+-2524844574374566417 minecraft:ruined_portals 298 183 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:4768,29,2928
+-2524844574374566417 minecraft:ruined_portals -317 213 ruined_portal_swamp:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-5072,51,3408
+-2524844574374566417 minecraft:ruined_portals -271 200 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:-4336,27,3200
+-2524844574374566417 minecraft:ruined_portals -229 216 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:-3664,31,3456
+-2524844574374566417 minecraft:ruined_portals -193 201 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-3088,28,3216
+-2524844574374566417 minecraft:ruined_portals -145 210 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-2320,55,3360
+-2524844574374566417 minecraft:ruined_portals -105 206 ruined_portal_nether:-1680,27,3296
+-2524844574374566417 minecraft:ruined_portals -70 204 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:-1120,27,3264
+-2524844574374566417 minecraft:ruined_portals -26 224 ruined_portal:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-416,31,3584
+-2524844574374566417 minecraft:ruined_portals 21 217 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:336,58,3472
+-2524844574374566417 minecraft:ruined_portals 58 204 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:928,65,3264
+-2524844574374566417 minecraft:ruined_portals 89 200 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:1424,27,3200
+-2524844574374566417 minecraft:ruined_portals 143 212 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:2288,29,3392
+-2524844574374566417 minecraft:ruined_portals 165 208 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_nether:2640,31,3328
+-2524844574374566417 minecraft:ruined_portals 218 207 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:3488,28,3312
+-2524844574374566417 minecraft:ruined_portals 257 213 ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:4112,31,3408
+-2524844574374566417 minecraft:ruined_portals 285 207 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:4560,31,3312
+-2524844574374566417 minecraft:ruined_portals -307 242 ruined_portal_jungle:no ruined_portal_nether:-4912,31,3872
+-2524844574374566417 minecraft:ruined_portals -274 257 ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-4384,27,4112
+-2524844574374566417 minecraft:ruined_portals -220 241 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:-3520,27,3856
+-2524844574374566417 minecraft:ruined_portals -192 243 ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-3072,73,3888
+-2524844574374566417 minecraft:ruined_portals -153 248 ruined_portal_mountain:no ruined_portal_nether:-2448,27,3968
+-2524844574374566417 minecraft:ruined_portals -118 253 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:-1888,31,4048
+-2524844574374566417 minecraft:ruined_portals -73 251 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:-1168,82,4016
+-2524844574374566417 minecraft:ruined_portals -35 246 ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_jungle:no ruined_portal_nether:-560,31,3936
+-2524844574374566417 minecraft:ruined_portals 24 240 ruined_portal:no ruined_portal_nether:384,28,3840
+-2524844574374566417 minecraft:ruined_portals 51 248 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:816,29,3968
+-2524844574374566417 minecraft:ruined_portals 95 264 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:1520,74,4224
+-2524844574374566417 minecraft:ruined_portals 122 255 ruined_portal_nether:1952,28,4080
+-2524844574374566417 minecraft:ruined_portals 161 247 ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:2576,33,3952
+-2524844574374566417 minecraft:ruined_portals 208 247 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal:no ruined_portal_swamp:no ruined_portal_nether:3328,29,3952
+-2524844574374566417 minecraft:ruined_portals 257 255 ruined_portal_mountain:no ruined_portal:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:4112,29,4080
+-2524844574374566417 minecraft:ruined_portals 290 247 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:4640,29,3952
+-2524844574374566417 minecraft:ruined_portals -319 286 ruined_portal_nether:-5104,27,4576
+-2524844574374566417 minecraft:ruined_portals -258 294 ruined_portal_jungle:no ruined_portal_nether:-4128,69,4704
+-2524844574374566417 minecraft:ruined_portals -224 280 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_nether:-3584,28,4480
+-2524844574374566417 minecraft:ruined_portals -190 299 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-3040,28,4784
+-2524844574374566417 minecraft:ruined_portals -160 283 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:-2560,31,4528
+-2524844574374566417 minecraft:ruined_portals -106 298 ruined_portal:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:-1696,62,4768
+-2524844574374566417 minecraft:ruined_portals -70 297 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-1120,28,4752
+-2524844574374566417 minecraft:ruined_portals -33 288 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_nether:-528,29,4608
+-2524844574374566417 minecraft:ruined_portals 21 291 ruined_portal_mountain:no ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:336,41,4656
+-2524844574374566417 minecraft:ruined_portals 45 301 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:720,28,4816
+-2524844574374566417 minecraft:ruined_portals 83 293 ruined_portal_nether:1328,28,4688
+-2524844574374566417 minecraft:ruined_portals 133 298 ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:2128,84,4768
+-2524844574374566417 minecraft:ruined_portals 179 302 ruined_portal:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:2864,27,4832
+-2524844574374566417 minecraft:ruined_portals 212 301 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:3392,53,4816
+-2524844574374566417 minecraft:ruined_portals 241 290 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:3856,28,4640
+-2524844574374566417 minecraft:ruined_portals 304 302 ruined_portal_nether:4864,31,4832
+-2524844574374566417 minecraft:ruined_portals 100983 72290 ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:1615728,78,1156640
+-2524844574374566417 minecraft:ruined_portals 115376 -28349 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_nether:1846016,29,-453584
+-2524844574374566417 minecraft:ruined_portals -33189 44740 ruined_portal_desert:no ruined_portal_nether:-531024,31,715840
+-2524844574374566417 minecraft:ruined_portals -57632 23542 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-922112,27,376672
+-2524844574374566417 minecraft:ruined_portals -25748 -103677 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-411968,27,-1658832
+-2524844574374566417 minecraft:ruined_portals 58058 39580 ruined_portal_mountain:no ruined_portal_desert:no ruined_portal_nether:928928,29,633280
+-2524844574374566417 minecraft:ruined_portals 27561 -93833 ruined_portal:no ruined_portal_ocean:no ruined_portal_nether:440976,29,-1501328
+-2524844574374566417 minecraft:ruined_portals 40944 -2434 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal_nether:655104,29,-38944
+-2524844574374566417 minecraft:ruined_portals -84856 90891 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-1357696,28,1454256
+-2524844574374566417 minecraft:ruined_portals 27336 123742 ruined_portal_swamp:no ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:437376,29,1979872
+-2524844574374566417 minecraft:ruined_portals 22043 54780 ruined_portal_swamp:no ruined_portal_nether:352688,100,876480
+-2524844574374566417 minecraft:ruined_portals -99378 38003 ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:-1590048,28,608048
+-2524844574374566417 minecraft:ruined_portals -4658 -64080 ruined_portal_nether:-74528,31,-1025280
+-2524844574374566417 minecraft:ruined_portals -78509 111332 ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-1256144,60,1781312
+-2524844574374566417 minecraft:ruined_portals -117786 -4028 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-1884576,32,-64448
+-2524844574374566417 minecraft:ruined_portals -20920 -21297 ruined_portal_swamp:no ruined_portal_nether:-334720,28,-340752
+-2524844574374566417 minecraft:ruined_portals -23217 31525 ruined_portal_nether:-371472,51,504400
+-2524844574374566417 minecraft:ruined_portals 2496 20805 ruined_portal_nether:39936,31,332880
+-2524844574374566417 minecraft:ruined_portals 82579 2489 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:1321264,60,39824
+-2524844574374566417 minecraft:ruined_portals 48933 -64999 ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_nether:782928,29,-1039984
+-2524844574374566417 minecraft:ruined_portals -94457 -2346 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:-1511312,28,-37536
+-2524844574374566417 minecraft:ruined_portals -118476 -113710 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_ocean:no ruined_portal_jungle:no ruined_portal_nether:-1895616,28,-1819360
+-2524844574374566417 minecraft:ruined_portals 7056 63537 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:112896,74,1016592
+-2524844574374566417 minecraft:ruined_portals 119857 -113112 ruined_portal_nether:1917712,27,-1809792
+-2524844574374566417 minecraft:ruined_portals 124142 26250 ruined_portal_swamp:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:1986272,29,420000
+-2524844574374566417 minecraft:ruined_portals 2886 105320 ruined_portal_mountain:no ruined_portal_nether:46176,31,1685120
+-2524844574374566417 minecraft:ruined_portals 33694 -36232 ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_desert:no ruined_portal:no ruined_portal_nether:539104,28,-579712
+-2524844574374566417 minecraft:ruined_portals -37918 -69906 ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_nether:-606688,28,-1118496
+-2524844574374566417 minecraft:ruined_portals -67388 121101 ruined_portal_desert:no ruined_portal_jungle:no ruined_portal:no ruined_portal_mountain:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:-1078208,31,1937616
+-2524844574374566417 minecraft:ruined_portals -112719 1533 ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:-1803504,35,24528
+-2524844574374566417 minecraft:ruined_portals -9868 85103 ruined_portal_nether:-157888,74,1361648
+-2524844574374566417 minecraft:ruined_portals -23759 -40181 ruined_portal_ocean:no ruined_portal:no ruined_portal_jungle:no ruined_portal_nether:-380144,32,-642896
+-2524844574374566417 minecraft:ruined_portals -29155 -81146 ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-466480,50,-1298336
+-2524844574374566417 minecraft:ruined_portals -14513 10564 ruined_portal_nether:-232208,29,169024
+-2524844574374566417 minecraft:ruined_portals 40082 7982 ruined_portal_jungle:no ruined_portal:no ruined_portal_nether:641312,52,127712
+-2524844574374566417 minecraft:ruined_portals -124118 10014 ruined_portal_mountain:no ruined_portal:no ruined_portal_jungle:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_nether:-1985888,31,160224
+-2524844574374566417 minecraft:ruined_portals 34577 12342 ruined_portal_desert:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_ocean:no ruined_portal_nether:553232,69,197472
+-2524844574374566417 minecraft:ruined_portals -108634 -22474 ruined_portal_jungle:no ruined_portal_mountain:no ruined_portal_nether:-1738144,75,-359584
+-2524844574374566417 minecraft:ruined_portals 109690 19369 ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal_desert:no ruined_portal_jungle:no ruined_portal_ocean:no ruined_portal:no ruined_portal_nether:1755040,28,309904
+-2524844574374566417 minecraft:ruined_portals -96141 102976 ruined_portal:no ruined_portal_mountain:no ruined_portal_nether:-1538256,31,1647616
+-2524844574374566417 minecraft:ruined_portals 73298 -66821 ruined_portal_nether:1172768,31,-1069136
+-2524844574374566417 minecraft:ruined_portals 108643 83447 ruined_portal:no ruined_portal_ocean:no ruined_portal_desert:no ruined_portal_swamp:no ruined_portal_nether:1738288,53,1335152
+-2524844574374566417 minecraft:ruined_portals 41365 -89198 ruined_portal_nether:661840,31,-1427168
+-2524844574374566417 minecraft:ruined_portals 104978 91526 ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal_nether:1679648,95,1464416
+-2524844574374566417 minecraft:ruined_portals -58018 81174 ruined_portal_jungle:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-928288,29,1298784
+-2524844574374566417 minecraft:ruined_portals -91074 -82944 ruined_portal_nether:-1457184,29,-1327104
+-2524844574374566417 minecraft:ruined_portals -94115 -40226 ruined_portal:no ruined_portal_swamp:no ruined_portal_jungle:no ruined_portal_nether:-1505840,31,-643616
+-2524844574374566417 minecraft:ruined_portals 740 -122866 ruined_portal_jungle:no ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_nether:11840,59,-1965856
+-2524844574374566417 minecraft:ruined_portals -44839 81521 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_desert:no ruined_portal_nether:-717424,29,1304336
+-2524844574374566417 minecraft:ruined_portals 7939 18240 ruined_portal_mountain:no ruined_portal_nether:127024,28,291840
+-2524844574374566417 minecraft:ruined_portals -110062 -4953 ruined_portal_mountain:no ruined_portal:no ruined_portal_nether:-1760992,31,-79248
+-2524844574374566417 minecraft:ruined_portals -24759 117499 ruined_portal_nether:-396144,28,1879984
+-2524844574374566417 minecraft:ruined_portals 80183 -95016 ruined_portal_ocean:no ruined_portal_nether:1282928,31,-1520256
+-2524844574374566417 minecraft:ruined_portals 26297 39162 ruined_portal_desert:no ruined_portal_ocean:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:420752,43,626592
+-2524844574374566417 minecraft:ruined_portals -94297 -65999 ruined_portal:no ruined_portal_nether:-1508752,29,-1055984
+-2524844574374566417 minecraft:ruined_portals -46102 -59392 ruined_portal_nether:-737632,52,-950272
+-2524844574374566417 minecraft:ruined_portals 79780 -33419 ruined_portal_nether:1276480,49,-534704
+-2524844574374566417 minecraft:ruined_portals 62141 -17786 ruined_portal_nether:994256,67,-284576
+-2524844574374566417 minecraft:ruined_portals 19619 -5576 ruined_portal_ocean:no ruined_portal_mountain:no ruined_portal_swamp:no ruined_portal:no ruined_portal_nether:313904,27,-89216
+-2524844574374566417 minecraft:ruined_portals 116969 -11673 ruined_portal_nether:1871504,37,-186768

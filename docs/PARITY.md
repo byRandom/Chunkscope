@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
 | 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
 
@@ -233,8 +233,23 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   shipwrecks and abandoned camps pick a structure by weight with a random
   seeded by `setLargeFeatureSeed`; if it does not generate, the game removes
   it and picks again among the rest.
-- Not ported yet: mineshafts (their height comes from their pieces) and
-  ruined portals. The app shows them as possible.
+- **Ruined portals** pick a setup by weight (a `float` draw against each
+  weight divided by the total), draw the air-pocket chance only when it is
+  neither 0 nor 1, then a giant portal (5 %) or a normal one, a rotation and
+  a mirror. The template's bounding box is placed at the chunk's corner,
+  pivoting on the template's center; the surface is read at the box's
+  center (`OCEAN_FLOOR_WG` for ocean portals, `WORLD_SURFACE_WG` otherwise)
+  and each placement turns it into a start height. `findSuitableY` then
+  walks down from there, but not below the level's bottom + 15, to the
+  first height where at least three of the box's four corner columns hold
+  a block the same heightmap counts. In the Nether the start is random
+  (27 to 29 or 29 to 100) and the level bottom is y = 0. The generation
+  point is the chunk's corner at that height, and the biome is checked
+  there. Two mutations no vanilla data can catch: the Nether's air-pocket
+  range (its probability is 0) and the block above or below the column
+  (never read).
+- Not ported yet: mineshafts (their height comes from their pieces). The
+  app shows them as possible.
 - Two checks cannot be told apart by any vanilla data, so no fixture
   covers them: the bottom of the column pre-check (y = -65 instead of -64),
   and the trial chambers' dimension padding (they start at y = -40 or

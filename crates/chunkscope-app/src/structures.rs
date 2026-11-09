@@ -1,11 +1,10 @@
-//! Structure layers: the structures that generate in each overworld
-//! structure set, and stronghold positions.
+//! Structure layers: the structures that generate in each structure set of
+//! the Overworld and the Nether, and stronghold positions.
 //!
 //! Each set attempts a structure at one chunk per region; whether it really
 //! generates there (and which structure of the set) is checked against
 //! biome and terrain like the game does, on background threads. Mineshafts
-//! and ruined portals are not validated yet: their attempts are shown as
-//! possible.
+//! are not validated yet: their attempts are shown as possible.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Condvar, Mutex, mpsc};
@@ -244,6 +243,15 @@ pub static KINDS: &[Kind] = &[
         color: rgb(0xe8e0c8),
         default_on: false,
     },
+    Kind {
+        dimension: Dimension::Nether,
+        only: None,
+        set: "minecraft:ruined_portals",
+        label: "Ruined portals",
+        glyph: "RP",
+        color: rgb(0xa77bd9),
+        default_on: false,
+    },
 ];
 
 /// A structure marker on the map, at the position `/locate` reports.
@@ -252,8 +260,8 @@ pub struct Marker {
     pub kind: usize,
     pub x: i32,
     pub z: i32,
-    /// `false` for attempts that are not validated yet (mineshafts, ruined
-    /// portals): the game may skip them.
+    /// `false` for attempts that are not validated yet (mineshafts): the
+    /// game may skip them.
     pub exact: bool,
     /// The structure that generates (e.g. `minecraft:village_plains`) and
     /// its start position, when validated.

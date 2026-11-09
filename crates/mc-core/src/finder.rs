@@ -43,7 +43,7 @@ pub struct Query {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Found {
     /// The structure that generates, or the set's name when its structures
-    /// are not validated yet (mineshafts, ruined portals).
+    /// are not validated yet (mineshafts).
     pub name: &'static str,
     pub x: i32,
     pub z: i32,
