@@ -1,17 +1,22 @@
-//! Structure layers: where each overworld structure set attempts to generate,
-//! and stronghold positions.
+//! Structure layers: the structures that generate in each overworld
+//! structure set, and stronghold positions.
 //!
-//! Biome and terrain checks are not implemented yet, so a random-spread
-//! position is a *candidate*: the game may still skip it. Strongholds are
-//! exact.
+//! Each set attempts a structure at one chunk per region; whether it really
+//! generates there (and which structure of the set) is checked against
+//! biome and terrain like the game does, on background threads. Mineshafts
+//! and ruined portals are not validated yet: their attempts are shown as
+//! possible.
 
-use std::sync::mpsc;
+use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, Condvar, Mutex, mpsc};
 use std::thread;
 
 use eframe::egui::{self, Color32};
 use mc_core::biome::OverworldBiomeSource;
 use mc_core::structure::stronghold::ring_positions;
+use mc_core::structure::validate::{Outcome, StructureGenerator};
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSet, StructureSets};
+use mc_core::terrain::OverworldTerrain;
 
 /// One structure layer of the map.
 pub struct Kind {
@@ -161,14 +166,33 @@ pub static KINDS: &[Kind] = &[
     },
 ];
 
-/// A structure marker on the map.
+/// A structure marker on the map, at the position `/locate` reports.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Marker {
     pub kind: usize,
     pub x: i32,
     pub z: i32,
-    /// `false` for candidates whose biome and terrain are not checked yet.
+    /// `false` for attempts that are not validated yet (mineshafts, ruined
+    /// portals): the game may skip them.
     pub exact: bool,
+    /// The structure that generates (e.g. `minecraft:village_plains`) and
+    /// its start position, when validated.
+    pub start: Option<(&'static str, i32, i32, i32)>,
+}
+
+/// Whether the structures of a layer are validated against biome and
+/// terrain (strongholds are exact too).
+pub fn validated(kind: usize) -> bool {
+    use mc_core::structure::validate::{Structure, StructureKind};
+    let Some(set) = set(KINDS[kind].set) else {
+        return false;
+    };
+    match set.placement {
+        StructurePlacement::ConcentricRings { .. } => true,
+        StructurePlacement::RandomSpread(_) => set.structures.iter().all(|(name, _)| {
+            Structure::find(name).is_some_and(|s| s.kind != StructureKind::NotImplemented)
+        }),
+    }
 }
 
 pub fn set(name: &str) -> Option<&'static StructureSet> {
@@ -184,12 +208,13 @@ pub fn spacing_blocks(kind: usize) -> Option<f64> {
     Some(p.spacing as f64 * 16.0 / f64::from(p.frequency).sqrt())
 }
 
-/// Candidate positions of `kind` whose chunk lies in `cx0..=cx1`,
-/// `cz0..=cz1`.
-pub fn candidates(
+/// The markers of `kind` whose chunk lies in `cx0..=cx1`, `cz0..=cz1`:
+/// attempts that generate, plus attempts that cannot be validated yet.
+pub fn markers(
     kind: usize,
     seed: i64,
     (cx0, cz0, cx1, cz1): (i32, i32, i32, i32),
+    generator: &StructureGenerator,
 ) -> Vec<Marker> {
     let mut out = Vec::new();
     let Some(set) = set(KINDS[kind].set) else {
@@ -199,13 +224,26 @@ pub fn candidates(
         return out;
     };
     let mut push = |cx: i32, cz: i32| {
-        if set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz) == Some(true) {
-            let (x, _, z) = p.locate_pos(cx, cz);
+        if set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz) != Some(true) {
+            return;
+        }
+        let (x, _, z) = p.locate_pos(cx, cz);
+        let outcome = generator.attempt(set, cx, cz);
+        if let Some((structure, (sx, sy, sz))) = outcome.generated() {
+            out.push(Marker {
+                kind,
+                x,
+                z,
+                exact: true,
+                start: Some((structure.name, sx, sy, sz)),
+            });
+        } else if let Outcome::Unknown(_) = outcome {
             out.push(Marker {
                 kind,
                 x,
                 z,
                 exact: false,
+                start: None,
             });
         }
     };
@@ -227,6 +265,147 @@ pub fn candidates(
         }
     }
     out
+}
+
+/// Structure markers are computed in squares of this many chunks.
+pub const BLOCK_CHUNKS: i32 = 32;
+
+/// One square of one structure layer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct BlockKey {
+    pub seed: i64,
+    pub kind: usize,
+    pub bx: i32,
+    pub bz: i32,
+}
+
+struct Queue {
+    /// Requests, most urgent last.
+    pending: Vec<BlockKey>,
+    working: HashSet<BlockKey>,
+}
+
+struct Shared {
+    queue: Mutex<Queue>,
+    wake: Condvar,
+}
+
+/// Validated structure markers, computed on background threads.
+pub struct StructureCache {
+    shared: Arc<Shared>,
+    results: mpsc::Receiver<(BlockKey, Vec<Marker>)>,
+    blocks: HashMap<BlockKey, Vec<Marker>>,
+    in_flight: usize,
+}
+
+/// How many squares stay in memory.
+const CACHE_LIMIT: usize = 20_000;
+
+impl StructureCache {
+    pub fn new(ctx: &egui::Context) -> Self {
+        let shared = Arc::new(Shared {
+            queue: Mutex::new(Queue {
+                pending: Vec::new(),
+                working: HashSet::new(),
+            }),
+            wake: Condvar::new(),
+        });
+        let (tx, rx) = mpsc::channel();
+        let workers = thread::available_parallelism()
+            .map_or(2, |n| n.get())
+            .div_ceil(2)
+            .max(1);
+        for i in 0..workers {
+            let shared = shared.clone();
+            let tx = tx.clone();
+            let ctx = ctx.clone();
+            thread::Builder::new()
+                .name(format!("structure-worker-{i}"))
+                .spawn(move || worker(&shared, &tx, &ctx))
+                .expect("spawn structure worker");
+        }
+        Self {
+            shared,
+            results: rx,
+            blocks: HashMap::new(),
+            in_flight: 0,
+        }
+    }
+
+    /// Squares requested but not computed yet.
+    pub fn pending(&self) -> usize {
+        self.in_flight
+    }
+
+    /// Collect finished squares. Call once per frame.
+    pub fn receive(&mut self) {
+        while let Ok((key, markers)) = self.results.try_recv() {
+            self.blocks.insert(key, markers);
+        }
+        if self.blocks.len() > CACHE_LIMIT {
+            self.blocks.clear();
+        }
+    }
+
+    pub fn get(&self, key: &BlockKey) -> Option<&[Marker]> {
+        self.blocks.get(key).map(Vec::as_slice)
+    }
+
+    /// Replace the work queue with the squares still missing from `wanted`
+    /// (most urgent first).
+    pub fn request(&mut self, wanted: &[BlockKey]) {
+        let mut q = self.shared.queue.lock().expect("structure queue");
+        let mut pending: Vec<BlockKey> = wanted
+            .iter()
+            .filter(|k| !self.blocks.contains_key(k) && !q.working.contains(k))
+            .copied()
+            .collect();
+        self.in_flight = pending.len() + q.working.len();
+        pending.reverse();
+        if q.pending != pending {
+            q.pending = pending;
+            self.shared.wake.notify_all();
+        }
+    }
+}
+
+fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egui::Context) {
+    let mut world: Option<(i64, OverworldBiomeSource, OverworldTerrain)> = None;
+    loop {
+        let key = {
+            let mut q = shared.queue.lock().expect("structure queue");
+            loop {
+                if let Some(key) = q.pending.pop() {
+                    q.working.insert(key);
+                    break key;
+                }
+                q = shared.wake.wait(q).expect("structure queue");
+            }
+        };
+        if world.as_ref().is_none_or(|w| w.0 != key.seed) {
+            world = Some((
+                key.seed,
+                OverworldBiomeSource::new(key.seed),
+                OverworldTerrain::new(key.seed),
+            ));
+        }
+        let (_, biomes, terrain) = world.as_ref().expect("world just set");
+        let generator = StructureGenerator::new(key.seed, biomes, terrain);
+        let c = (key.bx * BLOCK_CHUNKS, key.bz * BLOCK_CHUNKS);
+        let bounds = (c.0, c.1, c.0 + BLOCK_CHUNKS - 1, c.1 + BLOCK_CHUNKS - 1);
+        let found = markers(key.kind, key.seed, bounds, &generator);
+        let closed = tx.send((key, found)).is_err();
+        shared
+            .queue
+            .lock()
+            .expect("structure queue")
+            .working
+            .remove(&key);
+        if closed {
+            return;
+        }
+        ctx.request_repaint();
+    }
 }
 
 /// Stronghold positions, computed on a background thread (they need a

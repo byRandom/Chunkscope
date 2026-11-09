@@ -1,7 +1,6 @@
 //! The main window: title bar, tool rail, world panel, map canvas,
 //! inspector and status bar.
 
-use std::collections::HashMap;
 use std::hash::{BuildHasher, RandomState};
 
 use eframe::egui::{
@@ -13,7 +12,9 @@ use mc_core::{is_slime_chunk, parse_seed};
 
 use crate::biome_colors;
 use crate::icons::{self, Icon};
-use crate::structures::{self, KINDS, Marker, STRONGHOLDS, Strongholds};
+use crate::structures::{
+    self, BLOCK_CHUNKS, BlockKey, KINDS, Marker, STRONGHOLDS, Strongholds, StructureCache,
+};
 use crate::theme::{
     self, ACCENT, ACCENT_DIM, BG, BORDER, FIELD, ON_ACCENT, PANEL, TEXT, TEXT_WEAK,
 };
@@ -26,10 +27,6 @@ const MIN_ZOOM: f32 = 1.0 / 32.0;
 const MAX_ZOOM: f32 = 16.0;
 /// Structure markers closer than this on screen are not drawn.
 const MARKER_SPACING_PX: f64 = 48.0;
-/// Structure candidates are cached in squares of this many chunks.
-const BLOCK_CHUNKS: i32 = 32;
-/// New candidate squares computed per frame, at most.
-const BLOCKS_PER_FRAME: usize = 48;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Tab {
@@ -54,7 +51,7 @@ pub struct ChunkscopeApp {
 
     tiles: TileCache,
     strongholds: Strongholds,
-    markers: HashMap<(usize, i32, i32), Vec<Marker>>,
+    markers: StructureCache,
     source: OverworldBiomeSource,
 
     hover: Option<(i64, i64)>,
@@ -85,7 +82,7 @@ impl ChunkscopeApp {
             kinds_on: KINDS.iter().map(|k| k.default_on).collect(),
             tiles: TileCache::new(&cc.egui_ctx),
             strongholds: Strongholds::new(seed, &cc.egui_ctx),
-            markers: HashMap::new(),
+            markers: StructureCache::new(&cc.egui_ctx),
             source: OverworldBiomeSource::new(seed),
             hover: None,
             hover_biome: None,
@@ -103,7 +100,6 @@ impl ChunkscopeApp {
         }
         self.seed = seed;
         self.strongholds = Strongholds::new(seed, ctx);
-        self.markers.clear();
         self.source = OverworldBiomeSource::new(seed);
         self.hover_biome = None;
         self.selected = None;
@@ -119,6 +115,7 @@ impl eframe::App for ChunkscopeApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         self.tiles.receive(&ctx);
+        self.markers.receive();
         self.strongholds.is_loading();
 
         egui::Panel::top("title")
@@ -214,7 +211,7 @@ impl ChunkscopeApp {
             hint(ui, "Click", "a marker to select it");
             hint(ui, "Right-click", "to copy a position");
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                let pending = self.tiles.pending();
+                let pending = self.tiles.pending() + self.markers.pending();
                 let text = format!(
                     "{} tiles · {} pending · {:.0} ms per tile · {} threads",
                     self.tiles.loaded(),
@@ -333,7 +330,7 @@ impl ChunkscopeApp {
                 });
                 ui.add_space(2.0);
                 for (i, kind) in KINDS.iter().enumerate() {
-                    let note = (kind.set != STRONGHOLDS).then_some("possible");
+                    let note = (!structures::validated(i)).then_some("possible");
                     layer_row(
                         ui,
                         &mut self.kinds_on[i],
@@ -346,9 +343,9 @@ impl ChunkscopeApp {
                 ui.add_space(6.0);
                 ui.label(
                     RichText::new(
-                        "Structure positions are where the game attempts to generate. \
-                         Biome and terrain checks come next, so some may not exist. \
-                         Strongholds are exact.",
+                        "Structures are checked against biome and terrain like the game \
+                         does. Layers marked possible are not checked yet: the game may \
+                         skip some of their positions.",
                     )
                     .color(TEXT_WEAK)
                     .small(),
@@ -408,13 +405,19 @@ impl ChunkscopeApp {
                         );
                     });
                     xz_row(ui, ("X", &m.x.to_string()), ("Z", &m.z.to_string()));
+                    if let Some((name, sx, sy, sz)) = m.start {
+                        theme::field_label(ui, "Structure");
+                        field_box(ui, &biome_colors::display_name(name));
+                        theme::field_label(ui, "Start");
+                        field_box(ui, &format!("{sx}, {sy}, {sz}"));
+                    }
                     theme::field_label(ui, "Status");
                     field_box(
                         ui,
                         if m.exact {
-                            "Exact position"
+                            "Generates (checked like the game)"
                         } else {
-                            "Possible: biome not checked yet"
+                            "Possible: not checked yet"
                         },
                     );
                     ui.add_space(4.0);
@@ -715,8 +718,8 @@ impl ChunkscopeApp {
         let (x0, z0) = self.to_world(rect, rect.min);
         let (x1, z1) = self.to_world(rect, rect.max);
         let span = (BLOCK_CHUNKS * 16) as f64;
-        let mut budget = BLOCKS_PER_FRAME;
         let mut visible: Vec<Marker> = Vec::new();
+        let mut wanted: Vec<BlockKey> = Vec::new();
         for (kind, info) in KINDS.iter().enumerate() {
             if !self.kinds_on[kind] || info.set == STRONGHOLDS {
                 continue;
@@ -726,22 +729,26 @@ impl ChunkscopeApp {
             }
             for bz in (z0 / span).floor() as i32..=(z1 / span).floor() as i32 {
                 for bx in (x0 / span).floor() as i32..=(x1 / span).floor() as i32 {
-                    let k = (kind, bx, bz);
-                    if !self.markers.contains_key(&k) {
-                        if budget == 0 {
-                            ui.ctx().request_repaint();
-                            continue;
-                        }
-                        budget -= 1;
-                        let c = (bx * BLOCK_CHUNKS, bz * BLOCK_CHUNKS);
-                        let bounds = (c.0, c.1, c.0 + BLOCK_CHUNKS - 1, c.1 + BLOCK_CHUNKS - 1);
-                        self.markers
-                            .insert(k, structures::candidates(kind, self.seed, bounds));
+                    let key = BlockKey {
+                        seed: self.seed,
+                        kind,
+                        bx,
+                        bz,
+                    };
+                    match self.markers.get(&key) {
+                        Some(found) => visible.extend(found),
+                        None => wanted.push(key),
                     }
-                    visible.extend(&self.markers[&k]);
                 }
             }
         }
+        // Nearest squares first.
+        let (ccx, ccz) = (self.center.0 / span - 0.5, self.center.1 / span - 0.5);
+        wanted.sort_by(|a, b| {
+            let d = |k: &BlockKey| (k.bx as f64 - ccx).powi(2) + (k.bz as f64 - ccz).powi(2);
+            d(a).total_cmp(&d(b))
+        });
+        self.markers.request(&wanted);
         if let Some(i) = KINDS.iter().position(|k| k.set == STRONGHOLDS)
             && self.kinds_on[i]
         {
@@ -750,10 +757,8 @@ impl ChunkscopeApp {
                 x,
                 z,
                 exact: true,
+                start: None,
             }));
-        }
-        if self.markers.len() > 50_000 {
-            self.markers.clear();
         }
 
         // Hit test, nearest marker under the pointer.
@@ -785,7 +790,12 @@ impl ChunkscopeApp {
         if let Some(m) = self.hover_marker {
             let p = self.to_screen(rect, m.x as f64, m.z as f64);
             let kind = &KINDS[m.kind];
-            let label = format!("{}  {}, {}", kind.label.trim_end_matches('s'), m.x, m.z);
+            let name = match m.start {
+                Some((structure, ..)) => biome_colors::display_name(structure),
+                None => kind.label.trim_end_matches('s').to_owned(),
+            };
+            let possible = if m.exact { "" } else { " (possible)" };
+            let label = format!("{name}{possible}  {}, {}", m.x, m.z);
             let galley = painter.layout_no_wrap(label, FontId::proportional(12.0), TEXT);
             let pos = p + vec2(r + 8.0, -galley.size().y / 2.0);
             let bg = Rect::from_min_size(pos, galley.size()).expand2(vec2(8.0, 5.0));
