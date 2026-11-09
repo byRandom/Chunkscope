@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin, Nether biomes, Nether fortresses and bastions | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin, Nether biomes, terrain, fortresses and bastions | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
 | 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
 
@@ -209,6 +209,12 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
     picked from the start pool with the chunk's random, after the start
     height and the rotation. The oracle exports each start element's
     bounding box per rotation and its named start jigsaw (ancient cities).
+- **The Nether terrain** is the Nether's compiled `final_density`, exported
+  like the overworld's, with the legacy random source: its blended noise is
+  seeded with `new LegacyRandomSource(seed)`, not from the positional
+  factory. It has no aquifers: where the density is not positive, blocks
+  below y = 32 are lava and the rest air. A fixture checks 126 base columns
+  and their `WORLD_SURFACE_WG` height.
 - **Nether fortresses and bastions share a set** (`nether_complexes`,
   weights 2 and 3). A fortress always starts at its chunk's corner at
   y = 64 and only needs a Nether biome there (every Nether biome allows

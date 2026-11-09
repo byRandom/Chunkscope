@@ -98,6 +98,7 @@ public class GameOracle {
         spawnOrigins(lookup);
         netherBiomes(lookup);
         netherStructures(lookup);
+        netherTerrain(lookup, Path.of(args[5]));
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -623,6 +624,49 @@ public class GameOracle {
         }
         out.append("];\n");
         Files.writeString(rs, out);
+    }
+
+    /** The Nether's compiled final_density (appended to density/generated.rs) and base columns. */
+    static void netherTerrain(HolderLookup.Provider lookup, Path densityRs) throws Exception {
+        NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.NETHER).value();
+        String structure = null;
+        try (PrintWriter w = writer("nether_terrain.txt")) {
+            for (long seed : List.of(0L, -4172144997902289642L, INPUTS.nextLong())) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                List<int[]> columns = new ArrayList<>(List.of(new int[] {0, 0}, new int[] {8, -8}));
+                for (int i = 0; i < 40; i++) {
+                    int range = i % 2 == 0 ? 3_000 : 1_000_000;
+                    columns.add(new int[] {INPUTS.nextInt(-range, range), INPUTS.nextInt(-range, range)});
+                }
+                for (int[] xz : columns) {
+                    Column col = column(rs, settings, xz[0], xz[1]);
+                    TreeExport t = exportFinalDensity(lookup, rs, settings, col, seed);
+                    String s = String.join("\n", t.nodes) + String.join("\n", t.noises);
+                    if (structure == null) {
+                        structure = s;
+                        String file = Files.readString(densityRs);
+                        Files.writeString(densityRs, file + "\n// ---- The Nether -------------------------------------------------------\n\n"
+                                + densityTreeSection(t, "NETHER_", "NETHER", "nether", true));
+                    } else if (!structure.equals(s)) {
+                        throw new IllegalStateException("compiled Nether tree differs between columns or seeds");
+                    }
+                    col.chunk().close();
+                    // The game's own base column (the generator a Nether dimension uses).
+                    var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.NETHER);
+                    var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                            lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                                    .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.NETHER));
+                    var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+                    var height = net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+                    int ws = generator.getBaseHeight(xz[0], xz[1], net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, height, rs);
+                    var column = generator.getBaseColumn(xz[0], xz[1], height, rs);
+                    StringBuilder blocks = new StringBuilder();
+                    for (int y = height.getMinY(); y < height.getMinY() + height.getHeight(); y++) blocks.append(substance(column.getBlock(y), settings));
+                    w.println(seed + " " + xz[0] + " " + xz[1] + " " + ws + " " + blocks);
+                }
+            }
+        }
     }
 
     /** Nether biomes and climate (legacy random source) at random quart positions. */
@@ -1321,7 +1365,7 @@ public class GameOracle {
         return Float.toString(f).replace("E", "e");
     }
 
-    static TreeExport exportFinalDensity(HolderLookup.Provider lookup, RandomState rs, NoiseGeneratorSettings settings, Column col) throws Exception {
+    static TreeExport exportFinalDensity(HolderLookup.Provider lookup, RandomState rs, NoiseGeneratorSettings settings, Column col, long seed) throws Exception {
         Map<Object, String> names = new java.util.IdentityHashMap<>();
         @SuppressWarnings("unchecked")
         var instances = (Map<ResourceKey<?>, Object>) fieldAny(rs, "noiseInstances");
@@ -1331,7 +1375,10 @@ public class GameOracle {
         // the three smeared stacks of old_blended_noise, recreated to match by offset
         var blended = find(settings.noiseRouter().finalDensity(), net.minecraft.world.level.levelgen.synth.BlendedNoise.class);
         var factory = (PositionalRandomFactory) fieldAny(rs, "random");
-        var fresh = blended.createFbmSet(factory.fromHashOf(net.minecraft.world.level.levelgen.synth.BlendedNoise.NOISE_SEED));
+        // RandomState's wiring: with the legacy random source, the blended noise is seeded
+        // with new LegacyRandomSource(seed) instead of the positional factory.
+        var fresh = blended.createFbmSet(settings.useLegacyRandomSource() ? new LegacyRandomSource(seed)
+                : factory.fromHashOf(net.minecraft.world.level.levelgen.synth.BlendedNoise.NOISE_SEED));
         Map<Object, String> stacks = new java.util.IdentityHashMap<>();
         java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         java.util.ArrayDeque<Object> queue = new java.util.ArrayDeque<>(List.of(col.bound().sampler()));
@@ -1361,7 +1408,7 @@ public class GameOracle {
         // final_density first (keeps its node ids stable), then the aquifer's own functions
         t.roots.put("FINAL_DENSITY", t.node(col.bound().sampler()));
         Object aquifer = col.chunk().aquifer();
-        for (String[] f : new String[][] {{"AQUIFER_BARRIER", "barrierNoise"}, {"AQUIFER_FLOODEDNESS", "fluidLevelFloodednessNoise"},
+        if (settings.aquifers().isPresent()) for (String[] f : new String[][] {{"AQUIFER_BARRIER", "barrierNoise"}, {"AQUIFER_FLOODEDNESS", "fluidLevelFloodednessNoise"},
                 {"AQUIFER_SPREAD", "fluidLevelSpreadNoise"}, {"AQUIFER_LAVA", "lavaNoise"}, {"AQUIFER_EXCLUSION", "exclusion"},
                 {"AQUIFER_SURFACE_LEVEL", "surfaceLevel"}}) {
             var bound = (DensitySampler.Bound) fieldAny(aquifer, f[1]);
@@ -1390,7 +1437,7 @@ public class GameOracle {
                 for (int i = 0; i < 3; i++) columns.add(new int[] {INPUTS.nextInt(-100_000, 100_000), INPUTS.nextInt(-100_000, 100_000)});
                 for (int[] xz : columns) {
                     Column col = column(state, settings, xz[0], xz[1]);
-                    TreeExport t = exportFinalDensity(lookup, state, settings, col);
+                    TreeExport t = exportFinalDensity(lookup, state, settings, col, seed);
                     String s = String.join("\n", t.nodes) + String.join("\n", t.noises);
                     if (structure == null) {
                         structure = s;
@@ -1430,17 +1477,25 @@ public class GameOracle {
         out.append("//! `getBaseHeight` (one `NoiseChunk` column).\n\n");
         out.append("use super::tree::{Axis, Node, NoiseSource, Tree};\n");
         out.append("use crate::biome::spline::{Multipoint, Spline};\nuse crate::noise::blended::BlendedNoiseParams;\n\n");
-        out.append("static NODES: [Node; ").append(t.nodes.size()).append("] = [\n");
+        out.append(densityTreeSection(t, "", "OVERWORLD", "overworld", false));
+        Files.writeString(rs, out);
+    }
+
+    /** The statics of one compiled tree: nodes, noises and one `Tree` per root. */
+    static String densityTreeSection(TreeExport t, String prefix, String name, String file, boolean legacy) {
+        StringBuilder out = new StringBuilder();
+        out.append("static ").append(prefix).append("NODES: [Node; ").append(t.nodes.size()).append("] = [\n");
         for (int i = 0; i < t.nodes.size(); i++) out.append("    /* ").append(i).append(" */ ").append(t.nodes.get(i)).append(",\n");
-        out.append("];\n\nstatic NOISES: [NoiseSource; ").append(t.noises.size()).append("] = [\n");
+        out.append("];\n\nstatic ").append(prefix).append("NOISES: [NoiseSource; ").append(t.noises.size()).append("] = [\n");
         for (String n : t.noises) out.append("    ").append(n).append(",\n");
         out.append("];\n");
         for (var e : t.roots.entrySet()) {
-            out.append("\n/// The compiled `").append(e.getKey().toLowerCase()).append("` of `noise_settings/overworld.json`.\n");
-            out.append("pub static OVERWORLD_").append(e.getKey()).append(": Tree = Tree {\n    nodes: &NODES,\n    root: ").append(e.getValue())
-                    .append(",\n    noises: &NOISES,\n    blended: Some(").append(t.blendedParams).append("),\n};\n");
+            out.append("\n/// The compiled `").append(e.getKey().toLowerCase()).append("` of `noise_settings/").append(file).append(".json`.\n");
+            out.append("pub static ").append(name).append("_").append(e.getKey()).append(": Tree = Tree {\n    nodes: &").append(prefix)
+                    .append("NODES,\n    root: ").append(e.getValue()).append(",\n    noises: &").append(prefix)
+                    .append("NOISES,\n    blended: Some(").append(t.blendedParams).append("),\n    legacy_random: ").append(legacy).append(",\n};\n");
         }
-        Files.writeString(rs, out);
+        return out.toString();
     }
 
     /** FNV hash + first/middle/last values of a node over a volume, or "x" if the game rejects that volume. */

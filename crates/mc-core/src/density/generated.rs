@@ -305,6 +305,7 @@ pub static OVERWORLD_FINAL_DENSITY: Tree = Tree {
     root: 220,
     noises: &NOISES,
     blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.125, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: false,
 };
 
 /// The compiled `aquifer_barrier` of `noise_settings/overworld.json`.
@@ -313,6 +314,7 @@ pub static OVERWORLD_AQUIFER_BARRIER: Tree = Tree {
     root: 221,
     noises: &NOISES,
     blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.125, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: false,
 };
 
 /// The compiled `aquifer_floodedness` of `noise_settings/overworld.json`.
@@ -321,6 +323,7 @@ pub static OVERWORLD_AQUIFER_FLOODEDNESS: Tree = Tree {
     root: 222,
     noises: &NOISES,
     blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.125, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: false,
 };
 
 /// The compiled `aquifer_spread` of `noise_settings/overworld.json`.
@@ -329,6 +332,7 @@ pub static OVERWORLD_AQUIFER_SPREAD: Tree = Tree {
     root: 223,
     noises: &NOISES,
     blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.125, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: false,
 };
 
 /// The compiled `aquifer_lava` of `noise_settings/overworld.json`.
@@ -337,6 +341,7 @@ pub static OVERWORLD_AQUIFER_LAVA: Tree = Tree {
     root: 224,
     noises: &NOISES,
     blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.125, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: false,
 };
 
 /// The compiled `aquifer_exclusion` of `noise_settings/overworld.json`.
@@ -345,6 +350,7 @@ pub static OVERWORLD_AQUIFER_EXCLUSION: Tree = Tree {
     root: 232,
     noises: &NOISES,
     blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.125, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: false,
 };
 
 /// The compiled `aquifer_surface_level` of `noise_settings/overworld.json`.
@@ -353,4 +359,42 @@ pub static OVERWORLD_AQUIFER_SURFACE_LEVEL: Tree = Tree {
     root: 254,
     noises: &NOISES,
     blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.125, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: false,
+};
+
+// ---- The Nether -------------------------------------------------------
+
+static NETHER_NODES: [Node; 17] = [
+    /* 0 */ Node::ClampedGradient { axis: Axis::Y, from_coordinate: -8, min_coordinate: -8, max_coordinate: 24, from_value: 0.0, coordinate_factor: 0.03125 },
+    /* 1 */ Node::ClampedGradient { axis: Axis::Y, from_coordinate: 104, min_coordinate: 104, max_coordinate: 128, from_value: 1.0, coordinate_factor: -0.041666668 },
+    /* 2 */ Node::Noise { noise: 0, xz_scale: 2.1387875000000003, y_scale: 4.277575 },
+    /* 3 */ Node::ConstAdd(2, 0.5),
+    /* 4 */ Node::Clamp { input: 3, min: 0.0, max: 1.0 },
+    /* 5 */ Node::Noise { noise: 1, xz_scale: 171.103, y_scale: 256.6545 },
+    /* 6 */ Node::Noise { noise: 2, xz_scale: 171.103, y_scale: 256.6545 },
+    /* 7 */ Node::Lerp { alpha: 4, first: 5, second: 6 },
+    /* 8 */ Node::LerpConstFirst { alpha: 1, first: 0.9375, second: 7 },
+    /* 9 */ Node::LerpConstFirst { alpha: 0, first: 2.5, second: 8 },
+    /* 10 */ Node::Blend(9),
+    /* 11 */ Node::ConstMul(10, 0.64),
+    /* 12 */ Node::Interpolated { input: 11, cell_size_xz: 4, cell_size_y: 8, cell_size_xz_inv: 0.25, cell_size_y_inv: 0.125 },
+    /* 13 */ Node::Squeeze(12),
+    /* 14 */ Node::Constant(0.0),
+    /* 15 */ Node::ContextBound { key: "minecraft:beardifier", fallback: 14 },
+    /* 16 */ Node::Add(13, 15),
+];
+
+static NETHER_NOISES: [NoiseSource; 3] = [
+    NoiseSource::BlendedMain,
+    NoiseSource::BlendedMinLimit,
+    NoiseSource::BlendedMaxLimit,
+];
+
+/// The compiled `final_density` of `noise_settings/nether.json`.
+pub static NETHER_FINAL_DENSITY: Tree = Tree {
+    nodes: &NETHER_NODES,
+    root: 16,
+    noises: &NETHER_NOISES,
+    blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.375, xz_factor: 80.0, y_factor: 60.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: true,
 };

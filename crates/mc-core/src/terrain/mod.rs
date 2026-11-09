@@ -3,8 +3,10 @@
 //! `getBaseHeight`), which is what structure placement checks use.
 
 mod aquifer;
+mod nether;
 
 pub use aquifer::{Aquifer, AquiferRoots, FluidStatus, GlobalFluidPicker, Substance};
+pub use nether::{NETHER_HEIGHT, NETHER_MIN_Y, NETHER_SEA_LEVEL, NetherTerrain};
 
 use crate::density::generated::{
     OVERWORLD_AQUIFER_BARRIER, OVERWORLD_AQUIFER_EXCLUSION, OVERWORLD_AQUIFER_FLOODEDNESS,

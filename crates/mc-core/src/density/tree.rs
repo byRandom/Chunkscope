@@ -176,4 +176,8 @@ pub struct Tree {
     pub noises: &'static [NoiseSource],
     /// Parameters of the `old_blended_noise` the blended sources come from.
     pub blended: Option<BlendedNoiseParams>,
+    /// The dimension uses the legacy random source (`legacy_random_source`):
+    /// noises come from a legacy positional factory and the blended noise is
+    /// seeded with `LegacyRandomSource(seed)`.
+    pub legacy_random: bool,
 }
