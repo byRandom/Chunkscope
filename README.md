@@ -92,7 +92,8 @@ The desktop app, from source:
 cargo run --release -p chunkscope-app
 ```
 
-Drag to pan, scroll to zoom, click a marker to select it. Structure markers
+Drag to pan, scroll to zoom, click a marker to select it, right-click the map
+to copy a position or a `/tp` command. Structure markers
 other than strongholds are positions where the game *attempts* a structure;
 biome and terrain checks are not implemented yet, so some of them do not
 generate. On Linux the app needs the usual X11 or Wayland libraries
