@@ -301,8 +301,8 @@ pub static STRUCTURE_SETS: [StructureSet; 21] = [
     },
 ];
 
-/// The structures of the overworld structure sets (strongholds excepted), sorted by name.
-pub static STRUCTURES: [Structure; 47] = [
+/// The structures of the overworld and Nether structure sets (strongholds excepted), sorted by name.
+pub static STRUCTURES: [Structure; 50] = [
     Structure {
         name: "minecraft:abandoned_camp_bamboo_jungle",
         biomes: &["minecraft:bamboo_jungle"],
@@ -513,6 +513,17 @@ pub static STRUCTURES: [Structure; 47] = [
         },
     },
     Structure {
+        name: "minecraft:bastion_remnant",
+        biomes: &["minecraft:crimson_forest", "minecraft:nether_wastes", "minecraft:soul_sand_valley", "minecraft:warped_forest"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:bastion/starts",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(33),
+            project_start_to_heightmap: None,
+            dimension_padding: None,
+        },
+    },
+    Structure {
         name: "minecraft:buried_treasure",
         biomes: &["minecraft:beach", "minecraft:snowy_beach"],
         kind: StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor),
@@ -521,6 +532,11 @@ pub static STRUCTURES: [Structure; 47] = [
         name: "minecraft:desert_pyramid",
         biomes: &["minecraft:desert"],
         kind: StructureKind::SinglePiece { width: 21, depth: 21 },
+    },
+    Structure {
+        name: "minecraft:fortress",
+        biomes: &["minecraft:nether_wastes", "minecraft:soul_sand_valley", "minecraft:crimson_forest", "minecraft:warped_forest", "minecraft:basalt_deltas"],
+        kind: StructureKind::NetherFortress,
     },
     Structure {
         name: "minecraft:igloo",
@@ -553,6 +569,14 @@ pub static STRUCTURES: [Structure; 47] = [
         kind: StructureKind::OceanMonument,
     },
     Structure {
+        name: "minecraft:nether_fossil",
+        biomes: &["minecraft:soul_sand_valley"],
+        kind: StructureKind::NetherFossil {
+            min_inclusive: VerticalAnchor::Absolute(32),
+            max_inclusive: VerticalAnchor::BelowTop(2),
+        },
+    },
+    Structure {
         name: "minecraft:ocean_ruin_cold",
         biomes: &["minecraft:frozen_ocean", "minecraft:cold_ocean", "minecraft:ocean", "minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean"],
         kind: StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor),
@@ -576,37 +600,89 @@ pub static STRUCTURES: [Structure; 47] = [
     Structure {
         name: "minecraft:ruined_portal",
         biomes: &["minecraft:beach", "minecraft:snowy_beach", "minecraft:river", "minecraft:frozen_river", "minecraft:taiga", "minecraft:snowy_taiga", "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga", "minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest", "minecraft:old_growth_birch_forest", "minecraft:dappled_forest", "minecraft:dark_forest", "minecraft:pale_garden", "minecraft:grove", "minecraft:mushroom_fields", "minecraft:ice_spikes", "minecraft:dripstone_caves", "minecraft:lush_caves", "minecraft:sulfur_caves", "minecraft:savanna", "minecraft:snowy_plains", "minecraft:plains", "minecraft:sunflower_plains"],
-        kind: StructureKind::NotImplemented,
+        kind: StructureKind::RuinedPortal(&[
+            PortalSetup {
+                placement: PortalPlacement::Underground,
+                weight: 0.5,
+                air_pocket_probability: 1.0,
+            },
+            PortalSetup {
+                placement: PortalPlacement::OnLandSurface,
+                weight: 0.5,
+                air_pocket_probability: 0.0,
+            },
+        ]),
     },
     Structure {
         name: "minecraft:ruined_portal_desert",
         biomes: &["minecraft:desert"],
-        kind: StructureKind::NotImplemented,
+        kind: StructureKind::RuinedPortal(&[
+            PortalSetup {
+                placement: PortalPlacement::PartlyBuried,
+                weight: 1.0,
+                air_pocket_probability: 0.0,
+            },
+        ]),
     },
     Structure {
         name: "minecraft:ruined_portal_jungle",
         biomes: &["minecraft:bamboo_jungle", "minecraft:jungle", "minecraft:sparse_jungle"],
-        kind: StructureKind::NotImplemented,
+        kind: StructureKind::RuinedPortal(&[
+            PortalSetup {
+                placement: PortalPlacement::OnLandSurface,
+                weight: 1.0,
+                air_pocket_probability: 0.0,
+            },
+        ]),
     },
     Structure {
         name: "minecraft:ruined_portal_mountain",
         biomes: &["minecraft:badlands", "minecraft:eroded_badlands", "minecraft:wooded_badlands", "minecraft:windswept_hills", "minecraft:windswept_forest", "minecraft:windswept_gravelly_hills", "minecraft:savanna_plateau", "minecraft:windswept_savanna", "minecraft:stony_shore", "minecraft:meadow", "minecraft:frozen_peaks", "minecraft:jagged_peaks", "minecraft:stony_peaks", "minecraft:snowy_slopes", "minecraft:cherry_grove"],
-        kind: StructureKind::NotImplemented,
+        kind: StructureKind::RuinedPortal(&[
+            PortalSetup {
+                placement: PortalPlacement::InMountain,
+                weight: 0.5,
+                air_pocket_probability: 1.0,
+            },
+            PortalSetup {
+                placement: PortalPlacement::OnLandSurface,
+                weight: 0.5,
+                air_pocket_probability: 0.0,
+            },
+        ]),
     },
     Structure {
         name: "minecraft:ruined_portal_nether",
         biomes: &["minecraft:nether_wastes", "minecraft:soul_sand_valley", "minecraft:crimson_forest", "minecraft:warped_forest", "minecraft:basalt_deltas"],
-        kind: StructureKind::NotImplemented,
+        kind: StructureKind::RuinedPortal(&[
+            PortalSetup {
+                placement: PortalPlacement::InNether,
+                weight: 1.0,
+                air_pocket_probability: 0.0,
+            },
+        ]),
     },
     Structure {
         name: "minecraft:ruined_portal_ocean",
         biomes: &["minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean", "minecraft:deep_lukewarm_ocean", "minecraft:frozen_ocean", "minecraft:ocean", "minecraft:cold_ocean", "minecraft:lukewarm_ocean", "minecraft:warm_ocean"],
-        kind: StructureKind::NotImplemented,
+        kind: StructureKind::RuinedPortal(&[
+            PortalSetup {
+                placement: PortalPlacement::OnOceanFloor,
+                weight: 1.0,
+                air_pocket_probability: 0.0,
+            },
+        ]),
     },
     Structure {
         name: "minecraft:ruined_portal_swamp",
         biomes: &["minecraft:swamp", "minecraft:mangrove_swamp"],
-        kind: StructureKind::NotImplemented,
+        kind: StructureKind::RuinedPortal(&[
+            PortalSetup {
+                placement: PortalPlacement::OnOceanFloor,
+                weight: 1.0,
+                air_pocket_probability: 0.0,
+            },
+        ]),
     },
     Structure {
         name: "minecraft:shipwreck",
@@ -704,7 +780,7 @@ pub static STRUCTURES: [Structure; 47] = [
 
 /// Start pools of the jigsaw structures, sorted by name. `elements` are the distinct
 /// elements; `templates` is the game's weighted list, as indices into `elements`.
-pub static START_POOLS: [StartPool; 27] = [
+pub static START_POOLS: [StartPool; 28] = [
     StartPool {
         name: "minecraft:abandoned_camp/tent/bamboo_jungle",
         elements: &[
@@ -1735,6 +1811,32 @@ pub static START_POOLS: [StartPool; 27] = [
         templates: &[0, 1, 2],
     },
     StartPool {
+        name: "minecraft:bastion/starts",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 45, 23, 45], [-45, 0, 0, 0, 23, 45], [-45, 0, -45, 0, 23, 0], [0, 0, -45, 45, 23, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 29, 23, 47], [-47, 0, 0, 0, 23, 29], [-29, 0, -47, 0, 23, 0], [0, 0, -29, 47, 23, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 37, 47, 37], [-37, 0, 0, 0, 47, 37], [-37, 0, -37, 0, 47, 0], [0, 0, -37, 37, 47, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 15, 31, 31], [-31, 0, 0, 0, 31, 15], [-15, 0, -31, 0, 31, 0], [0, 0, -15, 31, 31, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3],
+    },
+    StartPool {
         name: "minecraft:pillager_outpost/base_plates",
         elements: &[
             Some(PoolElement {
@@ -1982,6 +2084,27 @@ pub static START_POOLS: [StartPool; 27] = [
         ],
         templates: &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3],
     },
+];
+
+/// `RuinedPortalStructure.STRUCTURE_LOCATION_PORTALS`: template sizes (x, y, z).
+pub static RUINED_PORTALS: [[i32; 3]; 10] = [
+    [6, 10, 6], // ruined_portal/portal_1
+    [9, 12, 9], // ruined_portal/portal_2
+    [8, 9, 9], // ruined_portal/portal_3
+    [8, 9, 9], // ruined_portal/portal_4
+    [10, 10, 7], // ruined_portal/portal_5
+    [5, 7, 7], // ruined_portal/portal_6
+    [9, 7, 9], // ruined_portal/portal_7
+    [14, 9, 9], // ruined_portal/portal_8
+    [10, 8, 9], // ruined_portal/portal_9
+    [12, 8, 10], // ruined_portal/portal_10
+];
+
+/// `RuinedPortalStructure.STRUCTURE_LOCATION_GIANT_PORTALS`: template sizes (x, y, z).
+pub static GIANT_RUINED_PORTALS: [[i32; 3]; 3] = [
+    [11, 17, 16], // ruined_portal/giant_portal_1
+    [11, 16, 16], // ruined_portal/giant_portal_2
+    [16, 16, 16], // ruined_portal/giant_portal_3
 ];
 
 /// `#minecraft:required_ocean_monument_surrounding`.

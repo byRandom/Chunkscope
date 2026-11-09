@@ -8,11 +8,14 @@ use std::time::Instant;
 
 use eframe::egui::{self, RichText};
 use mc_core::biome::Biome;
-use mc_core::finder::{Center, Match, Query, SearchState, Seeds, StructureFilter, search};
+use mc_core::finder::{
+    Center, Dimension as FinderDimension, Match, Query, SearchState, Seeds, StructureFilter, search,
+};
 use mc_core::parse_seed;
 
 use crate::app::{accent_button, fit_label, icon_button, panel_header, section};
 use crate::biome_colors;
+use crate::dimension::Dimension;
 use crate::icons::Icon;
 use crate::structures::{self, KINDS, SPAWN, STRONGHOLDS};
 use crate::theme::{self, TEXT, TEXT_WEAK};
@@ -53,7 +56,17 @@ pub struct FinderUi {
 
 /// Structure layers the finder can search (not the spawn, not strongholds).
 fn searchable(kind: usize) -> bool {
-    KINDS[kind].set != SPAWN && KINDS[kind].set != STRONGHOLDS
+    let k = &KINDS[kind];
+    k.set != SPAWN && k.set != STRONGHOLDS
+}
+
+/// A layer's name in the finder, with its dimension when not the Overworld.
+fn kind_label(kind: usize) -> String {
+    let k = &KINDS[kind];
+    match k.dimension {
+        Dimension::Overworld => k.label.to_owned(),
+        Dimension::Nether => format!("{} (Nether)", k.label),
+    }
 }
 
 impl Default for FinderUi {
@@ -89,11 +102,16 @@ impl FinderUi {
     fn query(&self) -> Option<Query> {
         let mut structures_ = Vec::new();
         for f in &self.filters {
-            let set = structures::set(KINDS[f.kind].set)?;
+            let kind = &KINDS[f.kind];
             structures_.push(StructureFilter {
-                set,
+                set: structures::set(kind.set)?,
                 radius: f.radius,
                 min_count: f.count,
+                dimension: match kind.dimension {
+                    Dimension::Overworld => FinderDimension::Overworld,
+                    Dimension::Nether => FinderDimension::Nether,
+                },
+                only: kind.only,
             });
         }
         Some(Query {
@@ -134,7 +152,10 @@ impl FinderUi {
             .spawn(move || {
                 search(seeds, &query, threads, &st, &|m| {
                     let mut r = results.lock().expect("results");
-                    r.push(m);
+                    // Other threads finish their batch after the cancel.
+                    if r.len() < MAX_RESULTS {
+                        r.push(m);
+                    }
                     if r.len() >= MAX_RESULTS {
                         st.cancel.store(true, Ordering::Relaxed);
                     }
@@ -209,12 +230,10 @@ impl FinderUi {
                     ui.horizontal(|ui| {
                         egui::ComboBox::from_id_salt(("finder-kind", i))
                             .width(ui.available_width() - 40.0)
-                            .selected_text(KINDS[f.kind].label)
+                            .selected_text(kind_label(f.kind))
                             .show_ui(ui, |ui| {
-                                for (k, kind) in KINDS.iter().enumerate() {
-                                    if searchable(k) {
-                                        ui.selectable_value(&mut f.kind, k, kind.label);
-                                    }
+                                for k in (0..KINDS.len()).filter(|&k| searchable(k)) {
+                                    ui.selectable_value(&mut f.kind, k, kind_label(k));
                                 }
                             });
                         if icon_button(ui, Icon::Minus, false)
@@ -241,6 +260,17 @@ impl FinderUi {
         if let Some(i) = remove {
             self.filters.remove(i);
         }
+        if self
+            .filters
+            .iter()
+            .any(|f| KINDS[f.kind].dimension == Dimension::Nether)
+        {
+            ui.label(
+                RichText::new("Nether structures are measured from the Nether's 0, 0.")
+                    .color(TEXT_WEAK)
+                    .small(),
+            );
+        }
         if ui.button("+ Add structure").clicked() {
             let kind = (0..KINDS.len()).find(|&k| searchable(k)).unwrap_or(0);
             self.filters.push(FilterRow {
@@ -259,7 +289,7 @@ impl FinderUi {
             .selected_text(label)
             .show_ui(ui, |ui| {
                 ui.selectable_value(&mut self.biome, None, "Any");
-                for b in Biome::all() {
+                for b in Dimension::Overworld.biomes() {
                     ui.selectable_value(
                         &mut self.biome,
                         Some(b),
@@ -335,7 +365,18 @@ impl FinderUi {
             let summary: Vec<String> = m
                 .found
                 .iter()
-                .map(|f| format!("{} {:.0}m", biome_colors::display_name(f.name), f.distance))
+                .map(|f| {
+                    let nether = if f.dimension == FinderDimension::Nether {
+                        " (Nether)"
+                    } else {
+                        ""
+                    };
+                    format!(
+                        "{}{nether} {:.0}m",
+                        biome_colors::display_name(f.name),
+                        f.distance
+                    )
+                })
                 .collect();
             egui::Frame::new()
                 .fill(theme::FIELD)

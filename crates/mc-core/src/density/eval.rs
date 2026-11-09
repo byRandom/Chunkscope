@@ -77,7 +77,17 @@ impl DensitySampler {
     /// Instantiates the tree's noises like `RandomState` does for a world
     /// using the Xoroshiro algorithm (every vanilla dimension).
     pub fn new(tree: Tree, world_seed: i64) -> Self {
-        let blended = tree.blended.map(|p| FbmSet::for_world(&p, world_seed));
+        use crate::random::{LegacyRandomSource, PositionalRandomFactory, RandomSource};
+        // RandomState: with the legacy random source, the blended noise is
+        // seeded with LegacyRandomSource(seed) and the other noises come from
+        // a legacy positional factory.
+        let blended = tree.blended.map(|p| {
+            if tree.legacy_random {
+                FbmSet::new(&p, &mut LegacyRandomSource::new(world_seed))
+            } else {
+                FbmSet::for_world(&p, world_seed)
+            }
+        });
         let noises = tree
             .noises
             .iter()
@@ -87,7 +97,12 @@ impl DensitySampler {
                         .iter()
                         .find(|(n, _)| n == name)
                         .unwrap_or_else(|| panic!("unknown noise {name}"));
-                    NormalNoise::instantiate(world_seed, name, params)
+                    if tree.legacy_random {
+                        let factory = LegacyRandomSource::new(world_seed).fork_positional();
+                        NormalNoise::new(params).create(&mut factory.from_hash_of(name))
+                    } else {
+                        NormalNoise::instantiate(world_seed, name, params)
+                    }
                 }
                 NoiseSource::BlendedMinLimit => {
                     blended.as_ref().expect("blended noise").min_limit.clone()

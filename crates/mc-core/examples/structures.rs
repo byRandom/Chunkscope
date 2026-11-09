@@ -1,7 +1,6 @@
 //! List the structures near a position: where each overworld structure set
 //! attempts a structure, checked against biome and terrain like the game
-//! does. Mineshafts and ruined portals are not validated yet; they are
-//! listed as possible.
+//! does. Mineshafts are not validated yet; they are listed as possible.
 //!
 //! ```text
 //! cargo run -p mc-core --example structures -- <seed text> <x> <z> [radius in blocks]

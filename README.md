@@ -11,13 +11,13 @@ Edition**, written in Rust. Think of an offline tool that shows biomes,
 structures and slime chunks for any seed, and can search millions of seeds for
 the features you care about.
 
-**Status:** early. Overworld biomes already match the game: the random
-number generators, seed handling, noise, climate sampling and biome lookup
-are all verified against the real JDK and the real game classes. Structure
-positions match too: where each structure set attempts to generate, and
-the biome and terrain checks that decide whether a structure really
-generates there (all overworld structures except mineshafts and ruined
-portals).
+**Status:** early. Overworld and Nether biomes already match the game: the
+random number generators, seed handling, noise, climate sampling and biome
+lookup are all verified against the real JDK and the real game classes.
+Structure positions match too: where each structure set attempts to
+generate, and the biome and terrain checks that decide whether a structure
+really generates there (every Overworld and Nether structure except
+mineshafts).
 
 Target: Minecraft **26.3** (Java 25).
 
@@ -57,7 +57,7 @@ Bedrock Edition is out of scope for now.
 - [x] Perlin noise and normal (double-Perlin) noise, with all vanilla noise parameters
 - [ ] Smeared Perlin, blended and simplex noise (terrain, End islands)
 - [x] Overworld biomes (climate sampling, terrain offset spline, biome R-tree)
-- [ ] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
+- [x] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
 - [ ] End: biomes, islands, end cities (0.5)
 - [ ] Mineshafts, no "possible" markers left, saved settings (0.6)
 - [ ] Large-scale verification against the game (0.7)
@@ -71,7 +71,7 @@ Bedrock Edition is out of scope for now.
   - [x] Overworld `final_density` (the game's compiled sampler tree)
   - [x] Aquifers
   - [x] Heightmaps (`getBaseHeight`: `WORLD_SURFACE_WG`, `OCEAN_FLOOR_WG`) and base block columns
-- [x] Structure validation (biome and terrain height), except mineshafts and ruined portals
+- [x] Structure validation (biome and terrain height), except mineshafts
 - [x] World spawn: the climate origin (exact) and the spawn block (estimate)
 - [x] Seed finder with filters (structures near the spawn, biome at the spawn), in the app and on the command line
 - [ ] Map viewer GUI
@@ -101,8 +101,8 @@ cargo run --release -p chunkscope-app
 Drag to pan, scroll to zoom, click a marker to select it, right-click the map
 to copy a position or a `/tp` command. The **Finder** tab searches seeds for
 structures near the spawn; click a result to open it on the map. Structures are checked against biome
-and terrain like the game does; mineshafts and ruined portals are not checked
-yet and are marked as possible. On Linux the app needs the usual X11 or Wayland libraries
+and terrain like the game does; mineshafts are not checked yet and are marked
+as possible. On Linux the app needs the usual X11 or Wayland libraries
 (for example `libxkbcommon-x11-0` on X11).
 
 Command-line examples:

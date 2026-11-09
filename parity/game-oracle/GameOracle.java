@@ -97,6 +97,9 @@ public class GameOracle {
         structures(lookup);
         spawnOrigins(lookup);
         netherBiomes(lookup);
+        netherStructures(lookup);
+        netherTerrain(lookup, Path.of(args[5]));
+        ruinedPortals(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -624,6 +627,49 @@ public class GameOracle {
         Files.writeString(rs, out);
     }
 
+    /** The Nether's compiled final_density (appended to density/generated.rs) and base columns. */
+    static void netherTerrain(HolderLookup.Provider lookup, Path densityRs) throws Exception {
+        NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.NETHER).value();
+        String structure = null;
+        try (PrintWriter w = writer("nether_terrain.txt")) {
+            for (long seed : List.of(0L, -4172144997902289642L, INPUTS.nextLong())) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                List<int[]> columns = new ArrayList<>(List.of(new int[] {0, 0}, new int[] {8, -8}));
+                for (int i = 0; i < 40; i++) {
+                    int range = i % 2 == 0 ? 3_000 : 1_000_000;
+                    columns.add(new int[] {INPUTS.nextInt(-range, range), INPUTS.nextInt(-range, range)});
+                }
+                for (int[] xz : columns) {
+                    Column col = column(rs, settings, xz[0], xz[1]);
+                    TreeExport t = exportFinalDensity(lookup, rs, settings, col, seed);
+                    String s = String.join("\n", t.nodes) + String.join("\n", t.noises);
+                    if (structure == null) {
+                        structure = s;
+                        String file = Files.readString(densityRs);
+                        Files.writeString(densityRs, file + "\n// ---- The Nether -------------------------------------------------------\n\n"
+                                + densityTreeSection(t, "NETHER_", "NETHER", "nether", true));
+                    } else if (!structure.equals(s)) {
+                        throw new IllegalStateException("compiled Nether tree differs between columns or seeds");
+                    }
+                    col.chunk().close();
+                    // The game's own base column (the generator a Nether dimension uses).
+                    var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.NETHER);
+                    var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                            lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                                    .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.NETHER));
+                    var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+                    var height = net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+                    int ws = generator.getBaseHeight(xz[0], xz[1], net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, height, rs);
+                    var column = generator.getBaseColumn(xz[0], xz[1], height, rs);
+                    StringBuilder blocks = new StringBuilder();
+                    for (int y = height.getMinY(); y < height.getMinY() + height.getHeight(); y++) blocks.append(substance(column.getBlock(y), settings));
+                    w.println(seed + " " + xz[0] + " " + xz[1] + " " + ws + " " + blocks);
+                }
+            }
+        }
+    }
+
     /** Nether biomes and climate (legacy random source) at random quart positions. */
     static void netherBiomes(HolderLookup.Provider lookup) throws IOException {
         NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
@@ -785,6 +831,13 @@ public class GameOracle {
         Files.writeString(rs, out);
     }
 
+    static String verticalAnchor(net.minecraft.world.level.levelgen.VerticalAnchor a) {
+        if (a instanceof net.minecraft.world.level.levelgen.VerticalAnchor.Absolute v) return "VerticalAnchor::Absolute(" + v.y() + ")";
+        if (a instanceof net.minecraft.world.level.levelgen.VerticalAnchor.AboveBottom v) return "VerticalAnchor::AboveBottom(" + v.offset() + ")";
+        if (a instanceof net.minecraft.world.level.levelgen.VerticalAnchor.BelowTop v) return "VerticalAnchor::BelowTop(" + v.offset() + ")";
+        throw new IllegalStateException("unsupported anchor " + a);
+    }
+
     static String anchor(net.minecraft.world.level.levelgen.VerticalAnchor a) {
         if (a instanceof net.minecraft.world.level.levelgen.VerticalAnchor.Absolute abs) return Integer.toString(abs.y());
         throw new IllegalStateException("unsupported anchor " + a);
@@ -794,8 +847,7 @@ public class GameOracle {
     static void writeStructures(HolderLookup.Provider lookup,
             List<net.minecraft.core.Holder.Reference<net.minecraft.world.level.levelgen.structure.StructureSet>> sets,
             StringBuilder out) {
-        java.util.Set<String> skip = java.util.Set.of("minecraft:strongholds", "minecraft:nether_complexes",
-                "minecraft:nether_fossils", "minecraft:end_cities");
+        java.util.Set<String> skip = java.util.Set.of("minecraft:strongholds", "minecraft:end_cities");
         List<String> names = new ArrayList<>();
         for (var ref : sets) {
             if (skip.contains(ref.key().identifier().toString())) continue;
@@ -804,7 +856,7 @@ public class GameOracle {
         java.util.Collections.sort(names);
         var registry = lookup.lookupOrThrow(Registries.STRUCTURE);
         Map<String, Object[]> startPools = new java.util.TreeMap<>();
-        out.append("\n/// The structures of the overworld structure sets (strongholds excepted), sorted by name.\n");
+        out.append("\n/// The structures of the overworld and Nether structure sets (strongholds excepted), sorted by name.\n");
         out.append("pub static STRUCTURES: [Structure; ").append(names.size()).append("] = [\n");
         for (String name : names) {
             var structure = registry.getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse(name))).value();
@@ -854,6 +906,25 @@ public class GameOracle {
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.OceanRuinStructure
                     || structure instanceof net.minecraft.world.level.levelgen.structure.structures.BuriedTreasureStructure) {
                 kind = "StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor)";
+            } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.NetherFossilStructure f) {
+                var u = (net.minecraft.world.level.levelgen.heightproviders.UniformHeight) get(f, "height");
+                kind = "StructureKind::NetherFossil {\n            min_inclusive: " + verticalAnchor((net.minecraft.world.level.levelgen.VerticalAnchor) get(u, "minInclusive"))
+                        + ",\n            max_inclusive: " + verticalAnchor((net.minecraft.world.level.levelgen.VerticalAnchor) get(u, "maxInclusive")) + ",\n        }";
+            } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.RuinedPortalStructure rp) {
+                @SuppressWarnings("unchecked")
+                var setups = (List<net.minecraft.world.level.levelgen.structure.structures.RuinedPortalStructure.Setup>) get(rp, "setups");
+                StringBuilder list = new StringBuilder();
+                for (var setup : setups) {
+                    String placement = java.util.Arrays.stream(setup.placement().name().split("_"))
+                            .map(w -> w.charAt(0) + w.substring(1).toLowerCase()).collect(java.util.stream.Collectors.joining());
+                    list.append("\n            PortalSetup {\n                placement: PortalPlacement::").append(placement)
+                            .append(",\n                weight: ").append(rustF32(setup.weight()))
+                            .append(",\n                air_pocket_probability: ").append(rustF32(setup.airPocketProbability()))
+                            .append(",\n            },");
+                }
+                kind = "StructureKind::RuinedPortal(&[" + list + "\n        ])";
+            } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.NetherFortressStructure) {
+                kind = "StructureKind::NetherFortress";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.WoodlandMansionStructure) {
                 kind = "StructureKind::WoodlandMansion";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.OceanMonumentStructure) {
@@ -867,8 +938,31 @@ public class GameOracle {
         StringBuilder surrounding = new StringBuilder();
         for (String b : biomeTag("minecraft:required_ocean_monument_surrounding")) surrounding.append(surrounding.length() == 0 ? "" : ", ").append('"').append(b).append('"');
         writeStartPools(lookup, startPools, out);
+        writePortalTemplates(lookup, out);
         out.append("\n/// `#minecraft:required_ocean_monument_surrounding`.\npub static OCEAN_MONUMENT_SURROUNDING: &[&str] = &[")
                 .append(surrounding).append("];\n");
+    }
+
+    /** The sizes of the ruined portal templates, in the game's order. */
+    static void writePortalTemplates(HolderLookup.Provider lookup, StringBuilder out) {
+        try {
+            var templates = templateManager(lookup);
+            for (String[] f : new String[][] {{"STRUCTURE_LOCATION_PORTALS", "RUINED_PORTALS"}, {"STRUCTURE_LOCATION_GIANT_PORTALS", "GIANT_RUINED_PORTALS"}}) {
+                Field field = net.minecraft.world.level.levelgen.structure.structures.RuinedPortalStructure.class.getDeclaredField(f[0]);
+                field.setAccessible(true);
+                String[] names = (String[]) field.get(null);
+                out.append("\n/// `RuinedPortalStructure.").append(f[0]).append("`: template sizes (x, y, z).\n");
+                out.append("pub static ").append(f[1]).append(": [[i32; 3]; ").append(names.length).append("] = [\n");
+                for (String name : names) {
+                    var size = templates.getOrCreate(Identifier.withDefaultNamespace(name)).getSize();
+                    out.append("    [").append(size.getX()).append(", ").append(size.getY()).append(", ").append(size.getZ())
+                            .append("], // ").append(name).append('\n');
+                }
+                out.append("];\n");
+            }
+        } catch (ReflectiveOperationException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /** Start pools of the jigsaw structures: what their start piece's bounding box and anchor need. */
@@ -1319,7 +1413,7 @@ public class GameOracle {
         return Float.toString(f).replace("E", "e");
     }
 
-    static TreeExport exportFinalDensity(HolderLookup.Provider lookup, RandomState rs, NoiseGeneratorSettings settings, Column col) throws Exception {
+    static TreeExport exportFinalDensity(HolderLookup.Provider lookup, RandomState rs, NoiseGeneratorSettings settings, Column col, long seed) throws Exception {
         Map<Object, String> names = new java.util.IdentityHashMap<>();
         @SuppressWarnings("unchecked")
         var instances = (Map<ResourceKey<?>, Object>) fieldAny(rs, "noiseInstances");
@@ -1329,7 +1423,10 @@ public class GameOracle {
         // the three smeared stacks of old_blended_noise, recreated to match by offset
         var blended = find(settings.noiseRouter().finalDensity(), net.minecraft.world.level.levelgen.synth.BlendedNoise.class);
         var factory = (PositionalRandomFactory) fieldAny(rs, "random");
-        var fresh = blended.createFbmSet(factory.fromHashOf(net.minecraft.world.level.levelgen.synth.BlendedNoise.NOISE_SEED));
+        // RandomState's wiring: with the legacy random source, the blended noise is seeded
+        // with new LegacyRandomSource(seed) instead of the positional factory.
+        var fresh = blended.createFbmSet(settings.useLegacyRandomSource() ? new LegacyRandomSource(seed)
+                : factory.fromHashOf(net.minecraft.world.level.levelgen.synth.BlendedNoise.NOISE_SEED));
         Map<Object, String> stacks = new java.util.IdentityHashMap<>();
         java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         java.util.ArrayDeque<Object> queue = new java.util.ArrayDeque<>(List.of(col.bound().sampler()));
@@ -1359,7 +1456,7 @@ public class GameOracle {
         // final_density first (keeps its node ids stable), then the aquifer's own functions
         t.roots.put("FINAL_DENSITY", t.node(col.bound().sampler()));
         Object aquifer = col.chunk().aquifer();
-        for (String[] f : new String[][] {{"AQUIFER_BARRIER", "barrierNoise"}, {"AQUIFER_FLOODEDNESS", "fluidLevelFloodednessNoise"},
+        if (settings.aquifers().isPresent()) for (String[] f : new String[][] {{"AQUIFER_BARRIER", "barrierNoise"}, {"AQUIFER_FLOODEDNESS", "fluidLevelFloodednessNoise"},
                 {"AQUIFER_SPREAD", "fluidLevelSpreadNoise"}, {"AQUIFER_LAVA", "lavaNoise"}, {"AQUIFER_EXCLUSION", "exclusion"},
                 {"AQUIFER_SURFACE_LEVEL", "surfaceLevel"}}) {
             var bound = (DensitySampler.Bound) fieldAny(aquifer, f[1]);
@@ -1388,7 +1485,7 @@ public class GameOracle {
                 for (int i = 0; i < 3; i++) columns.add(new int[] {INPUTS.nextInt(-100_000, 100_000), INPUTS.nextInt(-100_000, 100_000)});
                 for (int[] xz : columns) {
                     Column col = column(state, settings, xz[0], xz[1]);
-                    TreeExport t = exportFinalDensity(lookup, state, settings, col);
+                    TreeExport t = exportFinalDensity(lookup, state, settings, col, seed);
                     String s = String.join("\n", t.nodes) + String.join("\n", t.noises);
                     if (structure == null) {
                         structure = s;
@@ -1428,17 +1525,25 @@ public class GameOracle {
         out.append("//! `getBaseHeight` (one `NoiseChunk` column).\n\n");
         out.append("use super::tree::{Axis, Node, NoiseSource, Tree};\n");
         out.append("use crate::biome::spline::{Multipoint, Spline};\nuse crate::noise::blended::BlendedNoiseParams;\n\n");
-        out.append("static NODES: [Node; ").append(t.nodes.size()).append("] = [\n");
+        out.append(densityTreeSection(t, "", "OVERWORLD", "overworld", false));
+        Files.writeString(rs, out);
+    }
+
+    /** The statics of one compiled tree: nodes, noises and one `Tree` per root. */
+    static String densityTreeSection(TreeExport t, String prefix, String name, String file, boolean legacy) {
+        StringBuilder out = new StringBuilder();
+        out.append("static ").append(prefix).append("NODES: [Node; ").append(t.nodes.size()).append("] = [\n");
         for (int i = 0; i < t.nodes.size(); i++) out.append("    /* ").append(i).append(" */ ").append(t.nodes.get(i)).append(",\n");
-        out.append("];\n\nstatic NOISES: [NoiseSource; ").append(t.noises.size()).append("] = [\n");
+        out.append("];\n\nstatic ").append(prefix).append("NOISES: [NoiseSource; ").append(t.noises.size()).append("] = [\n");
         for (String n : t.noises) out.append("    ").append(n).append(",\n");
         out.append("];\n");
         for (var e : t.roots.entrySet()) {
-            out.append("\n/// The compiled `").append(e.getKey().toLowerCase()).append("` of `noise_settings/overworld.json`.\n");
-            out.append("pub static OVERWORLD_").append(e.getKey()).append(": Tree = Tree {\n    nodes: &NODES,\n    root: ").append(e.getValue())
-                    .append(",\n    noises: &NOISES,\n    blended: Some(").append(t.blendedParams).append("),\n};\n");
+            out.append("\n/// The compiled `").append(e.getKey().toLowerCase()).append("` of `noise_settings/").append(file).append(".json`.\n");
+            out.append("pub static ").append(name).append("_").append(e.getKey()).append(": Tree = Tree {\n    nodes: &").append(prefix)
+                    .append("NODES,\n    root: ").append(e.getValue()).append(",\n    noises: &").append(prefix)
+                    .append("NOISES,\n    blended: Some(").append(t.blendedParams).append("),\n    legacy_random: ").append(legacy).append(",\n};\n");
         }
-        Files.writeString(rs, out);
+        return out.toString();
     }
 
     /** FNV hash + first/middle/last values of a node over a volume, or "x" if the game rejects that volume. */
@@ -1762,6 +1867,194 @@ public class GameOracle {
                 }
             }
             w.println(sb);
+        }
+    }
+
+    /** The Nether's structure attempts (nether_complexes, nether_fossils) and generation points. */
+    static void netherStructures(HolderLookup.Provider lookup) throws Exception {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.NETHER);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                        .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.NETHER));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        // The level's height is the dimension type's (dimension_type/the_nether.json: y 0 to 255),
+        // not the noise settings' 128 blocks.
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(0, 256);
+        List<net.minecraft.core.Registry<?>> registries = new ArrayList<>();
+        for (var key : List.of(Registries.TEMPLATE_POOL, Registries.PROCESSOR_LIST)) registries.add(copyRegistry(lookup, key));
+        net.minecraft.core.registries.BuiltInRegistries.REGISTRY.forEach(registries::add);
+        var registryAccess = new net.minecraft.core.RegistryAccess.ImmutableRegistryAccess(registries);
+        var templates = templateManager(lookup);
+        Map<String, java.util.Set<String>> structureBiomes = new java.util.HashMap<>();
+        for (var ref : lookup.lookupOrThrow(Registries.STRUCTURE).listElements().toList()) {
+            String tag = ((net.minecraft.core.HolderSet.Named<Biome>) ref.value().biomes()).key().location().toString();
+            structureBiomes.put(ref.key().identifier().toString(), new java.util.HashSet<>(biomeTag(tag)));
+        }
+        var sets = structureSets(lookup);
+        List<String> netherSets = List.of("minecraft:nether_complexes", "minecraft:nether_fossils");
+        List<Long> worldSeeds = List.of(0L, -4172144997902289642L, INPUTS.nextLong());
+        try (PrintWriter w = writer("nether_structures.txt")) {
+            for (long seed : worldSeeds) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                var ctor = net.minecraft.world.level.chunk.ChunkGeneratorStructureState.class.getDeclaredConstructor(
+                        RandomState.class, net.minecraft.world.level.biome.BiomeSource.class, long.class,
+                        net.minecraft.world.level.ChunkPos.class, long.class, List.class);
+                ctor.setAccessible(true);
+                var state = ctor.newInstance(rs, biomeSource, seed, new net.minecraft.world.level.ChunkPos(0, 0), seed, List.copyOf(sets));
+                for (var setRef : sets) {
+                    String setName = setRef.key().identifier().toString();
+                    if (!netherSets.contains(setName)) continue;
+                    var set = setRef.value();
+                    var placement = (net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement) set.placement();
+                    List<int[]> chunks = new ArrayList<>();
+                    for (int rz = -8; rz < 8; rz++) for (int rx = -8; rx < 8; rx++) {
+                        var c = placement.getPotentialStructureChunk(seed, rx * placement.spacing(), rz * placement.spacing());
+                        chunks.add(new int[] {c.x(), c.z()});
+                    }
+                    for (int i = 0; i < 40; i++) {
+                        int range = 2_000_000 / 16 / placement.spacing();
+                        int rx = INPUTS.nextInt(-range, range), rz = INPUTS.nextInt(-range, range);
+                        var c = placement.getPotentialStructureChunk(seed, rx * placement.spacing(), rz * placement.spacing());
+                        chunks.add(new int[] {c.x(), c.z()});
+                    }
+                    for (int[] c : chunks) {
+                        var pos = new net.minecraft.world.level.ChunkPos(c[0], c[1]);
+                        if (!placement.isStructureChunk(state, pos.x(), pos.z())) continue;
+                        StringBuilder sb = new StringBuilder(seed + " " + setName + " " + pos.x() + " " + pos.z());
+                        selectStructure(sb, set, seed, pos, registryAccess, generator, biomeSource, rs, templates, height, structureBiomes);
+                        w.println(sb);
+                    }
+                }
+            }
+        }
+        // Generation points of each Nether structure on random clusters of chunks.
+        try (PrintWriter w = writer("nether_structure_points.txt")) {
+            long seed = INPUTS.nextLong();
+            RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+            var registry = lookup.lookupOrThrow(Registries.STRUCTURE);
+            for (String name : List.of("minecraft:bastion_remnant", "minecraft:fortress", "minecraft:nether_fossil")) {
+                var holder = registry.getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse(name)));
+                var biomes = structureBiomes.get(name);
+                java.util.function.Predicate<Holder<Biome>> valid = h -> biomes.contains(h.unwrapKey().orElseThrow().identifier().toString());
+                StringBuilder sb = new StringBuilder(seed + " " + name.substring("minecraft:".length()));
+                for (int cluster = 0; cluster < 12; cluster++) {
+                    int ccx = INPUTS.nextInt(-6000, 6000), ccz = INPUTS.nextInt(-6000, 6000);
+                    for (int dz = 0; dz < 6; dz++) for (int dx = 0; dx < 6; dx++) {
+                        var pos = new net.minecraft.world.level.ChunkPos(ccx + dx, ccz + dz);
+                        var context = new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(
+                                registryAccess, generator, biomeSource, rs.createClimateSampler(SamplerContext.builder().enableCaches().build()),
+                                rs, templates, seed, pos, height, valid);
+                        var point = holder.value().findValidGenerationPoint(context);
+                        sb.append(' ').append(pos.x()).append(',').append(pos.z()).append(':');
+                        if (point.isPresent()) {
+                            var p = point.get().position();
+                            sb.append(p.getX()).append(',').append(p.getY()).append(',').append(p.getZ());
+                        } else {
+                            sb.append("no");
+                        }
+                    }
+                }
+                w.println(sb);
+            }
+        }
+    }
+
+    /**
+     * Ruined portals: the Nether's ruined_portals attempts (the overworld's are in structures.txt),
+     * and the generation point of every variant on clusters of chunks, in both dimensions.
+     */
+    static void ruinedPortals(HolderLookup.Provider lookup) throws Exception {
+        List<net.minecraft.core.Registry<?>> registries = new ArrayList<>();
+        for (var key : List.of(Registries.TEMPLATE_POOL, Registries.PROCESSOR_LIST)) registries.add(copyRegistry(lookup, key));
+        net.minecraft.core.registries.BuiltInRegistries.REGISTRY.forEach(registries::add);
+        var registryAccess = new net.minecraft.core.RegistryAccess.ImmutableRegistryAccess(registries);
+        var templates = templateManager(lookup);
+        Map<String, java.util.Set<String>> structureBiomes = new java.util.HashMap<>();
+        for (var ref : lookup.lookupOrThrow(Registries.STRUCTURE).listElements().toList()) {
+            String tag = ((net.minecraft.core.HolderSet.Named<Biome>) ref.value().biomes()).key().location().toString();
+            structureBiomes.put(ref.key().identifier().toString(), new java.util.HashSet<>(biomeTag(tag)));
+        }
+        var sets = structureSets(lookup);
+        var registry = lookup.lookupOrThrow(Registries.STRUCTURE);
+        var portalSet = sets.stream().filter(r -> r.key().identifier().toString().equals("minecraft:ruined_portals")).findFirst().orElseThrow();
+        List<String> names = new ArrayList<>();
+        for (var e : portalSet.value().structures()) names.add(e.structure().unwrapKey().orElseThrow().identifier().toString());
+        java.util.Collections.sort(names);
+        try (PrintWriter attempts = writer("ruined_portals.txt"); PrintWriter points = writer("ruined_portal_points.txt")) {
+            for (boolean nether : new boolean[] {false, true}) {
+                var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                        .getOrThrow(nether ? NoiseGeneratorSettings.NETHER : NoiseGeneratorSettings.OVERWORLD);
+                NoiseGeneratorSettings settings = settingsHolder.value();
+                var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                        lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                                .getOrThrow(nether ? net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.NETHER
+                                        : net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.OVERWORLD));
+                var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+                var height = nether ? net.minecraft.world.level.LevelHeightAccessor.create(0, 256)
+                        : net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+                String dim = nether ? "nether" : "overworld";
+                if (nether) {
+                    var placement = (net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement) portalSet.value().placement();
+                    for (long seed : List.of(0L, -4172144997902289642L, INPUTS.nextLong())) {
+                        RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                        var ctor = net.minecraft.world.level.chunk.ChunkGeneratorStructureState.class.getDeclaredConstructor(
+                                RandomState.class, net.minecraft.world.level.biome.BiomeSource.class, long.class,
+                                net.minecraft.world.level.ChunkPos.class, long.class, List.class);
+                        ctor.setAccessible(true);
+                        var state = ctor.newInstance(rs, biomeSource, seed, new net.minecraft.world.level.ChunkPos(0, 0), seed, List.copyOf(sets));
+                        List<int[]> chunks = new ArrayList<>();
+                        for (int rz = -8; rz < 8; rz++) for (int rx = -8; rx < 8; rx++) chunks.add(new int[] {rx, rz});
+                        for (int i = 0; i < 60; i++) {
+                            int range = 2_000_000 / 16 / placement.spacing();
+                            chunks.add(new int[] {INPUTS.nextInt(-range, range), INPUTS.nextInt(-range, range)});
+                        }
+                        for (int[] r : chunks) {
+                            var pos = placement.getPotentialStructureChunk(seed, r[0] * placement.spacing(), r[1] * placement.spacing());
+                            if (!placement.isStructureChunk(state, pos.x(), pos.z())) continue;
+                            StringBuilder sb = new StringBuilder(seed + " minecraft:ruined_portals " + pos.x() + " " + pos.z());
+                            selectStructure(sb, portalSet.value(), seed, pos, registryAccess, generator, biomeSource, rs, templates, height, structureBiomes);
+                            attempts.println(sb);
+                        }
+                    }
+                }
+                long seed = INPUTS.nextLong();
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                var finder = biomeSource.createResolver(rs.createClimateSampler(SamplerContext.builder().build()));
+                for (String name : names) {
+                    if (nether != name.equals("minecraft:ruined_portal_nether")) continue;
+                    var holder = registry.getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse(name)));
+                    var biomes = structureBiomes.get(name);
+                    java.util.function.Predicate<Holder<Biome>> valid = h -> biomes.contains(h.unwrapKey().orElseThrow().identifier().toString());
+                    StringBuilder sb = new StringBuilder(dim + " " + seed + " " + name.substring("minecraft:".length()));
+                    for (int cluster = 0; cluster < (nether ? 40 : 16); cluster++) {
+                        int ccx = 0, ccz = 0;
+                        for (int tries = 0; tries < 4000; tries++) {
+                            ccx = INPUTS.nextInt(-6000, 6000);
+                            ccz = INPUTS.nextInt(-6000, 6000);
+                            if (valid.test(finder.getNoiseBiome(ccx * 4 + 2, 16, ccz * 4 + 2))) break;
+                        }
+                        ccx -= 3;
+                        ccz -= 3;
+                        for (int dz = 0; dz < 6; dz++) for (int dx = 0; dx < 6; dx++) {
+                            var pos = new net.minecraft.world.level.ChunkPos(ccx + dx, ccz + dz);
+                            var context = new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(
+                                    registryAccess, generator, biomeSource, rs.createClimateSampler(SamplerContext.builder().enableCaches().build()),
+                                    rs, templates, seed, pos, height, h -> true);
+                            // Without the biome check: every point findSuitableY gives, valid biome or not.
+                            var stub = holder.value().findValidGenerationPoint(context);
+                            sb.append(' ').append(pos.x()).append(',').append(pos.z()).append(':');
+                            if (stub.isPresent()) {
+                                var p = stub.get().position();
+                                sb.append(p.getX()).append(',').append(p.getY()).append(',').append(p.getZ());
+                            } else {
+                                sb.append("no");
+                            }
+                        }
+                    }
+                    points.println(sb);
+                }
+            }
         }
     }
 

@@ -1,11 +1,10 @@
-//! Structure layers: the structures that generate in each overworld
-//! structure set, and stronghold positions.
+//! Structure layers: the structures that generate in each structure set of
+//! the Overworld and the Nether, and stronghold positions.
 //!
 //! Each set attempts a structure at one chunk per region; whether it really
 //! generates there (and which structure of the set) is checked against
 //! biome and terrain like the game does, on background threads. Mineshafts
-//! and ruined portals are not validated yet: their attempts are shown as
-//! possible.
+//! are not validated yet: their attempts are shown as possible.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Condvar, Mutex, mpsc};
@@ -18,10 +17,16 @@ use mc_core::structure::validate::{Outcome, StructureGenerator};
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSet, StructureSets};
 use mc_core::terrain::OverworldTerrain;
 
+use crate::dimension::Dimension;
+
 /// One structure layer of the map.
 pub struct Kind {
+    pub dimension: Dimension,
     /// Structure set registry name.
     pub set: &'static str,
+    /// Only the structures of the set whose name starts with this (the
+    /// Nether's fortresses and bastions share one set).
+    pub only: Option<&'static str>,
     pub label: &'static str,
     /// Up to two letters drawn on the marker.
     pub glyph: &'static str,
@@ -41,6 +46,8 @@ pub const SPAWN: &str = "chunkscope:spawn";
 /// Overworld structure layers, in legend order.
 pub static KINDS: &[Kind] = &[
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: SPAWN,
         label: "World spawn",
         glyph: "W",
@@ -48,6 +55,8 @@ pub static KINDS: &[Kind] = &[
         default_on: true,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:villages",
         label: "Villages",
         glyph: "V",
@@ -55,6 +64,8 @@ pub static KINDS: &[Kind] = &[
         default_on: true,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: STRONGHOLDS,
         label: "Strongholds",
         glyph: "S",
@@ -62,6 +73,8 @@ pub static KINDS: &[Kind] = &[
         default_on: true,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:woodland_mansions",
         label: "Woodland mansions",
         glyph: "WM",
@@ -69,6 +82,8 @@ pub static KINDS: &[Kind] = &[
         default_on: true,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:ocean_monuments",
         label: "Ocean monuments",
         glyph: "OM",
@@ -76,6 +91,8 @@ pub static KINDS: &[Kind] = &[
         default_on: true,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:pillager_outposts",
         label: "Pillager outposts",
         glyph: "PO",
@@ -83,6 +100,8 @@ pub static KINDS: &[Kind] = &[
         default_on: true,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:desert_pyramids",
         label: "Desert pyramids",
         glyph: "DP",
@@ -90,6 +109,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:jungle_temples",
         label: "Jungle temples",
         glyph: "JT",
@@ -97,6 +118,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:swamp_huts",
         label: "Swamp huts",
         glyph: "SH",
@@ -104,6 +127,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:igloos",
         label: "Igloos",
         glyph: "IG",
@@ -111,6 +136,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:ancient_cities",
         label: "Ancient cities",
         glyph: "AC",
@@ -118,6 +145,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:trial_chambers",
         label: "Trial chambers",
         glyph: "TC",
@@ -125,6 +154,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:trail_ruins",
         label: "Trail ruins",
         glyph: "TR",
@@ -132,6 +163,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:abandoned_camp",
         label: "Abandoned camps",
         glyph: "AB",
@@ -139,6 +172,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:ruined_portals",
         label: "Ruined portals",
         glyph: "RP",
@@ -146,6 +181,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:shipwrecks",
         label: "Shipwrecks",
         glyph: "SW",
@@ -153,6 +190,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:ocean_ruins",
         label: "Ocean ruins",
         glyph: "OR",
@@ -160,6 +199,8 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:buried_treasures",
         label: "Buried treasure",
         glyph: "BT",
@@ -167,10 +208,48 @@ pub static KINDS: &[Kind] = &[
         default_on: false,
     },
     Kind {
+        dimension: Dimension::Overworld,
+        only: None,
         set: "minecraft:mineshafts",
         label: "Mineshafts",
         glyph: "M",
         color: rgb(0x8f7a66),
+        default_on: false,
+    },
+    Kind {
+        dimension: Dimension::Nether,
+        only: Some("minecraft:fortress"),
+        set: "minecraft:nether_complexes",
+        label: "Fortresses",
+        glyph: "F",
+        color: rgb(0xd9534f),
+        default_on: true,
+    },
+    Kind {
+        dimension: Dimension::Nether,
+        only: Some("minecraft:bastion"),
+        set: "minecraft:nether_complexes",
+        label: "Bastions",
+        glyph: "B",
+        color: rgb(0x8c8c96),
+        default_on: true,
+    },
+    Kind {
+        dimension: Dimension::Nether,
+        only: None,
+        set: "minecraft:nether_fossils",
+        label: "Nether fossils",
+        glyph: "NF",
+        color: rgb(0xe8e0c8),
+        default_on: false,
+    },
+    Kind {
+        dimension: Dimension::Nether,
+        only: None,
+        set: "minecraft:ruined_portals",
+        label: "Ruined portals",
+        glyph: "RP",
+        color: rgb(0xa77bd9),
         default_on: false,
     },
 ];
@@ -181,8 +260,8 @@ pub struct Marker {
     pub kind: usize,
     pub x: i32,
     pub z: i32,
-    /// `false` for attempts that are not validated yet (mineshafts, ruined
-    /// portals): the game may skip them.
+    /// `false` for attempts that are not validated yet (mineshafts): the
+    /// game may skip them.
     pub exact: bool,
     /// The structure that generates (e.g. `minecraft:village_plains`) and
     /// its start position, when validated.
@@ -242,6 +321,12 @@ pub fn markers(
         let (x, _, z) = p.locate_pos(cx, cz);
         let outcome = generator.attempt(set, cx, cz);
         if let Some((structure, (sx, sy, sz))) = outcome.generated() {
+            if KINDS[kind]
+                .only
+                .is_some_and(|prefix| !structure.name.starts_with(prefix))
+            {
+                return;
+            }
             out.push(Marker {
                 kind,
                 x,
@@ -381,8 +466,27 @@ impl StructureCache {
     }
 }
 
+/// The sources structure validation needs, for one seed.
+struct World {
+    overworld: OverworldBiomeSource,
+    terrain: OverworldTerrain,
+    nether: mc_core::biome::NetherBiomeSource,
+    nether_terrain: mc_core::terrain::NetherTerrain,
+}
+
+impl World {
+    fn new(seed: i64) -> Self {
+        Self {
+            overworld: OverworldBiomeSource::new(seed),
+            terrain: OverworldTerrain::new(seed),
+            nether: mc_core::biome::NetherBiomeSource::new(seed),
+            nether_terrain: mc_core::terrain::NetherTerrain::new(seed),
+        }
+    }
+}
+
 fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egui::Context) {
-    let mut world: Option<(i64, OverworldBiomeSource, OverworldTerrain)> = None;
+    let mut world: Option<(i64, World)> = None;
     loop {
         let key = {
             let mut q = shared.queue.lock().expect("structure queue");
@@ -395,14 +499,13 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egu
             }
         };
         if world.as_ref().is_none_or(|w| w.0 != key.seed) {
-            world = Some((
-                key.seed,
-                OverworldBiomeSource::new(key.seed),
-                OverworldTerrain::new(key.seed),
-            ));
+            world = Some((key.seed, World::new(key.seed)));
         }
-        let (_, biomes, terrain) = world.as_ref().expect("world just set");
-        let generator = StructureGenerator::new(key.seed, biomes, terrain);
+        let (_, w) = world.as_ref().expect("world just set");
+        let generator = match KINDS[key.kind].dimension {
+            Dimension::Overworld => StructureGenerator::new(key.seed, &w.overworld, &w.terrain),
+            Dimension::Nether => StructureGenerator::nether(key.seed, &w.nether, &w.nether_terrain),
+        };
         let c = (key.bx * BLOCK_CHUNKS, key.bz * BLOCK_CHUNKS);
         let bounds = (c.0, c.1, c.0 + BLOCK_CHUNKS - 1, c.1 + BLOCK_CHUNKS - 1);
         let found = markers(key.kind, key.seed, bounds, &generator);
