@@ -68,7 +68,7 @@ Bedrock Edition is out of scope for now.
   - [x] Heightmaps (`getBaseHeight`: `WORLD_SURFACE_WG`, `OCEAN_FLOOR_WG`) and base block columns
 - [x] Structure validation (biome and terrain height), except mineshafts and ruined portals
 - [x] World spawn: the climate origin (exact) and the spawn block (estimate)
-- [ ] Seed search CLI with filters
+- [x] Seed finder with filters (structures near the spawn, biome at the spawn), in the app and on the command line
 - [ ] Map viewer GUI
   - [x] Biome map (tiled, computed in parallel), structure layers, strongholds, slime chunks, grid, inspector
   - [x] Structure markers validated by biome and terrain (0.2)
@@ -94,7 +94,8 @@ cargo run --release -p chunkscope-app
 ```
 
 Drag to pan, scroll to zoom, click a marker to select it, right-click the map
-to copy a position or a `/tp` command. Structures are checked against biome
+to copy a position or a `/tp` command. The **Finder** tab searches seeds for
+structures near the spawn; click a result to open it on the map. Structures are checked against biome
 and terrain like the game does; mineshafts and ruined portals are not checked
 yet and are marked as possible. On Linux the app needs the usual X11 or Wayland libraries
 (for example `libxkbcommon-x11-0` on X11).
@@ -115,6 +116,13 @@ cargo run --release -p mc-core --example height -- <seed> <x> <z>
 
 ```bash
 cargo run --release -p mc-core --example spawn -- <seed>
+```
+
+Search seeds: for example, a village within 300 blocks of the spawn and a
+pillager outpost within 500, among the first 100,000 seeds:
+
+```bash
+cargo run --release -p mc-core --example find -- --count 100000 villages:300 pillager_outposts:500
 ```
 
 ## Development
