@@ -1,11 +1,14 @@
 name: Release
 
 # Push a tag like v0.1.0 to build the desktop app for every platform and
-# publish a GitHub release with the binaries attached. Pull requests that
-# touch this workflow run the builds only, as a dry run.
+# publish a GitHub release with the binaries attached. Or run this workflow
+# by hand on main ("Run workflow" in the Actions tab, which works from a
+# phone): it releases the version in Cargo.toml and creates its tag. Pull
+# requests that touch this workflow run the builds only, as a dry run.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
   pull_request:
     paths: [".github/workflows/release.yml"]
 
@@ -13,8 +16,50 @@ permissions:
   contents: write
 
 jobs:
+  prepare:
+    name: Version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      publish: ${{ steps.tag.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        name: Pick the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          case "$GITHUB_EVENT_NAME" in
+            push)
+              tag="$GITHUB_REF_NAME"
+              if [ "v$version" != "$tag" ]; then
+                echo "Tag $tag does not match the workspace version $version" >&2
+                exit 1
+              fi
+              publish=true ;;
+            workflow_dispatch)
+              tag="v$version"
+              if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+                echo "Run the release from main, not $GITHUB_REF" >&2
+                exit 1
+              fi
+              if gh release view "$tag" > /dev/null 2>&1; then
+                echo "Release $tag already exists: bump the version first" >&2
+                exit 1
+              fi
+              publish=true ;;
+            *)
+              tag="dry-run"
+              publish=false ;;
+          esac
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "Release $tag (publish: $publish)"
+
   build:
     name: Build ${{ matrix.name }}
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -40,22 +85,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
-      - name: Check the tag matches the crate version
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: bash
-        run: |
-          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match the workspace version $version" >&2
-            exit 1
-          fi
       - name: Build
         run: cargo build --release --locked -p chunkscope-app --target ${{ matrix.target }}
       - name: Package
         shell: bash
         run: |
-          tag="${GITHUB_REF_NAME}"
-          case "$GITHUB_REF" in refs/tags/*) ;; *) tag="dry-run" ;; esac
+          tag="${{ needs.prepare.outputs.tag }}"
           name="chunkscope-$tag-${{ matrix.name }}"
           mkdir "$name"
           cp README.md LICENSE-MIT LICENSE-APACHE "$name/"
@@ -75,8 +110,8 @@ jobs:
 
   release:
     name: Publish release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [prepare, build]
+    if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -89,9 +124,11 @@ jobs:
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
         run: |
-          notes="docs/releases/$GITHUB_REF_NAME.md"
+          notes="docs/releases/$TAG.md"
           if [ -f "$notes" ]; then set -- --notes-file "$notes"; else set -- --generate-notes; fi
           prerelease=""
-          case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" dist/* --title "Chunkscope ${GITHUB_REF_NAME#v}" $prerelease "$@"
+          case "$TAG" in *-*) prerelease="--prerelease" ;; esac
+          # Creates the tag on this commit when it does not exist yet.
+          gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "Chunkscope ${TAG#v}" $prerelease "$@"
