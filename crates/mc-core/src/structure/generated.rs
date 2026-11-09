@@ -301,8 +301,8 @@ pub static STRUCTURE_SETS: [StructureSet; 21] = [
     },
 ];
 
-/// The structures of the overworld structure sets (strongholds excepted), sorted by name.
-pub static STRUCTURES: [Structure; 47] = [
+/// The structures of the overworld and Nether structure sets (strongholds excepted), sorted by name.
+pub static STRUCTURES: [Structure; 50] = [
     Structure {
         name: "minecraft:abandoned_camp_bamboo_jungle",
         biomes: &["minecraft:bamboo_jungle"],
@@ -513,6 +513,17 @@ pub static STRUCTURES: [Structure; 47] = [
         },
     },
     Structure {
+        name: "minecraft:bastion_remnant",
+        biomes: &["minecraft:crimson_forest", "minecraft:nether_wastes", "minecraft:soul_sand_valley", "minecraft:warped_forest"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:bastion/starts",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(33),
+            project_start_to_heightmap: None,
+            dimension_padding: None,
+        },
+    },
+    Structure {
         name: "minecraft:buried_treasure",
         biomes: &["minecraft:beach", "minecraft:snowy_beach"],
         kind: StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor),
@@ -521,6 +532,11 @@ pub static STRUCTURES: [Structure; 47] = [
         name: "minecraft:desert_pyramid",
         biomes: &["minecraft:desert"],
         kind: StructureKind::SinglePiece { width: 21, depth: 21 },
+    },
+    Structure {
+        name: "minecraft:fortress",
+        biomes: &["minecraft:nether_wastes", "minecraft:soul_sand_valley", "minecraft:crimson_forest", "minecraft:warped_forest", "minecraft:basalt_deltas"],
+        kind: StructureKind::NetherFortress,
     },
     Structure {
         name: "minecraft:igloo",
@@ -551,6 +567,11 @@ pub static STRUCTURES: [Structure; 47] = [
         name: "minecraft:monument",
         biomes: &["minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean", "minecraft:deep_lukewarm_ocean"],
         kind: StructureKind::OceanMonument,
+    },
+    Structure {
+        name: "minecraft:nether_fossil",
+        biomes: &["minecraft:soul_sand_valley"],
+        kind: StructureKind::NotImplemented,
     },
     Structure {
         name: "minecraft:ocean_ruin_cold",
@@ -704,7 +725,7 @@ pub static STRUCTURES: [Structure; 47] = [
 
 /// Start pools of the jigsaw structures, sorted by name. `elements` are the distinct
 /// elements; `templates` is the game's weighted list, as indices into `elements`.
-pub static START_POOLS: [StartPool; 27] = [
+pub static START_POOLS: [StartPool; 28] = [
     StartPool {
         name: "minecraft:abandoned_camp/tent/bamboo_jungle",
         elements: &[
@@ -1733,6 +1754,32 @@ pub static START_POOLS: [StartPool; 27] = [
             }),
         ],
         templates: &[0, 1, 2],
+    },
+    StartPool {
+        name: "minecraft:bastion/starts",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 45, 23, 45], [-45, 0, 0, 0, 23, 45], [-45, 0, -45, 0, 23, 0], [0, 0, -45, 45, 23, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 29, 23, 47], [-47, 0, 0, 0, 23, 29], [-29, 0, -47, 0, 23, 0], [0, 0, -29, 47, 23, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 37, 47, 37], [-37, 0, 0, 0, 47, 37], [-37, 0, -37, 0, 47, 0], [0, 0, -37, 37, 47, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 15, 31, 31], [-31, 0, 0, 0, 31, 15], [-15, 0, -31, 0, 31, 0], [0, 0, -15, 31, 31, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3],
     },
     StartPool {
         name: "minecraft:pillager_outpost/base_plates",

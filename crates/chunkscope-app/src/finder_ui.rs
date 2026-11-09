@@ -53,7 +53,8 @@ pub struct FinderUi {
 
 /// Structure layers the finder can search (not the spawn, not strongholds).
 fn searchable(kind: usize) -> bool {
-    KINDS[kind].set != SPAWN && KINDS[kind].set != STRONGHOLDS
+    let k = &KINDS[kind];
+    k.dimension == crate::dimension::Dimension::Overworld && k.set != SPAWN && k.set != STRONGHOLDS
 }
 
 impl Default for FinderUi {

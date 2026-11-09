@@ -97,6 +97,7 @@ public class GameOracle {
         structures(lookup);
         spawnOrigins(lookup);
         netherBiomes(lookup);
+        netherStructures(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -794,8 +795,7 @@ public class GameOracle {
     static void writeStructures(HolderLookup.Provider lookup,
             List<net.minecraft.core.Holder.Reference<net.minecraft.world.level.levelgen.structure.StructureSet>> sets,
             StringBuilder out) {
-        java.util.Set<String> skip = java.util.Set.of("minecraft:strongholds", "minecraft:nether_complexes",
-                "minecraft:nether_fossils", "minecraft:end_cities");
+        java.util.Set<String> skip = java.util.Set.of("minecraft:strongholds", "minecraft:end_cities");
         List<String> names = new ArrayList<>();
         for (var ref : sets) {
             if (skip.contains(ref.key().identifier().toString())) continue;
@@ -804,7 +804,7 @@ public class GameOracle {
         java.util.Collections.sort(names);
         var registry = lookup.lookupOrThrow(Registries.STRUCTURE);
         Map<String, Object[]> startPools = new java.util.TreeMap<>();
-        out.append("\n/// The structures of the overworld structure sets (strongholds excepted), sorted by name.\n");
+        out.append("\n/// The structures of the overworld and Nether structure sets (strongholds excepted), sorted by name.\n");
         out.append("pub static STRUCTURES: [Structure; ").append(names.size()).append("] = [\n");
         for (String name : names) {
             var structure = registry.getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse(name))).value();
@@ -854,6 +854,8 @@ public class GameOracle {
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.OceanRuinStructure
                     || structure instanceof net.minecraft.world.level.levelgen.structure.structures.BuriedTreasureStructure) {
                 kind = "StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor)";
+            } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.NetherFortressStructure) {
+                kind = "StructureKind::NetherFortress";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.WoodlandMansionStructure) {
                 kind = "StructureKind::WoodlandMansion";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.OceanMonumentStructure) {
@@ -1762,6 +1764,94 @@ public class GameOracle {
                 }
             }
             w.println(sb);
+        }
+    }
+
+    /** The Nether's structure attempts (nether_complexes, nether_fossils) and generation points. */
+    static void netherStructures(HolderLookup.Provider lookup) throws Exception {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.NETHER);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                        .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.NETHER));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+        List<net.minecraft.core.Registry<?>> registries = new ArrayList<>();
+        for (var key : List.of(Registries.TEMPLATE_POOL, Registries.PROCESSOR_LIST)) registries.add(copyRegistry(lookup, key));
+        net.minecraft.core.registries.BuiltInRegistries.REGISTRY.forEach(registries::add);
+        var registryAccess = new net.minecraft.core.RegistryAccess.ImmutableRegistryAccess(registries);
+        var templates = templateManager(lookup);
+        Map<String, java.util.Set<String>> structureBiomes = new java.util.HashMap<>();
+        for (var ref : lookup.lookupOrThrow(Registries.STRUCTURE).listElements().toList()) {
+            String tag = ((net.minecraft.core.HolderSet.Named<Biome>) ref.value().biomes()).key().location().toString();
+            structureBiomes.put(ref.key().identifier().toString(), new java.util.HashSet<>(biomeTag(tag)));
+        }
+        var sets = structureSets(lookup);
+        List<String> netherSets = List.of("minecraft:nether_complexes", "minecraft:nether_fossils");
+        List<Long> worldSeeds = List.of(0L, -4172144997902289642L, INPUTS.nextLong());
+        try (PrintWriter w = writer("nether_structures.txt")) {
+            for (long seed : worldSeeds) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                var ctor = net.minecraft.world.level.chunk.ChunkGeneratorStructureState.class.getDeclaredConstructor(
+                        RandomState.class, net.minecraft.world.level.biome.BiomeSource.class, long.class,
+                        net.minecraft.world.level.ChunkPos.class, long.class, List.class);
+                ctor.setAccessible(true);
+                var state = ctor.newInstance(rs, biomeSource, seed, new net.minecraft.world.level.ChunkPos(0, 0), seed, List.copyOf(sets));
+                for (var setRef : sets) {
+                    String setName = setRef.key().identifier().toString();
+                    if (!netherSets.contains(setName)) continue;
+                    var set = setRef.value();
+                    var placement = (net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement) set.placement();
+                    List<int[]> chunks = new ArrayList<>();
+                    for (int rz = -8; rz < 8; rz++) for (int rx = -8; rx < 8; rx++) {
+                        var c = placement.getPotentialStructureChunk(seed, rx * placement.spacing(), rz * placement.spacing());
+                        chunks.add(new int[] {c.x(), c.z()});
+                    }
+                    for (int i = 0; i < 40; i++) {
+                        int range = 2_000_000 / 16 / placement.spacing();
+                        int rx = INPUTS.nextInt(-range, range), rz = INPUTS.nextInt(-range, range);
+                        var c = placement.getPotentialStructureChunk(seed, rx * placement.spacing(), rz * placement.spacing());
+                        chunks.add(new int[] {c.x(), c.z()});
+                    }
+                    for (int[] c : chunks) {
+                        var pos = new net.minecraft.world.level.ChunkPos(c[0], c[1]);
+                        if (!placement.isStructureChunk(state, pos.x(), pos.z())) continue;
+                        StringBuilder sb = new StringBuilder(seed + " " + setName + " " + pos.x() + " " + pos.z());
+                        selectStructure(sb, set, seed, pos, registryAccess, generator, biomeSource, rs, templates, height, structureBiomes);
+                        w.println(sb);
+                    }
+                }
+            }
+        }
+        // Generation points of each Nether structure on random clusters of chunks.
+        try (PrintWriter w = writer("nether_structure_points.txt")) {
+            long seed = INPUTS.nextLong();
+            RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+            var registry = lookup.lookupOrThrow(Registries.STRUCTURE);
+            for (String name : List.of("minecraft:bastion_remnant", "minecraft:fortress", "minecraft:nether_fossil")) {
+                var holder = registry.getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse(name)));
+                var biomes = structureBiomes.get(name);
+                java.util.function.Predicate<Holder<Biome>> valid = h -> biomes.contains(h.unwrapKey().orElseThrow().identifier().toString());
+                StringBuilder sb = new StringBuilder(seed + " " + name.substring("minecraft:".length()));
+                for (int cluster = 0; cluster < 12; cluster++) {
+                    int ccx = INPUTS.nextInt(-6000, 6000), ccz = INPUTS.nextInt(-6000, 6000);
+                    for (int dz = 0; dz < 6; dz++) for (int dx = 0; dx < 6; dx++) {
+                        var pos = new net.minecraft.world.level.ChunkPos(ccx + dx, ccz + dz);
+                        var context = new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(
+                                registryAccess, generator, biomeSource, rs.createClimateSampler(SamplerContext.builder().enableCaches().build()),
+                                rs, templates, seed, pos, height, valid);
+                        var point = holder.value().findValidGenerationPoint(context);
+                        sb.append(' ').append(pos.x()).append(',').append(pos.z()).append(':');
+                        if (point.isPresent()) {
+                            var p = point.get().position();
+                            sb.append(p.getX()).append(',').append(p.getY()).append(',').append(p.getZ());
+                        } else {
+                            sb.append("no");
+                        }
+                    }
+                }
+                w.println(sb);
+            }
         }
     }
 

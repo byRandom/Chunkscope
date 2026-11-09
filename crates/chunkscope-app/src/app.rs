@@ -362,30 +362,26 @@ impl ChunkscopeApp {
                 layer_row(ui, &mut self.show_grid, Icon::Grid, None, "Grid", None);
             });
             theme::divider(ui);
-            if self.dimension != Dimension::Overworld {
-                section(ui, |ui| {
-                    theme::section_title(ui, "Structures");
-                    ui.label(
-                        RichText::new("Nether structures are coming in the next update.")
-                            .color(TEXT_WEAK)
-                            .small(),
-                    );
-                });
-                return;
-            }
             section(ui, |ui| {
                 ui.horizontal(|ui| {
                     theme::section_title(ui, "Structures");
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        let all = self.kinds_on.iter().all(|&on| on);
+                        let dimension = self.dimension;
+                        let here = |i: &usize| KINDS[*i].dimension == dimension;
+                        let all = (0..KINDS.len()).filter(here).all(|i| self.kinds_on[i]);
                         let text = if all { "Hide all" } else { "Show all" };
                         if ui.small_button(text).clicked() {
-                            self.kinds_on.iter_mut().for_each(|on| *on = !all);
+                            for i in (0..KINDS.len()).filter(here) {
+                                self.kinds_on[i] = !all;
+                            }
                         }
                     });
                 });
                 ui.add_space(2.0);
                 for (i, kind) in KINDS.iter().enumerate() {
+                    if kind.dimension != self.dimension {
+                        continue;
+                    }
                     let note = if kind.set == SPAWN {
                         Some("estimate")
                     } else {
@@ -610,11 +606,7 @@ impl ChunkscopeApp {
         if self.show_grid {
             self.draw_grid(&painter, rect);
         }
-        if self.dimension == Dimension::Overworld {
-            self.draw_markers(ui, rect, &response);
-        } else {
-            self.hover_marker = None;
-        }
+        self.draw_markers(ui, rect, &response);
 
         // Hover readout. It keeps the last position when the pointer leaves
         // the map, so the values can be selected and copied in the inspector.
@@ -796,7 +788,11 @@ impl ChunkscopeApp {
         let mut visible: Vec<Marker> = Vec::new();
         let mut wanted: Vec<BlockKey> = Vec::new();
         for (kind, info) in KINDS.iter().enumerate() {
-            if !self.kinds_on[kind] || info.set == STRONGHOLDS || info.set == SPAWN {
+            if !self.kinds_on[kind]
+                || info.dimension != self.dimension
+                || info.set == STRONGHOLDS
+                || info.set == SPAWN
+            {
                 continue;
             }
             if structures::spacing_blocks(kind).is_none_or(|s| s < min_spacing) {
@@ -825,6 +821,7 @@ impl ChunkscopeApp {
         });
         self.markers.request(&wanted);
         if let Some(i) = KINDS.iter().position(|k| k.set == SPAWN)
+            && self.dimension == Dimension::Overworld
             && self.kinds_on[i]
             && let Some((_, (x, y, z))) = self.spawn.get()
         {
@@ -837,6 +834,7 @@ impl ChunkscopeApp {
             });
         }
         if let Some(i) = KINDS.iter().position(|k| k.set == STRONGHOLDS)
+            && self.dimension == Dimension::Overworld
             && self.kinds_on[i]
         {
             visible.extend(self.strongholds.positions().map(|(x, z)| Marker {

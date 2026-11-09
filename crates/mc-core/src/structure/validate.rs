@@ -12,9 +12,9 @@
 use std::sync::OnceLock;
 
 use super::placement::{StructurePlacement, StructureSet};
-use crate::biome::{Biome, OverworldBiomeSource};
+use crate::biome::{Biome, NetherBiomeSource, OverworldBiomeSource};
 use crate::random::{LegacyRandomSource, RandomSource, WorldgenRandom};
-use crate::terrain::{Heightmap, MIN_Y, OverworldTerrain, SEA_LEVEL};
+use crate::terrain::{Heightmap, OverworldTerrain};
 
 /// `HeightProvider` of a jigsaw structure's start, with absolute anchors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -47,6 +47,8 @@ pub enum StructureKind {
     /// `Structure.onTopOfChunkCenter` with this heightmap (swamp huts,
     /// igloos, ocean ruins, shipwrecks, buried treasure).
     OnTopOfChunkCenter(Heightmap),
+    /// `NetherFortressStructure`: the chunk's corner at y = 64.
+    NetherFortress,
     /// `WoodlandMansionStructure`
     WoodlandMansion,
     /// `OceanMonumentStructure`
@@ -189,19 +191,60 @@ fn quart(block: i32) -> i32 {
     block >> 2
 }
 
-/// Validates structure attempts for one world seed.
+/// A dimension's biome source, as structure validation reads it.
+pub trait BiomeLookup {
+    /// `getNoiseBiome(quartX, quartY, quartZ)`.
+    fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome;
+}
+
+impl BiomeLookup for OverworldBiomeSource {
+    fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome {
+        OverworldBiomeSource::biome(self, quart_x, quart_y, quart_z)
+    }
+}
+
+impl BiomeLookup for NetherBiomeSource {
+    fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome {
+        NetherBiomeSource::biome(self, quart_x, quart_y, quart_z)
+    }
+}
+
+/// Validates structure attempts for one world seed and dimension.
 pub struct StructureGenerator<'a> {
     seed: i64,
-    biomes: &'a OverworldBiomeSource,
-    terrain: &'a OverworldTerrain,
+    biomes: &'a dyn BiomeLookup,
+    /// The dimension's terrain, for the structures that need heights; `None`
+    /// while it is not ported (they are then reported as unknown).
+    terrain: Option<&'a OverworldTerrain>,
+    /// The dimension's lowest block and height (`LevelHeightAccessor`).
+    min_y: i32,
+    height: i32,
+    sea_level: i32,
 }
 
 impl<'a> StructureGenerator<'a> {
+    /// The overworld.
     pub fn new(seed: i64, biomes: &'a OverworldBiomeSource, terrain: &'a OverworldTerrain) -> Self {
         Self {
             seed,
             biomes,
-            terrain,
+            terrain: Some(terrain),
+            min_y: crate::terrain::MIN_Y,
+            height: crate::terrain::HEIGHT,
+            sea_level: crate::terrain::SEA_LEVEL,
+        }
+    }
+
+    /// The Nether (y 0 to 127, sea level 32). Its terrain is not ported yet,
+    /// so only the structures that need no heights are validated.
+    pub fn nether(seed: i64, biomes: &'a NetherBiomeSource) -> Self {
+        Self {
+            seed,
+            biomes,
+            terrain: None,
+            min_y: 0,
+            height: 128,
+            sea_level: 32,
         }
     }
 
@@ -280,7 +323,19 @@ impl<'a> StructureGenerator<'a> {
                 r
             },
         };
+        let needs_terrain = match structure.kind {
+            StructureKind::NetherFortress | StructureKind::NotImplemented => false,
+            StructureKind::Jigsaw {
+                project_start_to_heightmap,
+                ..
+            } => project_start_to_heightmap.is_some(),
+            _ => true,
+        };
+        if needs_terrain && self.terrain.is_none() {
+            return None;
+        }
         let point = match structure.kind {
+            StructureKind::NetherFortress => Some((chunk_x << 4, 64, chunk_z << 4)),
             StructureKind::SinglePiece { width, depth } => ctx.single_piece(width, depth),
             StructureKind::OnTopOfChunkCenter(heightmap) => ctx.on_top_of_chunk_center(heightmap),
             StructureKind::WoodlandMansion => ctx.woodland_mansion(),
@@ -331,7 +386,8 @@ impl Context<'_, '_> {
 
     /// `couldValidBiomeExistInTerrainColumn`
     fn could_valid_biome_exist_in_terrain_column(&self, x: i32, z: i32) -> bool {
-        self.could_structure_exist_in_column(x, z, MIN_Y - 1, MIN_Y + crate::terrain::HEIGHT - 1)
+        let g = self.generator;
+        self.could_structure_exist_in_column(x, z, g.min_y - 1, g.min_y + g.height - 1)
     }
 
     fn middle_x(&self) -> i32 {
@@ -342,9 +398,15 @@ impl Context<'_, '_> {
         (self.chunk_z << 4) + 8
     }
 
+    /// The terrain; only called for structures that need it, which
+    /// `try_structure` checks first.
+    fn terrain(&self) -> &OverworldTerrain {
+        self.generator.terrain.expect("checked by try_structure")
+    }
+
     /// `ChunkGenerator.getFirstOccupiedHeight`
     fn first_occupied_height(&self, x: i32, z: i32, heightmap: Heightmap) -> i32 {
-        self.generator.terrain.base_height(x, z, heightmap) - 1
+        self.terrain().base_height(x, z, heightmap) - 1
     }
 
     /// `Structure.getLowestY(context, x, z, width, depth)`: the lowest
@@ -379,7 +441,9 @@ impl Context<'_, '_> {
         if !self.could_valid_biome_exist_in_terrain_column(self.middle_x(), self.middle_z()) {
             return None;
         }
-        if self.lowest_y(self.chunk_x << 4, self.chunk_z << 4, width, depth) < SEA_LEVEL {
+        if self.lowest_y(self.chunk_x << 4, self.chunk_z << 4, width, depth)
+            < self.generator.sea_level
+        {
             return None;
         }
         Some(self.on_top_without_biome_check(Heightmap::WorldSurface))
@@ -455,22 +519,20 @@ impl Context<'_, '_> {
         let y = match project {
             None => piece[1],
             Some(heightmap) => {
-                let max = MIN_Y + crate::terrain::HEIGHT - 1;
-                if !self.could_structure_exist_in_column(center_x, center_z, MIN_Y, max) {
+                let g = self.generator;
+                let max = g.min_y + g.height - 1;
+                if !self.could_structure_exist_in_column(center_x, center_z, g.min_y, max) {
                     return None;
                 }
-                start_y
-                    + self
-                        .generator
-                        .terrain
-                        .base_height(center_x, center_z, heightmap)
+                start_y + self.terrain().base_height(center_x, center_z, heightmap)
             }
         };
         // The start piece is moved so its ground level sits at `y`.
         let dy = y - (min_y + element.ground_level_delta);
         if let Some((bottom, top)) = padding {
-            let max = MIN_Y + crate::terrain::HEIGHT - 1;
-            if min_y + dy < MIN_Y + bottom || max_y + dy > max - top {
+            let g = self.generator;
+            let max = g.min_y + g.height - 1;
+            if min_y + dy < g.min_y + bottom || max_y + dy > max - top {
                 return None;
             }
         }
@@ -488,7 +550,8 @@ impl Context<'_, '_> {
         let mut all_surrounding = true;
         for qz in quart(z - r)..=quart(z + r) {
             for qx in quart(x - r)..=quart(x + r) {
-                for qy in quart(SEA_LEVEL - r)..=quart(SEA_LEVEL + r) {
+                let sea = self.generator.sea_level;
+                for qy in quart(sea - r)..=quart(sea + r) {
                     let b = self.generator.biomes.biome(qx, qy, qz);
                     all_surrounding &= surrounding[b.0 as usize];
                 }
