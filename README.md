@@ -14,9 +14,10 @@ the features you care about.
 **Status:** early. Overworld biomes already match the game: the random
 number generators, seed handling, noise, climate sampling and biome lookup
 are all verified against the real JDK and the real game classes. Structure
-placement (where each structure set attempts to generate) and stronghold
-positions match too; the biome and terrain checks that decide whether a structure really generates
-there are next.
+positions match too: where each structure set attempts to generate, and
+the biome and terrain checks that decide whether a structure really
+generates there (all overworld structures except mineshafts and ruined
+portals).
 
 Target: Minecraft **26.3** (Java 25).
 
@@ -65,7 +66,7 @@ Bedrock Edition is out of scope for now.
   - [x] Overworld `final_density` (the game's compiled sampler tree)
   - [x] Aquifers
   - [x] Heightmaps (`getBaseHeight`: `WORLD_SURFACE_WG`, `OCEAN_FLOOR_WG`) and base block columns
-- [ ] Structure validation (biome and terrain height)
+- [x] Structure validation (biome and terrain height), except mineshafts and ruined portals
 - [ ] Strongholds and world spawn
 - [ ] Seed search CLI with filters
 - [ ] Map viewer GUI

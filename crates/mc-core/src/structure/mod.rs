@@ -11,6 +11,7 @@
 pub mod generated;
 mod placement;
 pub mod stronghold;
+pub mod validate;
 
 pub use generated::STRUCTURE_SETS;
 pub use placement::{

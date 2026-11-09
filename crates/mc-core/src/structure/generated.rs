@@ -2,6 +2,8 @@
 //! Every vanilla structure set, exported from the game.
 
 use super::placement::*;
+use super::validate::*;
+use crate::terrain::Heightmap;
 
 /// All vanilla structure sets, sorted by name.
 pub static STRUCTURE_SETS: [StructureSet; 21] = [
@@ -298,3 +300,1689 @@ pub static STRUCTURE_SETS: [StructureSet; 21] = [
         }),
     },
 ];
+
+/// The structures of the overworld structure sets (strongholds excepted), sorted by name.
+pub static STRUCTURES: [Structure; 47] = [
+    Structure {
+        name: "minecraft:abandoned_camp_bamboo_jungle",
+        biomes: &["minecraft:bamboo_jungle"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/bamboo_jungle",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_birch_forest",
+        biomes: &["minecraft:birch_forest"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/birch_forest",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_cherry_grove",
+        biomes: &["minecraft:cherry_grove"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/cherry_grove",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_dappled_forest",
+        biomes: &["minecraft:dappled_forest"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/dappled_forest",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_flower_forest",
+        biomes: &["minecraft:flower_forest"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/flower_forest",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_forest",
+        biomes: &["minecraft:forest"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/forest",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_meadow",
+        biomes: &["minecraft:meadow"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/meadow",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_old_growth_birch_forest",
+        biomes: &["minecraft:old_growth_birch_forest"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/old_growth_birch_forest",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_old_growth_pine_taiga",
+        biomes: &["minecraft:old_growth_pine_taiga"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/old_growth_pine_taiga",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_old_growth_spruce_taiga",
+        biomes: &["minecraft:old_growth_spruce_taiga"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/old_growth_spruce_taiga",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_pale_garden",
+        biomes: &["minecraft:pale_garden"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/pale_garden",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_savanna",
+        biomes: &["minecraft:savanna"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/savanna",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_snowy_taiga",
+        biomes: &["minecraft:snowy_taiga"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/snowy_taiga",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_sparse_jungle",
+        biomes: &["minecraft:sparse_jungle"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/sparse_jungle",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_swamp",
+        biomes: &["minecraft:swamp"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/swamp",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_taiga",
+        biomes: &["minecraft:taiga"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/taiga",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_windswept_forest",
+        biomes: &["minecraft:windswept_forest"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/windswept_forest",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:abandoned_camp_wooded_badlands",
+        biomes: &["minecraft:wooded_badlands"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:abandoned_camp/tent/wooded_badlands",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:ancient_city",
+        biomes: &["minecraft:deep_dark"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:ancient_city/city_center",
+            start_jigsaw_name: Some("minecraft:city_anchor"),
+            start_height: HeightProvider::Constant(-27),
+            project_start_to_heightmap: None,
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:buried_treasure",
+        biomes: &["minecraft:beach", "minecraft:snowy_beach"],
+        kind: StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor),
+    },
+    Structure {
+        name: "minecraft:desert_pyramid",
+        biomes: &["minecraft:desert"],
+        kind: StructureKind::SinglePiece { width: 21, depth: 21 },
+    },
+    Structure {
+        name: "minecraft:igloo",
+        biomes: &["minecraft:snowy_taiga", "minecraft:snowy_plains", "minecraft:snowy_slopes"],
+        kind: StructureKind::OnTopOfChunkCenter(Heightmap::WorldSurface),
+    },
+    Structure {
+        name: "minecraft:jungle_pyramid",
+        biomes: &["minecraft:bamboo_jungle", "minecraft:jungle"],
+        kind: StructureKind::SinglePiece { width: 12, depth: 15 },
+    },
+    Structure {
+        name: "minecraft:mansion",
+        biomes: &["minecraft:dark_forest", "minecraft:pale_garden"],
+        kind: StructureKind::WoodlandMansion,
+    },
+    Structure {
+        name: "minecraft:mineshaft",
+        biomes: &["minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean", "minecraft:deep_lukewarm_ocean", "minecraft:frozen_ocean", "minecraft:ocean", "minecraft:cold_ocean", "minecraft:lukewarm_ocean", "minecraft:warm_ocean", "minecraft:river", "minecraft:frozen_river", "minecraft:beach", "minecraft:snowy_beach", "minecraft:meadow", "minecraft:frozen_peaks", "minecraft:jagged_peaks", "minecraft:stony_peaks", "minecraft:snowy_slopes", "minecraft:cherry_grove", "minecraft:windswept_hills", "minecraft:windswept_forest", "minecraft:windswept_gravelly_hills", "minecraft:taiga", "minecraft:snowy_taiga", "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga", "minecraft:bamboo_jungle", "minecraft:jungle", "minecraft:sparse_jungle", "minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest", "minecraft:old_growth_birch_forest", "minecraft:dappled_forest", "minecraft:dark_forest", "minecraft:pale_garden", "minecraft:grove", "minecraft:stony_shore", "minecraft:mushroom_fields", "minecraft:ice_spikes", "minecraft:windswept_savanna", "minecraft:desert", "minecraft:savanna", "minecraft:snowy_plains", "minecraft:plains", "minecraft:sunflower_plains", "minecraft:swamp", "minecraft:mangrove_swamp", "minecraft:savanna_plateau", "minecraft:dripstone_caves", "minecraft:lush_caves", "minecraft:sulfur_caves"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:mineshaft_mesa",
+        biomes: &["minecraft:badlands", "minecraft:eroded_badlands", "minecraft:wooded_badlands"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:monument",
+        biomes: &["minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean", "minecraft:deep_lukewarm_ocean"],
+        kind: StructureKind::OceanMonument,
+    },
+    Structure {
+        name: "minecraft:ocean_ruin_cold",
+        biomes: &["minecraft:frozen_ocean", "minecraft:cold_ocean", "minecraft:ocean", "minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean"],
+        kind: StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor),
+    },
+    Structure {
+        name: "minecraft:ocean_ruin_warm",
+        biomes: &["minecraft:lukewarm_ocean", "minecraft:warm_ocean", "minecraft:deep_lukewarm_ocean"],
+        kind: StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor),
+    },
+    Structure {
+        name: "minecraft:pillager_outpost",
+        biomes: &["minecraft:desert", "minecraft:plains", "minecraft:savanna", "minecraft:snowy_plains", "minecraft:taiga", "minecraft:meadow", "minecraft:frozen_peaks", "minecraft:jagged_peaks", "minecraft:stony_peaks", "minecraft:snowy_slopes", "minecraft:cherry_grove", "minecraft:grove"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:pillager_outpost/base_plates",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:ruined_portal",
+        biomes: &["minecraft:beach", "minecraft:snowy_beach", "minecraft:river", "minecraft:frozen_river", "minecraft:taiga", "minecraft:snowy_taiga", "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga", "minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest", "minecraft:old_growth_birch_forest", "minecraft:dappled_forest", "minecraft:dark_forest", "minecraft:pale_garden", "minecraft:grove", "minecraft:mushroom_fields", "minecraft:ice_spikes", "minecraft:dripstone_caves", "minecraft:lush_caves", "minecraft:sulfur_caves", "minecraft:savanna", "minecraft:snowy_plains", "minecraft:plains", "minecraft:sunflower_plains"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:ruined_portal_desert",
+        biomes: &["minecraft:desert"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:ruined_portal_jungle",
+        biomes: &["minecraft:bamboo_jungle", "minecraft:jungle", "minecraft:sparse_jungle"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:ruined_portal_mountain",
+        biomes: &["minecraft:badlands", "minecraft:eroded_badlands", "minecraft:wooded_badlands", "minecraft:windswept_hills", "minecraft:windswept_forest", "minecraft:windswept_gravelly_hills", "minecraft:savanna_plateau", "minecraft:windswept_savanna", "minecraft:stony_shore", "minecraft:meadow", "minecraft:frozen_peaks", "minecraft:jagged_peaks", "minecraft:stony_peaks", "minecraft:snowy_slopes", "minecraft:cherry_grove"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:ruined_portal_nether",
+        biomes: &["minecraft:nether_wastes", "minecraft:soul_sand_valley", "minecraft:crimson_forest", "minecraft:warped_forest", "minecraft:basalt_deltas"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:ruined_portal_ocean",
+        biomes: &["minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean", "minecraft:deep_lukewarm_ocean", "minecraft:frozen_ocean", "minecraft:ocean", "minecraft:cold_ocean", "minecraft:lukewarm_ocean", "minecraft:warm_ocean"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:ruined_portal_swamp",
+        biomes: &["minecraft:swamp", "minecraft:mangrove_swamp"],
+        kind: StructureKind::NotImplemented,
+    },
+    Structure {
+        name: "minecraft:shipwreck",
+        biomes: &["minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean", "minecraft:deep_lukewarm_ocean", "minecraft:frozen_ocean", "minecraft:ocean", "minecraft:cold_ocean", "minecraft:lukewarm_ocean", "minecraft:warm_ocean"],
+        kind: StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor),
+    },
+    Structure {
+        name: "minecraft:shipwreck_beached",
+        biomes: &["minecraft:beach", "minecraft:snowy_beach"],
+        kind: StructureKind::OnTopOfChunkCenter(Heightmap::WorldSurface),
+    },
+    Structure {
+        name: "minecraft:swamp_hut",
+        biomes: &["minecraft:swamp"],
+        kind: StructureKind::OnTopOfChunkCenter(Heightmap::WorldSurface),
+    },
+    Structure {
+        name: "minecraft:trail_ruins",
+        biomes: &["minecraft:taiga", "minecraft:snowy_taiga", "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga", "minecraft:old_growth_birch_forest", "minecraft:jungle"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:trail_ruins/tower",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(-15),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:trial_chambers",
+        biomes: &["minecraft:mushroom_fields", "minecraft:deep_frozen_ocean", "minecraft:frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:cold_ocean", "minecraft:deep_ocean", "minecraft:ocean", "minecraft:deep_lukewarm_ocean", "minecraft:lukewarm_ocean", "minecraft:warm_ocean", "minecraft:stony_shore", "minecraft:swamp", "minecraft:mangrove_swamp", "minecraft:snowy_slopes", "minecraft:snowy_plains", "minecraft:snowy_beach", "minecraft:windswept_gravelly_hills", "minecraft:grove", "minecraft:windswept_hills", "minecraft:snowy_taiga", "minecraft:windswept_forest", "minecraft:taiga", "minecraft:plains", "minecraft:meadow", "minecraft:beach", "minecraft:forest", "minecraft:old_growth_spruce_taiga", "minecraft:flower_forest", "minecraft:birch_forest", "minecraft:dark_forest", "minecraft:pale_garden", "minecraft:savanna_plateau", "minecraft:savanna", "minecraft:jungle", "minecraft:badlands", "minecraft:desert", "minecraft:wooded_badlands", "minecraft:jagged_peaks", "minecraft:stony_peaks", "minecraft:frozen_river", "minecraft:river", "minecraft:ice_spikes", "minecraft:dappled_forest", "minecraft:old_growth_pine_taiga", "minecraft:sunflower_plains", "minecraft:old_growth_birch_forest", "minecraft:sparse_jungle", "minecraft:bamboo_jungle", "minecraft:eroded_badlands", "minecraft:windswept_savanna", "minecraft:cherry_grove", "minecraft:frozen_peaks", "minecraft:dripstone_caves", "minecraft:lush_caves", "minecraft:sulfur_caves"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:trial_chambers/chamber/end",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Uniform { min_inclusive: -40, max_inclusive: -20 },
+            project_start_to_heightmap: None,
+            dimension_padding: Some((10, 10)),
+        },
+    },
+    Structure {
+        name: "minecraft:village_desert",
+        biomes: &["minecraft:desert"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:village/desert/town_centers",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:village_plains",
+        biomes: &["minecraft:plains", "minecraft:meadow"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:village/plains/town_centers",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:village_savanna",
+        biomes: &["minecraft:savanna"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:village/savanna/town_centers",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:village_snowy",
+        biomes: &["minecraft:snowy_plains"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:village/snowy/town_centers",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+    Structure {
+        name: "minecraft:village_taiga",
+        biomes: &["minecraft:taiga"],
+        kind: StructureKind::Jigsaw {
+            start_pool: "minecraft:village/taiga/town_centers",
+            start_jigsaw_name: None,
+            start_height: HeightProvider::Constant(0),
+            project_start_to_heightmap: Some(Heightmap::WorldSurface),
+            dimension_padding: None,
+        },
+    },
+];
+
+/// Start pools of the jigsaw structures, sorted by name. `elements` are the distinct
+/// elements; `templates` is the game's weighted list, as indices into `elements`.
+pub static START_POOLS: [StartPool; 27] = [
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/bamboo_jungle",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/birch_forest",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/cherry_grove",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/dappled_forest",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 8, 7], [-7, 0, 0, 0, 8, 7], [-7, 0, -7, 0, 8, 0], [0, 0, -7, 7, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 8, 7], [-7, 0, 0, 0, 8, 7], [-7, 0, -7, 0, 8, 0], [0, 0, -7, 7, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/flower_forest",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 8, 7], [-7, 0, 0, 0, 8, 7], [-7, 0, -7, 0, 8, 0], [0, 0, -7, 7, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/forest",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 8, 7], [-7, 0, 0, 0, 8, 7], [-7, 0, -7, 0, 8, 0], [0, 0, -7, 7, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/meadow",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/old_growth_birch_forest",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 12, 7], [-7, 0, 0, 0, 12, 7], [-7, 0, -7, 0, 12, 0], [0, 0, -7, 7, 12, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/old_growth_pine_taiga",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 9, 7], [-7, 0, 0, 0, 9, 7], [-7, 0, -7, 0, 9, 0], [0, 0, -7, 7, 9, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/old_growth_spruce_taiga",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 8, 7], [-7, 0, 0, 0, 8, 7], [-7, 0, -7, 0, 8, 0], [0, 0, -7, 7, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/pale_garden",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/savanna",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 8, 7], [-7, 0, 0, 0, 8, 7], [-7, 0, -7, 0, 8, 0], [0, 0, -7, 7, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/snowy_taiga",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 9, 7], [-7, 0, 0, 0, 9, 7], [-7, 0, -7, 0, 9, 0], [0, 0, -7, 7, 9, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 11, 7], [-7, 0, 0, 0, 11, 7], [-7, 0, -7, 0, 11, 0], [0, 0, -7, 7, 11, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/sparse_jungle",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 12, 7], [-7, 0, 0, 0, 12, 7], [-7, 0, -7, 0, 12, 0], [0, 0, -7, 7, 12, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/swamp",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 9, 7], [-7, 0, 0, 0, 9, 7], [-7, 0, -7, 0, 9, 0], [0, 0, -7, 7, 9, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/taiga",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 8, 7], [-7, 0, 0, 0, 8, 7], [-7, 0, -7, 0, 8, 0], [0, 0, -7, 7, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 8, 7], [-7, 0, 0, 0, 8, 7], [-7, 0, -7, 0, 8, 0], [0, 0, -7, 7, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 9, 7], [-7, 0, 0, 0, 9, 5], [-5, 0, -7, 0, 9, 0], [0, 0, -5, 7, 9, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/windswept_forest",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 10, 7], [-7, 0, 0, 0, 10, 7], [-7, 0, -7, 0, 10, 0], [0, 0, -7, 7, 10, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:abandoned_camp/tent/wooded_badlands",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 10, 7], [-7, 0, 0, 0, 10, 7], [-7, 0, -7, 0, 10, 0], [0, 0, -7, 7, 10, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 5, 7, 7], [-7, 0, 0, 0, 7, 5], [-5, 0, -7, 0, 7, 0], [0, 0, -5, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 7, 7], [-7, 0, 0, 0, 7, 7], [-7, 0, -7, 0, 7, 0], [0, 0, -7, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    StartPool {
+        name: "minecraft:ancient_city/city_center",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 17, 30, 40], [-40, 0, 0, 0, 30, 17], [-17, 0, -40, 0, 30, 0], [0, 0, -17, 40, 30, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Jigsaw([[13, 24, 20], [-20, 24, 13], [-13, 24, -20], [20, 24, -13]]),
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 17, 30, 40], [-40, 0, 0, 0, 30, 17], [-17, 0, -40, 0, 30, 0], [0, 0, -17, 40, 30, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Jigsaw([[13, 24, 20], [-20, 24, 13], [-13, 24, -20], [20, 24, -13]]),
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 17, 30, 40], [-40, 0, 0, 0, 30, 17], [-17, 0, -40, 0, 30, 0], [0, 0, -17, 40, 30, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Jigsaw([[13, 24, 20], [-20, 24, 13], [-13, 24, -20], [20, 24, -13]]),
+            }),
+        ],
+        templates: &[0, 1, 2],
+    },
+    StartPool {
+        name: "minecraft:pillager_outpost/base_plates",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 15, 29, 15], [-15, 0, 0, 0, 29, 15], [-15, 0, -15, 0, 29, 0], [0, 0, -15, 15, 29, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0],
+    },
+    StartPool {
+        name: "minecraft:trail_ruins/tower",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 4, 12, 4], [-4, 0, 0, 0, 12, 4], [-4, 0, -4, 0, 12, 0], [0, 0, -4, 4, 12, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 4, 12, 4], [-4, 0, 0, 0, 12, 4], [-4, 0, -4, 0, 12, 0], [0, 0, -4, 4, 12, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 6, 12, 6], [-6, 0, 0, 0, 12, 6], [-6, 0, -6, 0, 12, 0], [0, 0, -6, 6, 12, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 6, 12, 6], [-6, 0, 0, 0, 12, 6], [-6, 0, -6, 0, 12, 0], [0, 0, -6, 6, 12, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 6, 12, 6], [-6, 0, 0, 0, 12, 6], [-6, 0, -6, 0, 12, 0], [0, 0, -6, 6, 12, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1, 2, 3, 4],
+    },
+    StartPool {
+        name: "minecraft:trial_chambers/chamber/end",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 18, 19, 18], [-18, 0, 0, 0, 19, 18], [-18, 0, -18, 0, 19, 0], [0, 0, -18, 18, 19, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 18, 19, 18], [-18, 0, 0, 0, 19, 18], [-18, 0, -18, 0, 19, 0], [0, 0, -18, 18, 19, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 1],
+    },
+    StartPool {
+        name: "minecraft:village/desert/town_centers",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 16, 5, 8], [-8, 0, 0, 0, 5, 16], [-16, 0, -8, 0, 5, 0], [0, 0, -16, 8, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 11, 5, 11], [-11, 0, 0, 0, 5, 11], [-11, 0, -11, 0, 5, 0], [0, 0, -11, 11, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 14, 5, 14], [-14, 0, 0, 0, 5, 14], [-14, 0, -14, 0, 5, 0], [0, 0, -14, 14, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 16, 5, 8], [-8, 0, 0, 0, 5, 16], [-16, 0, -8, 0, 5, 0], [0, 0, -16, 8, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 11, 5, 11], [-11, 0, 0, 0, 5, 11], [-11, 0, -11, 0, 5, 0], [0, 0, -11, 11, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 14, 5, 14], [-14, 0, 0, 0, 5, 14], [-14, 0, -14, 0, 5, 0], [0, 0, -14, 14, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 5],
+    },
+    StartPool {
+        name: "minecraft:village/plains/town_centers",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 8, 3, 8], [-8, 0, 0, 0, 3, 8], [-8, 0, -8, 0, 3, 0], [0, 0, -8, 8, 3, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 9, 6, 9], [-9, 0, 0, 0, 6, 9], [-9, 0, -9, 0, 6, 0], [0, 0, -9, 9, 6, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 4, 14], [-14, 0, 0, 0, 4, 7], [-7, 0, -14, 0, 4, 0], [0, 0, -7, 14, 4, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 10, 8, 10], [-10, 0, 0, 0, 8, 10], [-10, 0, -10, 0, 8, 0], [0, 0, -10, 10, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 8, 5, 8], [-8, 0, 0, 0, 5, 8], [-8, 0, -8, 0, 5, 0], [0, 0, -8, 8, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 9, 6, 9], [-9, 0, 0, 0, 6, 9], [-9, 0, -9, 0, 6, 0], [0, 0, -9, 9, 6, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 7, 4, 14], [-14, 0, 0, 0, 4, 7], [-7, 0, -14, 0, 4, 0], [0, 0, -7, 14, 4, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 10, 8, 10], [-10, 0, 0, 0, 8, 10], [-10, 0, -10, 0, 8, 0], [0, 0, -10, 10, 8, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 5, 6, 7],
+    },
+    StartPool {
+        name: "minecraft:village/savanna/town_centers",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 13, 4, 11], [-11, 0, 0, 0, 4, 13], [-13, 0, -11, 0, 4, 0], [0, 0, -13, 11, 4, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 10, 5, 10], [-10, 0, 0, 0, 5, 10], [-10, 0, -10, 0, 5, 0], [0, 0, -10, 10, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 8, 5, 10], [-10, 0, 0, 0, 5, 8], [-8, 0, -10, 0, 5, 0], [0, 0, -8, 10, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 8, 5, 8], [-8, 0, 0, 0, 5, 8], [-8, 0, -8, 0, 5, 0], [0, 0, -8, 8, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 13, 5, 11], [-11, 0, 0, 0, 5, 13], [-13, 0, -11, 0, 5, 0], [0, 0, -13, 11, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 10, 5, 10], [-10, 0, 0, 0, 5, 10], [-10, 0, -10, 0, 5, 0], [0, 0, -10, 10, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 8, 5, 10], [-10, 0, 0, 0, 5, 8], [-8, 0, -10, 0, 5, 0], [0, 0, -8, 10, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 8, 5, 8], [-8, 0, 0, 0, 5, 8], [-8, 0, -8, 0, 5, 0], [0, 0, -8, 8, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 5, 6, 6, 6, 7, 7, 7],
+    },
+    StartPool {
+        name: "minecraft:village/snowy/town_centers",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 11, 7, 7], [-7, 0, 0, 0, 7, 11], [-11, 0, -7, 0, 7, 0], [0, 0, -11, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 10, 4, 8], [-8, 0, 0, 0, 4, 10], [-10, 0, -8, 0, 4, 0], [0, 0, -10, 8, 4, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 6, 6, 6], [-6, 0, 0, 0, 6, 6], [-6, 0, -6, 0, 6, 0], [0, 0, -6, 6, 6, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 11, 7, 7], [-7, 0, 0, 0, 7, 11], [-11, 0, -7, 0, 7, 0], [0, 0, -11, 7, 7, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 10, 5, 8], [-8, 0, 0, 0, 5, 10], [-10, 0, -8, 0, 5, 0], [0, 0, -10, 8, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 6, 6, 6], [-6, 0, 0, 0, 6, 6], [-6, 0, -6, 0, 6, 0], [0, 0, -6, 6, 6, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 5, 5, 5],
+    },
+    StartPool {
+        name: "minecraft:village/taiga/town_centers",
+        elements: &[
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 21, 2, 17], [-17, 0, 0, 0, 2, 21], [-21, 0, -17, 0, 2, 0], [0, 0, -21, 17, 2, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 8, 6, 8], [-8, 0, 0, 0, 6, 8], [-8, 0, -8, 0, 6, 0], [0, 0, -8, 8, 6, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 21, 5, 17], [-17, 0, 0, 0, 5, 21], [-21, 0, -17, 0, 5, 0], [0, 0, -21, 17, 5, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+            Some(PoolElement {
+                boxes: [[0, 0, 0, 8, 6, 8], [-8, 0, 0, 0, 6, 8], [-8, 0, -8, 0, 6, 0], [0, 0, -8, 8, 6, 0]],
+                ground_level_delta: 1,
+                anchor: Anchor::Origin,
+            }),
+        ],
+        templates: &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3],
+    },
+];
+
+/// `#minecraft:required_ocean_monument_surrounding`.
+pub static OCEAN_MONUMENT_SURROUNDING: &[&str] = &["minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean", "minecraft:deep_lukewarm_ocean", "minecraft:frozen_ocean", "minecraft:ocean", "minecraft:cold_ocean", "minecraft:lukewarm_ocean", "minecraft:warm_ocean", "minecraft:river", "minecraft:frozen_river"];
