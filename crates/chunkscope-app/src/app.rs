@@ -362,17 +362,6 @@ impl ChunkscopeApp {
                 layer_row(ui, &mut self.show_grid, Icon::Grid, None, "Grid", None);
             });
             theme::divider(ui);
-            if self.dimension != Dimension::Overworld {
-                section(ui, |ui| {
-                    theme::section_title(ui, "Structures");
-                    ui.label(
-                        RichText::new("Nether structures are coming in the next update.")
-                            .color(TEXT_WEAK)
-                            .small(),
-                    );
-                });
-                return;
-            }
             section(ui, |ui| {
                 ui.horizontal(|ui| {
                     theme::section_title(ui, "Structures");
@@ -617,11 +606,7 @@ impl ChunkscopeApp {
         if self.show_grid {
             self.draw_grid(&painter, rect);
         }
-        if self.dimension == Dimension::Overworld {
-            self.draw_markers(ui, rect, &response);
-        } else {
-            self.hover_marker = None;
-        }
+        self.draw_markers(ui, rect, &response);
 
         // Hover readout. It keeps the last position when the pointer leaves
         // the map, so the values can be selected and copied in the inspector.
