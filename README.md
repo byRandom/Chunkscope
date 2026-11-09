@@ -67,7 +67,7 @@ Bedrock Edition is out of scope for now.
   - [x] Aquifers
   - [x] Heightmaps (`getBaseHeight`: `WORLD_SURFACE_WG`, `OCEAN_FLOOR_WG`) and base block columns
 - [x] Structure validation (biome and terrain height), except mineshafts and ruined portals
-- [ ] Strongholds and world spawn
+- [x] World spawn: the climate origin (exact) and the spawn block (estimate)
 - [ ] Seed search CLI with filters
 - [ ] Map viewer GUI
   - [x] Biome map (tiled, computed in parallel), structure layers, strongholds, slime chunks, grid, inspector
@@ -111,6 +111,10 @@ cargo run --release -p mc-core --example structures -- <seed> <x> <z> [radius]
 
 ```bash
 cargo run --release -p mc-core --example height -- <seed> <x> <z>
+```
+
+```bash
+cargo run --release -p mc-core --example spawn -- <seed>
 ```
 
 ## Development
