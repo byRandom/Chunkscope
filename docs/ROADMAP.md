@@ -11,7 +11,7 @@ Target: Minecraft: Java Edition 26.3. If a new Minecraft version comes out
 before 1.0, porting to it is a minor version of its own (see
 "Following Minecraft" below).
 
-## Where we are (0.3)
+## Where we were (0.3)
 
 Done and verified against the game, for the Overworld:
 
@@ -28,7 +28,10 @@ Done and verified against the game, for the Overworld:
 Not done: the Nether, the End, mineshafts, ruined portals, large-scale
 verification, saved settings, signed builds, a stable command line.
 
-## 0.4: the Nether, and ruined portals
+## 0.4: the Nether, and ruined portals (done)
+
+Released in 0.4.0. The seed finder measures Nether structures from the
+Nether's 0, 0; a later version may offer the spawn divided by 8 instead.
 
 The Nether uses the same machinery as the Overworld with other data.
 

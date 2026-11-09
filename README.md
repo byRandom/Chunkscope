@@ -11,13 +11,13 @@ Edition**, written in Rust. Think of an offline tool that shows biomes,
 structures and slime chunks for any seed, and can search millions of seeds for
 the features you care about.
 
-**Status:** early. Overworld biomes already match the game: the random
-number generators, seed handling, noise, climate sampling and biome lookup
-are all verified against the real JDK and the real game classes. Structure
-positions match too: where each structure set attempts to generate, and
-the biome and terrain checks that decide whether a structure really
-generates there (all overworld structures except mineshafts and ruined
-portals).
+**Status:** early. Overworld and Nether biomes already match the game: the
+random number generators, seed handling, noise, climate sampling and biome
+lookup are all verified against the real JDK and the real game classes.
+Structure positions match too: where each structure set attempts to
+generate, and the biome and terrain checks that decide whether a structure
+really generates there (every Overworld and Nether structure except
+mineshafts).
 
 Target: Minecraft **26.3** (Java 25).
 
@@ -57,7 +57,7 @@ Bedrock Edition is out of scope for now.
 - [x] Perlin noise and normal (double-Perlin) noise, with all vanilla noise parameters
 - [ ] Smeared Perlin, blended and simplex noise (terrain, End islands)
 - [x] Overworld biomes (climate sampling, terrain offset spline, biome R-tree)
-- [ ] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
+- [x] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
 - [ ] End: biomes, islands, end cities (0.5)
 - [ ] Mineshafts, no "possible" markers left, saved settings (0.6)
 - [ ] Large-scale verification against the game (0.7)
