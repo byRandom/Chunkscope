@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin, Nether biomes, terrain, fortresses and bastions | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
 | 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
 
@@ -221,6 +221,14 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   one), so the set almost never comes up empty; a bastion is a jigsaw
   structure starting at y = 33, not projected to the terrain. Neither
   needs the Nether terrain.
+- **The Nether is 256 blocks high for structures, 128 for terrain.** The
+  level's height comes from `dimension_type/the_nether.json` (y 0 to 255);
+  the terrain is generated from y 0 to 127 (`noise_settings/nether.json`).
+  Height providers resolve against the generated range
+  (`WorldGenerationContext`: the larger bottom, the smaller depth), so a
+  Nether fossil's `below_top: 2` is y = 125. A fossil picks a random column
+  and height, then walks down to the first air block on a solid one, and
+  needs that point above the lava sea (y = 32).
 - **Sets with several structures retry.** Villages, ocean ruins,
   shipwrecks and abandoned camps pick a structure by weight with a random
   seeded by `setLargeFeatureSeed`; if it does not generate, the game removes

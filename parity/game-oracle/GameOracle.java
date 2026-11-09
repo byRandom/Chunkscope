@@ -830,6 +830,13 @@ public class GameOracle {
         Files.writeString(rs, out);
     }
 
+    static String verticalAnchor(net.minecraft.world.level.levelgen.VerticalAnchor a) {
+        if (a instanceof net.minecraft.world.level.levelgen.VerticalAnchor.Absolute v) return "VerticalAnchor::Absolute(" + v.y() + ")";
+        if (a instanceof net.minecraft.world.level.levelgen.VerticalAnchor.AboveBottom v) return "VerticalAnchor::AboveBottom(" + v.offset() + ")";
+        if (a instanceof net.minecraft.world.level.levelgen.VerticalAnchor.BelowTop v) return "VerticalAnchor::BelowTop(" + v.offset() + ")";
+        throw new IllegalStateException("unsupported anchor " + a);
+    }
+
     static String anchor(net.minecraft.world.level.levelgen.VerticalAnchor a) {
         if (a instanceof net.minecraft.world.level.levelgen.VerticalAnchor.Absolute abs) return Integer.toString(abs.y());
         throw new IllegalStateException("unsupported anchor " + a);
@@ -898,6 +905,10 @@ public class GameOracle {
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.OceanRuinStructure
                     || structure instanceof net.minecraft.world.level.levelgen.structure.structures.BuriedTreasureStructure) {
                 kind = "StructureKind::OnTopOfChunkCenter(Heightmap::OceanFloor)";
+            } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.NetherFossilStructure f) {
+                var u = (net.minecraft.world.level.levelgen.heightproviders.UniformHeight) get(f, "height");
+                kind = "StructureKind::NetherFossil {\n            min_inclusive: " + verticalAnchor((net.minecraft.world.level.levelgen.VerticalAnchor) get(u, "minInclusive"))
+                        + ",\n            max_inclusive: " + verticalAnchor((net.minecraft.world.level.levelgen.VerticalAnchor) get(u, "maxInclusive")) + ",\n        }";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.NetherFortressStructure) {
                 kind = "StructureKind::NetherFortress";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.WoodlandMansionStructure) {
@@ -1830,7 +1841,9 @@ public class GameOracle {
                 lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
                         .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.NETHER));
         var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
-        var height = net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+        // The level's height is the dimension type's (dimension_type/the_nether.json: y 0 to 255),
+        // not the noise settings' 128 blocks.
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(0, 256);
         List<net.minecraft.core.Registry<?>> registries = new ArrayList<>();
         for (var key : List.of(Registries.TEMPLATE_POOL, Registries.PROCESSOR_LIST)) registries.add(copyRegistry(lookup, key));
         net.minecraft.core.registries.BuiltInRegistries.REGISTRY.forEach(registries::add);

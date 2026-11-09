@@ -14,7 +14,7 @@ use std::sync::OnceLock;
 use super::placement::{StructurePlacement, StructureSet};
 use crate::biome::{Biome, NetherBiomeSource, OverworldBiomeSource};
 use crate::random::{LegacyRandomSource, RandomSource, WorldgenRandom};
-use crate::terrain::{Heightmap, OverworldTerrain};
+use crate::terrain::{Heightmap, NetherTerrain, OverworldTerrain, Substance};
 
 /// `HeightProvider` of a jigsaw structure's start, with absolute anchors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -26,6 +26,16 @@ pub enum HeightProvider {
         min_inclusive: i32,
         max_inclusive: i32,
     },
+}
+
+/// `VerticalAnchor`, resolved against the dimension's generation range.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum VerticalAnchor {
+    Absolute(i32),
+    /// Offset above the lowest generated block.
+    AboveBottom(i32),
+    /// Offset below the highest generated block.
+    BelowTop(i32),
 }
 
 /// How a structure type finds its generation point.
@@ -49,6 +59,12 @@ pub enum StructureKind {
     OnTopOfChunkCenter(Heightmap),
     /// `NetherFortressStructure`: the chunk's corner at y = 64.
     NetherFortress,
+    /// `NetherFossilStructure`: a random column and height, then down to
+    /// the first air block above a solid one, above sea level.
+    NetherFossil {
+        min_inclusive: VerticalAnchor,
+        max_inclusive: VerticalAnchor,
+    },
     /// `WoodlandMansionStructure`
     WoodlandMansion,
     /// `OceanMonumentStructure`
@@ -209,17 +225,45 @@ impl BiomeLookup for NetherBiomeSource {
     }
 }
 
+/// A dimension's terrain, as structure validation reads it.
+#[derive(Clone, Copy)]
+enum TerrainRef<'a> {
+    Overworld(&'a OverworldTerrain),
+    Nether(&'a NetherTerrain),
+}
+
+impl TerrainRef<'_> {
+    fn base_height(self, x: i32, z: i32, heightmap: Heightmap) -> i32 {
+        match self {
+            TerrainRef::Overworld(t) => t.base_height(x, z, heightmap),
+            TerrainRef::Nether(t) => t.base_height(x, z, heightmap),
+        }
+    }
+
+    /// The base column and its lowest y.
+    fn base_column(self, x: i32, z: i32) -> (Vec<Substance>, i32) {
+        match self {
+            TerrainRef::Overworld(t) => (t.base_column(x, z), crate::terrain::MIN_Y),
+            TerrainRef::Nether(t) => (t.base_column(x, z), crate::terrain::NETHER_MIN_Y),
+        }
+    }
+}
+
 /// Validates structure attempts for one world seed and dimension.
 pub struct StructureGenerator<'a> {
     seed: i64,
     biomes: &'a dyn BiomeLookup,
     /// The dimension's terrain, for the structures that need heights; `None`
     /// while it is not ported (they are then reported as unknown).
-    terrain: Option<&'a OverworldTerrain>,
-    /// The dimension's lowest block and height (`LevelHeightAccessor`).
+    terrain: Option<TerrainRef<'a>>,
+    /// The level's lowest block and height (`LevelHeightAccessor`, from the
+    /// dimension type).
     min_y: i32,
     height: i32,
     sea_level: i32,
+    /// `WorldGenerationContext`: the generated range (the noise settings').
+    gen_min_y: i32,
+    gen_depth: i32,
 }
 
 impl<'a> StructureGenerator<'a> {
@@ -228,23 +272,36 @@ impl<'a> StructureGenerator<'a> {
         Self {
             seed,
             biomes,
-            terrain: Some(terrain),
+            terrain: Some(TerrainRef::Overworld(terrain)),
             min_y: crate::terrain::MIN_Y,
             height: crate::terrain::HEIGHT,
             sea_level: crate::terrain::SEA_LEVEL,
+            gen_min_y: crate::terrain::MIN_Y,
+            gen_depth: crate::terrain::HEIGHT,
         }
     }
 
-    /// The Nether (y 0 to 127, sea level 32). Its terrain is not ported yet,
-    /// so only the structures that need no heights are validated.
-    pub fn nether(seed: i64, biomes: &'a NetherBiomeSource) -> Self {
+    /// The Nether: a level from y 0 to 255 (`dimension_type/the_nether.json`)
+    /// whose terrain is generated from y 0 to 127, with the lava sea at 32.
+    pub fn nether(seed: i64, biomes: &'a NetherBiomeSource, terrain: &'a NetherTerrain) -> Self {
         Self {
             seed,
             biomes,
-            terrain: None,
+            terrain: Some(TerrainRef::Nether(terrain)),
             min_y: 0,
-            height: 128,
-            sea_level: 32,
+            height: 256,
+            sea_level: crate::terrain::NETHER_SEA_LEVEL,
+            gen_min_y: crate::terrain::NETHER_MIN_Y,
+            gen_depth: crate::terrain::NETHER_HEIGHT,
+        }
+    }
+
+    /// `VerticalAnchor.resolveY` in this dimension's `WorldGenerationContext`.
+    fn resolve(&self, anchor: VerticalAnchor) -> i32 {
+        match anchor {
+            VerticalAnchor::Absolute(y) => y,
+            VerticalAnchor::AboveBottom(offset) => self.gen_min_y + offset,
+            VerticalAnchor::BelowTop(offset) => self.gen_depth - 1 + self.gen_min_y - offset,
         }
     }
 
@@ -336,6 +393,10 @@ impl<'a> StructureGenerator<'a> {
         }
         let point = match structure.kind {
             StructureKind::NetherFortress => Some((chunk_x << 4, 64, chunk_z << 4)),
+            StructureKind::NetherFossil {
+                min_inclusive,
+                max_inclusive,
+            } => ctx.nether_fossil(min_inclusive, max_inclusive),
             StructureKind::SinglePiece { width, depth } => ctx.single_piece(width, depth),
             StructureKind::OnTopOfChunkCenter(heightmap) => ctx.on_top_of_chunk_center(heightmap),
             StructureKind::WoodlandMansion => ctx.woodland_mansion(),
@@ -400,8 +461,51 @@ impl Context<'_, '_> {
 
     /// The terrain; only called for structures that need it, which
     /// `try_structure` checks first.
-    fn terrain(&self) -> &OverworldTerrain {
+    fn terrain(&self) -> TerrainRef<'_> {
         self.generator.terrain.expect("checked by try_structure")
+    }
+
+    /// `UniformHeight.sample`: `Mth.randomBetweenInclusive`, or the minimum
+    /// for a reversed range.
+    fn uniform(&mut self, min: i32, max: i32) -> i32 {
+        if min > max {
+            min
+        } else {
+            self.random.next_int_bounded(max - min + 1) + min
+        }
+    }
+
+    /// `NetherFossilStructure.findGenerationPoint`.
+    fn nether_fossil(
+        &mut self,
+        min_inclusive: VerticalAnchor,
+        max_inclusive: VerticalAnchor,
+    ) -> Option<(i32, i32, i32)> {
+        let x = (self.chunk_x << 4) + self.random.next_int_bounded(16);
+        let z = (self.chunk_z << 4) + self.random.next_int_bounded(16);
+        let sea = self.generator.sea_level;
+        let (min, max) = (
+            self.generator.resolve(min_inclusive),
+            self.generator.resolve(max_inclusive),
+        );
+        let mut y = self.uniform(min, max);
+        let (column, bottom) = self.terrain().base_column(x, z);
+        let block = |y: i32| {
+            usize::try_from(y - bottom)
+                .ok()
+                .and_then(|i| column.get(i).copied())
+                .unwrap_or(Substance::Air)
+        };
+        // Down to the first air block standing on a block with a sturdy top
+        // (or soul sand, which the base column never has).
+        while y > sea {
+            let here = block(y);
+            y -= 1;
+            if here == Substance::Air && block(y) == Substance::Solid {
+                break;
+            }
+        }
+        (y > sea).then_some((x, y, z))
     }
 
     /// `ChunkGenerator.getFirstOccupiedHeight`
@@ -483,15 +587,7 @@ impl Context<'_, '_> {
             HeightProvider::Uniform {
                 min_inclusive,
                 max_inclusive,
-            } => {
-                if min_inclusive > max_inclusive {
-                    min_inclusive
-                } else {
-                    self.random
-                        .next_int_bounded(max_inclusive - min_inclusive + 1)
-                        + min_inclusive
-                }
-            }
+            } => self.uniform(min_inclusive, max_inclusive),
         };
         let (x0, z0) = (self.chunk_x << 4, self.chunk_z << 4);
         let rotation = self.random.next_int_bounded(4) as usize;

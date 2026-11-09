@@ -463,6 +463,7 @@ struct World {
     overworld: OverworldBiomeSource,
     terrain: OverworldTerrain,
     nether: mc_core::biome::NetherBiomeSource,
+    nether_terrain: mc_core::terrain::NetherTerrain,
 }
 
 impl World {
@@ -471,6 +472,7 @@ impl World {
             overworld: OverworldBiomeSource::new(seed),
             terrain: OverworldTerrain::new(seed),
             nether: mc_core::biome::NetherBiomeSource::new(seed),
+            nether_terrain: mc_core::terrain::NetherTerrain::new(seed),
         }
     }
 }
@@ -494,7 +496,7 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egu
         let (_, w) = world.as_ref().expect("world just set");
         let generator = match KINDS[key.kind].dimension {
             Dimension::Overworld => StructureGenerator::new(key.seed, &w.overworld, &w.terrain),
-            Dimension::Nether => StructureGenerator::nether(key.seed, &w.nether),
+            Dimension::Nether => StructureGenerator::nether(key.seed, &w.nether, &w.nether_terrain),
         };
         let c = (key.bx * BLOCK_CHUNKS, key.bz * BLOCK_CHUNKS);
         let bounds = (c.0, c.1, c.0 + BLOCK_CHUNKS - 1, c.1 + BLOCK_CHUNKS - 1);

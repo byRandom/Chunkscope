@@ -152,6 +152,7 @@ fn generation_points_match_the_game() {
 #[test]
 fn nether_structures_match_the_game() {
     use mc_core::biome::NetherBiomeSource;
+    use mc_core::terrain::NetherTerrain;
     let read = |name: &str| {
         std::fs::read_to_string(format!(
             "{}/../../parity/fixtures/game/{name}",
@@ -160,7 +161,7 @@ fn nether_structures_match_the_game() {
         .expect("run parity/game-oracle/run.sh")
     };
     let mut failed = false;
-    let mut source: Option<(i64, NetherBiomeSource)> = None;
+    let mut source: Option<(i64, NetherBiomeSource, NetherTerrain)> = None;
     let mut stats: BTreeMap<String, (u32, u32, Vec<String>)> = BTreeMap::new();
     for line in read("nether_structures.txt").lines() {
         let mut parts = line.split(' ');
@@ -170,9 +171,10 @@ fn nether_structures_match_the_game() {
         let cz: i32 = parts.next().unwrap().parse().unwrap();
         let expected: Vec<&str> = parts.collect();
         if source.as_ref().is_none_or(|s| s.0 != seed) {
-            source = Some((seed, NetherBiomeSource::new(seed)));
+            source = Some((seed, NetherBiomeSource::new(seed), NetherTerrain::new(seed)));
         }
-        let generator = StructureGenerator::nether(seed, &source.as_ref().unwrap().1);
+        let (_, biomes, terrain) = source.as_ref().unwrap();
+        let generator = StructureGenerator::nether(seed, biomes, terrain);
         let set = STRUCTURE_SETS.find_set(set_name).expect("known set");
         assert_eq!(
             set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz),
@@ -210,7 +212,8 @@ fn nether_structures_match_the_game() {
         let seed: i64 = parts.next().unwrap().parse().unwrap();
         let name = format!("minecraft:{}", parts.next().unwrap());
         let biomes = NetherBiomeSource::new(seed);
-        let generator = StructureGenerator::nether(seed, &biomes);
+        let terrain = NetherTerrain::new(seed);
+        let generator = StructureGenerator::nether(seed, &biomes, &terrain);
         let structure = Structure::find(&name).expect("known structure");
         let (mut checked, mut mismatches) = (0, Vec::new());
         for entry in parts {

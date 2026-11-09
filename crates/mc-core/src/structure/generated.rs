@@ -571,7 +571,10 @@ pub static STRUCTURES: [Structure; 50] = [
     Structure {
         name: "minecraft:nether_fossil",
         biomes: &["minecraft:soul_sand_valley"],
-        kind: StructureKind::NotImplemented,
+        kind: StructureKind::NetherFossil {
+            min_inclusive: VerticalAnchor::Absolute(32),
+            max_inclusive: VerticalAnchor::BelowTop(2),
+        },
     },
     Structure {
         name: "minecraft:ocean_ruin_cold",
