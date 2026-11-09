@@ -66,11 +66,9 @@ fn main() {
                     .and_then(|v| v.parse().ok())
                     .expect("<set>:<radius>");
                 let min_count = parts.next().map_or(1, |v| v.parse().expect("count"));
-                query.structures.push(StructureFilter {
-                    set,
-                    radius,
-                    min_count,
-                });
+                query
+                    .structures
+                    .push(StructureFilter::overworld(set, radius, min_count));
             }
         }
     }

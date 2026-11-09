@@ -1,5 +1,8 @@
 //! Seed finder: search seeds for structures near the spawn and for biomes.
 //!
+//! Overworld structures are measured from the query's center; Nether
+//! structures from the Nether's (0, 0).
+//!
 //! Each seed is checked with the cheap tests first: where structure sets
 //! *attempt* structures near the center (a few random numbers per region),
 //! then the biome at the center, and only then the full structure validation
@@ -7,11 +10,11 @@
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-use crate::biome::{Biome, OverworldBiomeSource, OverworldClimate};
+use crate::biome::{Biome, NetherBiomeSource, OverworldBiomeSource, OverworldClimate};
 use crate::spawn::spawn_origin;
 use crate::structure::validate::{Outcome, StructureGenerator};
 use crate::structure::{STRUCTURE_SETS, StructurePlacement, StructureSet};
-use crate::terrain::{Heightmap, OverworldTerrain};
+use crate::terrain::{Heightmap, NetherTerrain, OverworldTerrain};
 
 /// Where distances are measured from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -22,6 +25,15 @@ pub enum Center {
     Zero,
 }
 
+/// The dimension a structure filter searches.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum Dimension {
+    #[default]
+    Overworld,
+    /// Measured from the Nether's (0, 0), whatever the query's center.
+    Nether,
+}
+
 /// At least `min_count` structures of `set` within `radius` blocks of the
 /// center (measured to the position `/locate` reports).
 #[derive(Clone, Copy, Debug)]
@@ -29,6 +41,23 @@ pub struct StructureFilter {
     pub set: &'static StructureSet,
     pub radius: i32,
     pub min_count: u32,
+    pub dimension: Dimension,
+    /// Only structures whose name starts with this (e.g. `minecraft:bastion`
+    /// in the set they share with fortresses).
+    pub only: Option<&'static str>,
+}
+
+impl StructureFilter {
+    /// A filter on every structure of an overworld set.
+    pub fn overworld(set: &'static StructureSet, radius: i32, min_count: u32) -> Self {
+        Self {
+            set,
+            radius,
+            min_count,
+            dimension: Dimension::Overworld,
+            only: None,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -45,6 +74,7 @@ pub struct Found {
     /// The structure that generates, or the set's name when its structures
     /// are not validated yet (mineshafts).
     pub name: &'static str,
+    pub dimension: Dimension,
     pub x: i32,
     pub z: i32,
     pub distance: f64,
@@ -118,10 +148,14 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
         Center::Spawn => spawn_origin(&OverworldClimate::new(seed)),
         Center::Zero => (0, 0),
     };
+    let filter_center = |f: &StructureFilter| match f.dimension {
+        Dimension::Overworld => center,
+        Dimension::Nether => (0, 0),
+    };
     // Cheap pass: enough attempts near the center for every filter?
     let mut attempts = Vec::with_capacity(query.structures.len());
     for f in &query.structures {
-        let a = attempts_near(f.set, seed, center, f.radius);
+        let a = attempts_near(f.set, seed, filter_center(f), f.radius);
         if (a.len() as u32) < f.min_count {
             return None;
         }
@@ -139,15 +173,31 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
     }
     // Full pass: the structures that really generate.
     let generator = StructureGenerator::new(seed, &biomes, &terrain);
+    let nether = query
+        .structures
+        .iter()
+        .any(|f| f.dimension == Dimension::Nether)
+        .then(|| (NetherBiomeSource::new(seed), NetherTerrain::new(seed)));
+    let nether_generator = nether
+        .as_ref()
+        .map(|(b, t)| StructureGenerator::nether(seed, b, t));
     let mut found = Vec::new();
     for (f, attempts) in query.structures.iter().zip(attempts) {
+        let generator = match f.dimension {
+            Dimension::Overworld => &generator,
+            Dimension::Nether => nether_generator.as_ref().expect("built for Nether filters"),
+        };
         let mut count = 0;
         for ((cx, cz), (x, z), distance) in attempts {
             let entry = match generator.attempt(f.set, cx, cz) {
                 outcome @ Outcome::Generates(_) => {
                     let (s, _) = outcome.generated().expect("generates");
+                    if f.only.is_some_and(|prefix| !s.name.starts_with(prefix)) {
+                        continue;
+                    }
                     Found {
                         name: s.name,
+                        dimension: f.dimension,
                         x,
                         z,
                         distance,
@@ -157,6 +207,7 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
                 Outcome::Nothing(_) => continue,
                 Outcome::Unknown(_) => Found {
                     name: f.set.name,
+                    dimension: f.dimension,
                     x,
                     z,
                     distance,
