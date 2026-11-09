@@ -30,6 +30,7 @@ Bedrock Edition is out of scope for now.
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | `crates/java-compat`   | Bit-exact ports of the JDK behaviour Minecraft relies on: `java.util.Random`, `StrictMath.log`, `Math.round`, `DoubleStream.sum`, `String.hashCode`, `String.trim`, `Long.parseLong` |
 | `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), noise (Perlin, normal noise, all vanilla noise parameters), overworld climate and biomes, overworld terrain (`final_density`, aquifers, heightmaps), structure placement, seed text → world seed, slime chunks |
+| `crates/chunkscope-app` | The desktop app (`chunkscope`): an interactive biome and structure map, native Rust with egui |
 | `parity/oracle`        | JDK oracle: reference fixtures from a real JDK                                          |
 | `parity/game-oracle`   | Game oracle: reference fixtures from the real game classes (downloads the official server jar) |
 
@@ -56,8 +57,25 @@ Bedrock Edition is out of scope for now.
 - [ ] Strongholds and world spawn
 - [ ] Seed search CLI with filters
 - [ ] Map viewer GUI
+  - [x] Biome map (tiled, computed in parallel), structure layers, strongholds, slime chunks, grid, inspector
+  - [ ] Structure markers validated by biome and terrain
+  - [ ] Saved settings, screenshots, release builds for Windows, macOS and Linux
 
 ## Try it
+
+The desktop app:
+
+```bash
+cargo run --release -p chunkscope-app
+```
+
+Drag to pan, scroll to zoom, click a marker to select it. Structure markers
+other than strongholds are positions where the game *attempts* a structure;
+biome and terrain checks are not implemented yet, so some of them do not
+generate. On Linux the app needs the usual X11 or Wayland libraries
+(for example `libxkbcommon-x11-0` on X11).
+
+Command-line examples:
 
 ```bash
 cargo run --release -p mc-core --example biome -- <seed> <x> <z> [y]
