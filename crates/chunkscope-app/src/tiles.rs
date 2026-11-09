@@ -9,8 +9,8 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Condvar, Mutex, mpsc};
 use std::thread;
 
+use crate::dimension::{BiomeSource, Dimension};
 use eframe::egui::{self, Color32, ColorImage, TextureHandle, TextureOptions};
-use mc_core::biome::OverworldBiomeSource;
 
 /// Samples per tile side.
 pub const TILE_PX: i32 = 128;
@@ -20,6 +20,7 @@ pub const MAX_LEVEL: u8 = 5;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct TileKey {
     pub seed: i64,
+    pub dimension: Dimension,
     /// Block Y the biomes are sampled at.
     pub y: i32,
     pub level: u8,
@@ -187,7 +188,7 @@ impl TileCache {
 }
 
 fn worker(shared: &Shared, tx: &mpsc::Sender<Done>, ctx: &egui::Context, palette: &[Color32]) {
-    let mut source: Option<(i64, OverworldBiomeSource)> = None;
+    let mut source: Option<((i64, Dimension), BiomeSource)> = None;
     loop {
         let key = {
             let mut q = shared.queue.lock().expect("tile queue");
@@ -199,8 +200,9 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<Done>, ctx: &egui::Context, palette
                 q = shared.wake.wait(q).expect("tile queue");
             }
         };
-        if source.as_ref().is_none_or(|(s, _)| *s != key.seed) {
-            source = Some((key.seed, OverworldBiomeSource::new(key.seed)));
+        let world = (key.seed, key.dimension);
+        if source.as_ref().is_none_or(|(w, _)| *w != world) {
+            source = Some((world, BiomeSource::new(key.dimension, key.seed)));
         }
         let (_, src) = source.as_ref().expect("source just set");
         let start = std::time::Instant::now();
@@ -222,7 +224,7 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<Done>, ctx: &egui::Context, palette
     }
 }
 
-fn compute(source: &OverworldBiomeSource, key: TileKey, palette: &[Color32]) -> Done {
+fn compute(source: &BiomeSource, key: TileKey, palette: &[Color32]) -> Done {
     // Start every tile from a fresh search state, so a tile looks the same
     // whichever thread computed it (see docs/PARITY.md on query order).
     source.reset_search();

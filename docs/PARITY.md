@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin, Nether biomes | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
 | 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
 
@@ -176,6 +176,16 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   constant fails it. Not covered yet: the lava threshold window (fluid levels
   between -12 and -10), which the fixtures never reach.
 
+- **The Nether uses the legacy random source, and two of its noises are
+  special.** With `legacy_random_source`, the game seeds the Nether's
+  temperature and vegetation noises with `new LegacyRandomSource(seed)` and
+  `seed + 1`, and builds them with `createForLegacyNetherBiome`: two
+  `LegacyFbmInitializer` stacks drawn one after the other (the octave at
+  index `-firstOctave` is always drawn first; every octave of zero
+  amplitude skips 262 draws), all layers of the first stack and then all
+  layers of the second, not interleaved as in `NormalNoise`. Their y scale
+  is 0, so Nether biomes do not depend on the height. A fixture checks the
+  climate and the biome of 4,800 lookups on 12 seeds.
 - **A structure attempt is not a structure.** Where a set attempts a
   structure, the game asks the structure for a generation point and keeps
   it only if the biome *at that point* is one of the structure's biomes.

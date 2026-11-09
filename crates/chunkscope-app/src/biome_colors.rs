@@ -76,6 +76,12 @@ pub fn color_of(name: &str) -> Color32 {
         "lush_caves" => 0x5aa34a,
         "deep_dark" => 0x14303a,
         "sulfur_caves" => 0xbfae3a,
+        // Nether.
+        "nether_wastes" => 0x8a3a32,
+        "crimson_forest" => 0xc0283a,
+        "warped_forest" => 0x2a8f86,
+        "soul_sand_valley" => 0x6b5a4a,
+        "basalt_deltas" => 0x5c5a5e,
         _ => 0xff00ff,
     })
 }

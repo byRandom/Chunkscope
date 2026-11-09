@@ -582,7 +582,7 @@ pub const OFFSET: Spline = Spline::Multipoint(&Multipoint {
 });
 
 /// Biome registry names; `Biome(i)` is `BIOMES[i]`.
-pub const BIOMES: [&str; 56] = [
+pub const BIOMES: [&str; 61] = [
     "minecraft:mushroom_fields",
     "minecraft:deep_frozen_ocean",
     "minecraft:frozen_ocean",
@@ -639,10 +639,15 @@ pub const BIOMES: [&str; 56] = [
     "minecraft:lush_caves",
     "minecraft:sulfur_caves",
     "minecraft:deep_dark",
+    "minecraft:nether_wastes",
+    "minecraft:soul_sand_valley",
+    "minecraft:crimson_forest",
+    "minecraft:warped_forest",
+    "minecraft:basalt_deltas",
 ];
 
 /// Distinct climate ranges used by `OVERWORLD`.
-pub const PARAMETERS: [Parameter; 58] = [
+pub const PARAMETERS: [Parameter; 61] = [
     Parameter::new(-10000, 10000),
     Parameter::new(-12000, -10500),
     Parameter::new(0, 0),
@@ -701,6 +706,9 @@ pub const PARAMETERS: [Parameter; 58] = [
     Parameter::new(4500, 10000),
     Parameter::new(-11000, -8500),
     Parameter::new(11000, 11000),
+    Parameter::new(-5000, -5000),
+    Parameter::new(4000, 4000),
+    Parameter::new(5000, 5000),
 ];
 
 /// The `minecraft:overworld` parameter list, in game order: indices into
@@ -8301,6 +8309,15 @@ pub static OVERWORLD: [([u16; 6], i64, u16); 7594] = [
     ([0, 53, 0, 0, 52, 0], 0, 53),
     ([0, 0, 54, 55, 52, 56], 0, 54),
     ([0, 0, 0, 33, 57, 0], 0, 55),
+];
+
+/// The `minecraft:nether` parameter list, in game order, like `OVERWORLD`.
+pub static NETHER: [([u16; 6], i64, u16); 5] = [
+    ([2, 2, 2, 2, 2, 2], 0, 56),
+    ([2, 58, 2, 2, 2, 2], 0, 57),
+    ([59, 2, 2, 2, 2, 2], 0, 58),
+    ([2, 60, 2, 2, 2, 2], 3750, 59),
+    ([58, 2, 2, 2, 2, 2], 1750, 60),
 ];
 
 /// The overworld spawn targets (`NoiseGeneratorSettings.spawnTarget`): ranges for

@@ -3,11 +3,12 @@
 
 use std::hash::{BuildHasher, RandomState};
 
+use crate::dimension::{BiomeSource, Dimension};
 use eframe::egui::{
     self, Align, Align2, Color32, CornerRadius, FontId, Layout, Margin, Pos2, Rect, RichText,
     Sense, Stroke, StrokeKind, UiBuilder, Vec2, pos2, vec2,
 };
-use mc_core::biome::{Biome, OverworldBiomeSource};
+use mc_core::biome::Biome;
 use mc_core::{is_slime_chunk, parse_seed};
 
 use crate::biome_colors;
@@ -56,7 +57,8 @@ pub struct ChunkscopeApp {
     spawn: Spawn,
     finder: crate::finder_ui::FinderUi,
     markers: StructureCache,
-    source: OverworldBiomeSource,
+    dimension: Dimension,
+    source: BiomeSource,
 
     hover: Option<(i64, i64)>,
     hover_biome: Option<((i32, i32, i32), Biome)>,
@@ -89,7 +91,8 @@ impl ChunkscopeApp {
             spawn: Spawn::new(seed, &cc.egui_ctx),
             finder: Default::default(),
             markers: StructureCache::new(&cc.egui_ctx),
-            source: OverworldBiomeSource::new(seed),
+            dimension: Dimension::Overworld,
+            source: BiomeSource::new(Dimension::Overworld, seed),
             hover: None,
             hover_biome: None,
             hover_marker: None,
@@ -107,7 +110,17 @@ impl ChunkscopeApp {
         self.seed = seed;
         self.strongholds = Strongholds::new(seed, ctx);
         self.spawn = Spawn::new(seed, ctx);
-        self.source = OverworldBiomeSource::new(seed);
+        self.source = BiomeSource::new(self.dimension, seed);
+        self.hover_biome = None;
+        self.selected = None;
+    }
+
+    fn set_dimension(&mut self, dimension: Dimension) {
+        if dimension == self.dimension {
+            return;
+        }
+        self.dimension = dimension;
+        self.source = BiomeSource::new(dimension, self.seed);
         self.hover_biome = None;
         self.selected = None;
     }
@@ -208,7 +221,9 @@ impl ChunkscopeApp {
                     let (r, _) = ui.allocate_exact_size(vec2(14.0, 14.0), Sense::hover());
                     icons::paint(ui.painter(), r, Icon::Map, ACCENT);
                     ui.label(RichText::new(format!("Seed {}", self.seed)).color(TEXT));
-                    ui.label(RichText::new("· Overworld").color(TEXT_WEAK));
+                    ui.label(
+                        RichText::new(format!("· {}", self.dimension.label())).color(TEXT_WEAK),
+                    );
                 });
             });
 
@@ -309,7 +324,16 @@ impl ChunkscopeApp {
             ui.add_space(4.0);
             ui.columns(2, |cols| {
                 theme::field_label(&mut cols[0], "Dimension");
-                field_box(&mut cols[0], "Overworld");
+                let mut dimension = self.dimension;
+                egui::ComboBox::from_id_salt("dimension")
+                    .width(cols[0].available_width())
+                    .selected_text(dimension.label())
+                    .show_ui(&mut cols[0], |ui| {
+                        for d in Dimension::ALL {
+                            ui.selectable_value(&mut dimension, d, d.label());
+                        }
+                    });
+                self.set_dimension(dimension);
                 theme::field_label(&mut cols[1], "Biome Y");
                 cols[1].add(
                     egui::DragValue::new(&mut self.y)
@@ -325,17 +349,30 @@ impl ChunkscopeApp {
                 theme::section_title(ui, "Layers");
                 ui.add_space(2.0);
                 layer_row(ui, &mut self.show_biomes, Icon::Map, None, "Biomes", None);
-                layer_row(
-                    ui,
-                    &mut self.show_slime,
-                    Icon::Slime,
-                    None,
-                    "Slime chunks",
-                    None,
-                );
+                if self.dimension == Dimension::Overworld {
+                    layer_row(
+                        ui,
+                        &mut self.show_slime,
+                        Icon::Slime,
+                        None,
+                        "Slime chunks",
+                        None,
+                    );
+                }
                 layer_row(ui, &mut self.show_grid, Icon::Grid, None, "Grid", None);
             });
             theme::divider(ui);
+            if self.dimension != Dimension::Overworld {
+                section(ui, |ui| {
+                    theme::section_title(ui, "Structures");
+                    ui.label(
+                        RichText::new("Nether structures are coming in the next update.")
+                            .color(TEXT_WEAK)
+                            .small(),
+                    );
+                });
+                return;
+            }
             section(ui, |ui| {
                 ui.horizontal(|ui| {
                     theme::section_title(ui, "Structures");
@@ -393,9 +430,11 @@ impl ChunkscopeApp {
                         let color = biome_colors::color_of(biome.name());
                         swatch_box(ui, color, &biome_colors::display_name(biome.name()));
                     }
-                    let slime = is_slime_chunk(self.seed, (x >> 4) as i32, (z >> 4) as i32);
-                    theme::field_label(ui, "Slime chunk");
-                    field_box(ui, if slime { "Yes" } else { "No" });
+                    if self.dimension == Dimension::Overworld {
+                        let slime = is_slime_chunk(self.seed, (x >> 4) as i32, (z >> 4) as i32);
+                        theme::field_label(ui, "Slime chunk");
+                        field_box(ui, if slime { "Yes" } else { "No" });
+                    }
                 }
                 None => {
                     ui.label(RichText::new("Hover the map").color(TEXT_WEAK));
@@ -488,7 +527,7 @@ impl ChunkscopeApp {
             theme::section_title(ui, "Biome colors");
             ui.add_space(2.0);
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for biome in Biome::all() {
+                for biome in self.dimension.biomes() {
                     let color = biome_colors::color_of(biome.name());
                     ui.horizontal(|ui| {
                         let (r, _) = ui.allocate_exact_size(vec2(12.0, 12.0), Sense::hover());
@@ -565,13 +604,17 @@ impl ChunkscopeApp {
         } else {
             self.tiles.request(&[]);
         }
-        if self.show_slime {
+        if self.show_slime && self.dimension == Dimension::Overworld {
             self.draw_slime(&painter, rect);
         }
         if self.show_grid {
             self.draw_grid(&painter, rect);
         }
-        self.draw_markers(ui, rect, &response);
+        if self.dimension == Dimension::Overworld {
+            self.draw_markers(ui, rect, &response);
+        } else {
+            self.hover_marker = None;
+        }
 
         // Hover readout. It keeps the last position when the pointer leaves
         // the map, so the values can be selected and copied in the inspector.
@@ -638,6 +681,7 @@ impl ChunkscopeApp {
         let (tx1, tz1) = ((x1 / tb).floor() as i32, (z1 / tb).floor() as i32);
         let key = |level: u8, tx: i32, tz: i32| TileKey {
             seed: self.seed,
+            dimension: self.dimension,
             y: self.y,
             level,
             tx,
@@ -912,9 +956,10 @@ impl ChunkscopeApp {
             {
                 self.show_grid ^= true;
             }
-            if icon_button(ui, Icon::Slime, self.show_slime)
-                .on_hover_text("Slime chunks")
-                .clicked()
+            if self.dimension == Dimension::Overworld
+                && icon_button(ui, Icon::Slime, self.show_slime)
+                    .on_hover_text("Slime chunks")
+                    .clicked()
             {
                 self.show_slime ^= true;
             }

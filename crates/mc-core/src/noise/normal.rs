@@ -116,6 +116,37 @@ impl NormalNoise {
         NoiseStack { layers }
     }
 
+    /// `NormalNoise.createForLegacyNetherBiome`: the Nether's temperature and
+    /// vegetation noises in worlds using the legacy random source. Two stacks
+    /// from `LegacyFbmInitializer` drawn one after the other from `random`,
+    /// all layers of the first, then all layers of the second (frequencies
+    /// times `INPUT_FACTOR`), each scaled by `normalization * base_amplitude`.
+    pub fn create_for_legacy_nether_biome(
+        params: &NoiseParameters,
+        random: &mut impl RandomSource,
+    ) -> NoiseStack {
+        let amplitudes: Vec<f64> = if params.amplitude_modifiers.is_empty() {
+            vec![1.0; params.octave_count.max(0) as usize]
+        } else {
+            params.amplitude_modifiers.to_vec()
+        };
+        let a = legacy_fbm(random, params.base_octave, &amplitudes);
+        let b = legacy_fbm(random, params.base_octave, &amplitudes);
+        let scale = (Self::new(params).normalization_factor * params.base_amplitude) as f32;
+        let mut layers = Vec::with_capacity(a.layers.len() + b.layers.len());
+        // NoiseStack.Builder.addStack: frequency * multiplier, amplitude * scale.
+        for (stack, multiplier) in [(a, 1.0), (b, INPUT_FACTOR)] {
+            for layer in stack.layers {
+                layers.push(Layer {
+                    noise: layer.noise,
+                    frequency: layer.frequency * multiplier,
+                    amplitude: layer.amplitude * scale,
+                });
+            }
+        }
+        NoiseStack { layers }
+    }
+
     /// How world generation instantiates a named noise
     /// (`Noises.instantiate` with `RandomState`'s positional factory), for
     /// worlds using the Xoroshiro algorithm (all vanilla dimensions).
@@ -202,6 +233,43 @@ fn compute_parity_normalization_factor(
 /// `NormalNoise.parityExpectedDeviation`.
 fn parity_expected_deviation(octave_span: i32) -> f64 {
     0.1 * (1.0 + 1.0 / (octave_span + 1) as f64)
+}
+
+/// `LegacyFbmInitializer.createForLegacyNetherBiome`: octaves drawn in the
+/// order of old worlds, from the lowest frequency's neighbor downward, with
+/// 262 skipped draws for each octave of zero amplitude.
+fn legacy_fbm(random: &mut impl RandomSource, first_octave: i32, amplitudes: &[f64]) -> NoiseStack {
+    let n = amplitudes.len() as i32;
+    let zero = -first_octave;
+    assert!(zero >= n - 1, "Positive octaves are temporarily disabled");
+    let mut octaves: Vec<Option<PerlinNoise>> = (0..n).map(|_| None).collect();
+    // The octave at index -first_octave is always drawn first.
+    let first = PerlinNoise::new(random);
+    if (0..n).contains(&zero) && amplitudes[zero as usize] != 0.0 {
+        octaves[zero as usize] = Some(first);
+    }
+    for i in (0..zero).rev() {
+        if i < n && amplitudes[i as usize] != 0.0 {
+            octaves[i as usize] = Some(PerlinNoise::new(random));
+        } else {
+            random.consume_count(262);
+        }
+    }
+    let mut frequency = 2f64.powi(-zero);
+    let mut amplitude = 2f64.powi(n - 1) / (2f64.powi(n) - 1.0);
+    let mut layers = Vec::new();
+    for (i, octave) in octaves.into_iter().enumerate() {
+        if let Some(noise) = octave {
+            layers.push(Layer {
+                noise,
+                frequency,
+                amplitude: (amplitude * amplitudes[i]) as f32,
+            });
+        }
+        frequency *= 2.0;
+        amplitude /= 2.0;
+    }
+    NoiseStack { layers }
 }
 
 /// `NoiseStack.Layer`.
