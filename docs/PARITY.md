@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps); next: structure validation, spawn | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals); next: spawn | In progress |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -174,6 +174,40 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   (where barriers decide) at every Y: breaking the tie order or a pressure
   constant fails it. Not covered yet: the lava threshold window (fluid levels
   between -12 and -10), which the fixtures never reach.
+
+- **A structure attempt is not a structure.** Where a set attempts a
+  structure, the game asks the structure for a generation point and keeps
+  it only if the biome *at that point* is one of the structure's biomes.
+  On the fixtures' candidate chunks, only about a quarter of village
+  attempts and 2% of mansion attempts generate. The point depends on the
+  structure type:
+  - most types first check that a valid biome exists anywhere in the
+    column at the chunk center, from y = -65 to 319 (sampled in volume
+    mode, which gives the same climate values as point mode);
+  - `onTopOfChunkCenter` uses `getFirstOccupiedHeight`, which is the
+    heightmap height **minus one**; jigsaw starts use
+    `getFirstFreeHeight`, the height itself;
+  - desert pyramids and jungle temples need the lowest corner of their
+    footprint at sea level or above, woodland mansions at y = 60 or above,
+    in a direction that depends on their random rotation;
+  - ocean monuments need deep ocean in a 29-block radius; the game looks up
+    every biome in that box before checking any, so all lookups happen;
+  - jigsaw structures (villages, outposts, ancient cities, trail ruins,
+    trial chambers, abandoned camps) start at the center of their start
+    piece, `(max + min) / 2` with Java's truncating division. The piece is
+    picked from the start pool with the chunk's random, after the start
+    height and the rotation. The oracle exports each start element's
+    bounding box per rotation and its named start jigsaw (ancient cities).
+- **Sets with several structures retry.** Villages, ocean ruins,
+  shipwrecks and abandoned camps pick a structure by weight with a random
+  seeded by `setLargeFeatureSeed`; if it does not generate, the game removes
+  it and picks again among the rest.
+- Not ported yet: mineshafts (their height comes from their pieces) and
+  ruined portals. The app shows them as possible.
+- Two checks cannot be told apart by any vanilla data, so no fixture
+  covers them: the bottom of the column pre-check (y = -65 instead of -64),
+  and the trial chambers' dimension padding (they start at y = -40 or
+  higher, far from the limit).
 
 ## Known non-determinism in the game itself
 
