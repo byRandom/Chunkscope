@@ -164,6 +164,11 @@ impl Biome {
         generated::BIOMES[self.0 as usize]
     }
 
+    /// Every biome in the overworld biome list, in id order.
+    pub fn all() -> impl Iterator<Item = Biome> {
+        (0..generated::BIOMES.len() as u16).map(Biome)
+    }
+
     pub fn from_name(name: &str) -> Option<Biome> {
         generated::BIOMES
             .iter()

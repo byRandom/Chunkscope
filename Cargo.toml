@@ -12,3 +12,10 @@ version = "0.1.0"
 # they take minutes. Optimize test builds (debug assertions stay on).
 [profile.test]
 opt-level = 3
+
+# Map rendering runs the world-generation code millions of times; keep it
+# fast in debug builds of the app too.
+[profile.dev.package.mc-core]
+opt-level = 3
+[profile.dev.package.java-compat]
+opt-level = 3

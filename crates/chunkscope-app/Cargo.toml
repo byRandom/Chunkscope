@@ -1,0 +1,21 @@
+[package]
+name = "chunkscope-app"
+description = "Chunkscope desktop app: an interactive seed map for Minecraft: Java Edition"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "chunkscope"
+path = "src/main.rs"
+
+[dependencies]
+mc-core = { path = "../mc-core" }
+eframe = { version = "0.37", default-features = false, features = [
+    "accesskit",
+    "default_fonts",
+    "glow",
+    "wayland",
+    "x11",
+] }
