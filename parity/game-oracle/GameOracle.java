@@ -95,6 +95,7 @@ public class GameOracle {
         terrain(lookup);
         aquifers(lookup);
         structures(lookup);
+        spawnOrigins(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -574,7 +575,55 @@ public class GameOracle {
                 .append("/// and weirdness, then the offset, then the index into `BIOMES`.\n")
                 .append("pub static OVERWORLD: [([u16; 6], i64, u16); ").append(params.values().size()).append("] = [\n")
                 .append(entries).append("];\n");
+
+        // The overworld spawn targets (NoiseGeneratorSettings.spawnTarget): climate ranges of
+        // the five climate density functions, which are the noise router's own.
+        NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.OVERWORLD).value();
+        List<String> order = List.of("minecraft:overworld/temperature", "minecraft:overworld/vegetation",
+                "minecraft:overworld/continents", "minecraft:overworld/erosion", "minecraft:overworld/ridges");
+        out.append("\n/// The overworld spawn targets (`NoiseGeneratorSettings.spawnTarget`): ranges for\n")
+                .append("/// temperature, humidity (vegetation), continentalness, erosion and weirdness (ridges).\n")
+                .append("pub const SPAWN_TARGETS: [[Parameter; 5]; ").append(settings.spawnTarget().size()).append("] = [\n");
+        for (var target : settings.spawnTarget()) {
+            Climate.Parameter[] ranges = new Climate.Parameter[5];
+            for (var e : target.parameters().entrySet()) {
+                String name = e.getKey().unwrapKey().orElseThrow().identifier().toString();
+                int i = order.indexOf(name);
+                if (i < 0 || ranges[i] != null) throw new IllegalStateException("unexpected spawn target function " + name);
+                ranges[i] = e.getValue();
+            }
+            out.append("    [");
+            for (int i = 0; i < 5; i++) {
+                if (ranges[i] == null) throw new IllegalStateException("missing spawn target function " + order.get(i));
+                out.append(i == 0 ? "" : ", ").append("Parameter::new(").append(ranges[i].min()).append(", ").append(ranges[i].max()).append(")");
+            }
+            out.append("],\n");
+        }
+        out.append("];\n");
         Files.writeString(rs, out);
+    }
+
+    /** NoiseSpawnFinder.findSpawnPosition and NoiseBasedChunkGenerator.getOrigin for many seeds. */
+    static void spawnOrigins(HolderLookup.Provider lookup) throws IOException {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.OVERWORLD);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                        .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.OVERWORLD));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        List<Long> worldSeeds = new ArrayList<>(List.of(0L, 1L, -1L, 42L, Long.MIN_VALUE, Long.MAX_VALUE,
+                -4172144997902289642L, 7598295893756170300L, 485913639L));
+        for (int i = 0; i < 400; i++) worldSeeds.add(INPUTS.nextLong());
+        try (PrintWriter w = writer("spawn_origin.txt")) {
+            for (long seed : worldSeeds) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                var samplers = rs.samplersWithContext(SamplerContext.builder().enableCaches().build());
+                var pos = net.minecraft.world.level.levelgen.NoiseSpawnFinder.findSpawnPosition(settings.spawnTarget(), samplers);
+                var origin = generator.getOrigin(rs);
+                w.println(seed + " " + pos.getX() + " " + pos.getZ() + " " + origin.x() + " " + origin.z());
+            }
+        }
     }
 
     static Path this_out() {

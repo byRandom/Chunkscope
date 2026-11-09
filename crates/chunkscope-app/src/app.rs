@@ -13,7 +13,8 @@ use mc_core::{is_slime_chunk, parse_seed};
 use crate::biome_colors;
 use crate::icons::{self, Icon};
 use crate::structures::{
-    self, BLOCK_CHUNKS, BlockKey, KINDS, Marker, STRONGHOLDS, Strongholds, StructureCache,
+    self, BLOCK_CHUNKS, BlockKey, KINDS, Marker, SPAWN, STRONGHOLDS, Spawn, Strongholds,
+    StructureCache,
 };
 use crate::theme::{
     self, ACCENT, ACCENT_DIM, BG, BORDER, FIELD, ON_ACCENT, PANEL, TEXT, TEXT_WEAK,
@@ -51,6 +52,7 @@ pub struct ChunkscopeApp {
 
     tiles: TileCache,
     strongholds: Strongholds,
+    spawn: Spawn,
     markers: StructureCache,
     source: OverworldBiomeSource,
 
@@ -82,6 +84,7 @@ impl ChunkscopeApp {
             kinds_on: KINDS.iter().map(|k| k.default_on).collect(),
             tiles: TileCache::new(&cc.egui_ctx),
             strongholds: Strongholds::new(seed, &cc.egui_ctx),
+            spawn: Spawn::new(seed, &cc.egui_ctx),
             markers: StructureCache::new(&cc.egui_ctx),
             source: OverworldBiomeSource::new(seed),
             hover: None,
@@ -100,6 +103,7 @@ impl ChunkscopeApp {
         }
         self.seed = seed;
         self.strongholds = Strongholds::new(seed, ctx);
+        self.spawn = Spawn::new(seed, ctx);
         self.source = OverworldBiomeSource::new(seed);
         self.hover_biome = None;
         self.selected = None;
@@ -117,6 +121,7 @@ impl eframe::App for ChunkscopeApp {
         self.tiles.receive(&ctx);
         self.markers.receive();
         self.strongholds.is_loading();
+        self.spawn.is_loading();
 
         egui::Panel::top("title")
             .exact_size(40.0)
@@ -331,7 +336,11 @@ impl ChunkscopeApp {
                 });
                 ui.add_space(2.0);
                 for (i, kind) in KINDS.iter().enumerate() {
-                    let note = (!structures::validated(i)).then_some("possible");
+                    let note = if kind.set == SPAWN {
+                        Some("estimate")
+                    } else {
+                        (!structures::validated(i)).then_some("possible")
+                    };
                     layer_row(
                         ui,
                         &mut self.kinds_on[i],
@@ -403,21 +412,32 @@ impl ChunkscopeApp {
                         );
                     });
                     xz_row(ui, ("X", &m.x.to_string()), ("Z", &m.z.to_string()));
-                    if let Some((name, sx, sy, sz)) = m.start {
-                        theme::field_label(ui, "Structure");
-                        field_box(ui, &biome_colors::display_name(name));
-                        theme::field_label(ui, "Start");
-                        field_box(ui, &format!("{sx}, {sy}, {sz}"));
+                    if kind.set == SPAWN {
+                        if let Some(((ox, oz), (sx, sy, sz))) = self.spawn.get() {
+                            theme::field_label(ui, "Estimated spawn block");
+                            field_box(ui, &format!("{sx}, {sy}, {sz}"));
+                            theme::field_label(ui, "Searched around (exact)");
+                            field_box(ui, &format!("{ox}, {oz}  (chunk {}, {})", ox >> 4, oz >> 4));
+                        }
+                        theme::field_label(ui, "Status");
+                        field_box(ui, "Estimate: trees and lakes can move it");
+                    } else {
+                        if let Some((name, sx, sy, sz)) = m.start {
+                            theme::field_label(ui, "Structure");
+                            field_box(ui, &biome_colors::display_name(name));
+                            theme::field_label(ui, "Start");
+                            field_box(ui, &format!("{sx}, {sy}, {sz}"));
+                        }
+                        theme::field_label(ui, "Status");
+                        field_box(
+                            ui,
+                            if m.exact {
+                                "Generates (checked like the game)"
+                            } else {
+                                "Possible: not checked yet"
+                            },
+                        );
                     }
-                    theme::field_label(ui, "Status");
-                    field_box(
-                        ui,
-                        if m.exact {
-                            "Generates (checked like the game)"
-                        } else {
-                            "Possible: not checked yet"
-                        },
-                    );
                     ui.add_space(4.0);
                     ui.horizontal(|ui| {
                         if accent_button(ui, "Copy /tp").clicked() {
@@ -719,7 +739,7 @@ impl ChunkscopeApp {
         let mut visible: Vec<Marker> = Vec::new();
         let mut wanted: Vec<BlockKey> = Vec::new();
         for (kind, info) in KINDS.iter().enumerate() {
-            if !self.kinds_on[kind] || info.set == STRONGHOLDS {
+            if !self.kinds_on[kind] || info.set == STRONGHOLDS || info.set == SPAWN {
                 continue;
             }
             if structures::spacing_blocks(kind).is_none_or(|s| s < min_spacing) {
@@ -747,6 +767,18 @@ impl ChunkscopeApp {
             d(a).total_cmp(&d(b))
         });
         self.markers.request(&wanted);
+        if let Some(i) = KINDS.iter().position(|k| k.set == SPAWN)
+            && self.kinds_on[i]
+            && let Some((_, (x, y, z))) = self.spawn.get()
+        {
+            visible.push(Marker {
+                kind: i,
+                x,
+                z,
+                exact: false,
+                start: Some(("chunkscope:spawn", x, y, z)),
+            });
+        }
         if let Some(i) = KINDS.iter().position(|k| k.set == STRONGHOLDS)
             && self.kinds_on[i]
         {
@@ -789,10 +821,15 @@ impl ChunkscopeApp {
             let p = self.to_screen(rect, m.x as f64, m.z as f64);
             let kind = &KINDS[m.kind];
             let name = match m.start {
+                _ if kind.set == SPAWN => kind.label.to_owned(),
                 Some((structure, ..)) => biome_colors::display_name(structure),
                 None => kind.label.trim_end_matches('s').to_owned(),
             };
-            let possible = if m.exact { "" } else { " (possible)" };
+            let possible = match (m.exact, kind.set == SPAWN) {
+                (true, _) => "",
+                (false, true) => " (estimate)",
+                (false, false) => " (possible)",
+            };
             let label = format!("{name}{possible}  {}, {}", m.x, m.z);
             let galley = painter.layout_no_wrap(label, FontId::proportional(12.0), TEXT);
             let pos = p + vec2(r + 8.0, -galley.size().y / 2.0);

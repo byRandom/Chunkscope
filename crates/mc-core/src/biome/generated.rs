@@ -8302,3 +8302,10 @@ pub static OVERWORLD: [([u16; 6], i64, u16); 7594] = [
     ([0, 0, 54, 55, 52, 56], 0, 54),
     ([0, 0, 0, 33, 57, 0], 0, 55),
 ];
+
+/// The overworld spawn targets (`NoiseGeneratorSettings.spawnTarget`): ranges for
+/// temperature, humidity (vegetation), continentalness, erosion and weirdness (ridges).
+pub const SPAWN_TARGETS: [[Parameter; 5]; 2] = [
+    [Parameter::new(-10000, 10000), Parameter::new(-10000, 10000), Parameter::new(-1100, 10000), Parameter::new(-10000, 10000), Parameter::new(-10000, -1600)],
+    [Parameter::new(-10000, 10000), Parameter::new(-10000, 10000), Parameter::new(-1100, 10000), Parameter::new(-10000, 10000), Parameter::new(1600, 10000)],
+];

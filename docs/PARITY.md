@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals); next: spawn | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin | In progress |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -208,6 +208,23 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   covers them: the bottom of the column pre-check (y = -65 instead of -64),
   and the trial chambers' dimension padding (they start at y = -40 or
   higher, far from the limit).
+
+- **The world spawn starts from the climate.** `NoiseSpawnFinder` scores
+  points by the squared distance of their quantized climate to the
+  `spawn_target` ranges (times 2048²) plus their squared distance to (0, 0):
+  first on rings 512 blocks apart up to 2048, then on rings 32 blocks apart
+  up to 512 around the best point. The climate is sampled at the point's
+  quart corner, but the distance uses the point itself, and the stored
+  position is the point itself. The rings use `Math.sin` and `Math.cos`
+  (see below). A fixture checks the origin of 409 seeds. No fixture can
+  catch a change of the ring's angle limit (no angle step lands near 2π)
+  or of the tie rule (no tie in 409 seeds); the port keeps the game's
+  strict comparison.
+- **The spawn block needs full chunks.** From the origin's chunk the game
+  walks 11×11 chunks in a spiral and stands the player on the first column
+  whose top is not a fluid, measured on fully generated chunks (trees,
+  lakes, ice). Chunkscope runs the same walk on its terrain, without
+  features, so its spawn block is an estimate; the app says so.
 
 ## Known non-determinism in the game itself
 

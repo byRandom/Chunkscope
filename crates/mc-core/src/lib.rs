@@ -7,6 +7,7 @@ pub mod noise;
 pub mod random;
 pub mod seed;
 pub mod slime;
+pub mod spawn;
 pub mod structure;
 pub mod terrain;
 

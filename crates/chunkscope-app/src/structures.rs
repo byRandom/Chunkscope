@@ -35,9 +35,18 @@ const fn rgb(hex: u32) -> Color32 {
 }
 
 pub const STRONGHOLDS: &str = "minecraft:strongholds";
+/// The world spawn layer (not a structure set).
+pub const SPAWN: &str = "chunkscope:spawn";
 
 /// Overworld structure layers, in legend order.
 pub static KINDS: &[Kind] = &[
+    Kind {
+        set: SPAWN,
+        label: "World spawn",
+        glyph: "W",
+        color: rgb(0xf4f4f4),
+        default_on: true,
+    },
     Kind {
         set: "minecraft:villages",
         label: "Villages",
@@ -184,6 +193,9 @@ pub struct Marker {
 /// terrain (strongholds are exact too).
 pub fn validated(kind: usize) -> bool {
     use mc_core::structure::validate::{Structure, StructureKind};
+    if KINDS[kind].set == SPAWN {
+        return false; // an estimate, see `Spawn`
+    }
     let Some(set) = set(KINDS[kind].set) else {
         return false;
     };
@@ -405,6 +417,53 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egu
             return;
         }
         ctx.request_repaint();
+    }
+}
+
+/// The climate origin `(x, z)` the game searches the spawn around (exact),
+/// and the estimated spawn block `(x, y, z)`.
+pub type SpawnPoints = ((i32, i32), (i32, i32, i32));
+
+/// The world spawn: its origin (exact) and the spawn block (an estimate),
+/// computed on a background thread.
+pub struct Spawn {
+    rx: Option<mpsc::Receiver<SpawnPoints>>,
+    value: Option<SpawnPoints>,
+}
+
+impl Spawn {
+    pub fn new(seed: i64, ctx: &egui::Context) -> Self {
+        let (tx, rx) = mpsc::channel();
+        let ctx = ctx.clone();
+        thread::Builder::new()
+            .name("spawn".into())
+            .spawn(move || {
+                let biomes = OverworldBiomeSource::new(seed);
+                let terrain = OverworldTerrain::new(seed);
+                let origin = mc_core::spawn::spawn_origin(biomes.climate());
+                let block = mc_core::spawn::spawn_estimate(biomes.climate(), &terrain);
+                let _ = tx.send((origin, block));
+                ctx.request_repaint();
+            })
+            .expect("spawn spawn thread");
+        Self {
+            rx: Some(rx),
+            value: None,
+        }
+    }
+
+    pub fn is_loading(&mut self) -> bool {
+        if let Some(rx) = &self.rx
+            && let Ok(v) = rx.try_recv()
+        {
+            self.value = Some(v);
+            self.rx = None;
+        }
+        self.rx.is_some()
+    }
+
+    pub fn get(&self) -> Option<SpawnPoints> {
+        self.value
     }
 }
 
