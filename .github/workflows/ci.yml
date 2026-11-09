@@ -1,8 +1,17 @@
 name: CI
 
+# Pull requests are checked once (not also on the push to their branch);
+# main is checked after each merge. Tags are not: their commit already passed
+# on main.
 on:
   push:
+    branches: [main]
   pull_request:
+
+# A newer push to the same pull request or branch cancels the older run.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   jdk-parity:
@@ -45,6 +54,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      # Reuses compiled dependencies (egui, eframe...) between runs.
+      - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --all
