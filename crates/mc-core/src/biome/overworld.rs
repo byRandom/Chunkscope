@@ -164,7 +164,7 @@ impl Biome {
         generated::BIOMES[self.0 as usize]
     }
 
-    /// Every biome in the overworld biome list, in id order.
+    /// Every biome of every dimension Chunkscope knows, in id order.
     pub fn all() -> impl Iterator<Item = Biome> {
         (0..generated::BIOMES.len() as u16).map(Biome)
     }
@@ -179,8 +179,13 @@ impl Biome {
 
 /// The `minecraft:overworld` multi-noise biome parameter list.
 pub fn overworld_parameters() -> ParameterList<Biome> {
+    parameter_list(&generated::OVERWORLD)
+}
+
+/// A parameter list from one of the generated preset tables.
+pub(super) fn parameter_list(table: &[([u16; 6], i64, u16)]) -> ParameterList<Biome> {
     use super::climate::Parameter;
-    let entries = generated::OVERWORLD
+    let entries = table
         .iter()
         .map(|&(params, offset, biome)| {
             let p = |i: usize| generated::PARAMETERS[params[i] as usize];
@@ -199,6 +204,14 @@ pub fn overworld_parameters() -> ParameterList<Biome> {
         })
         .collect();
     ParameterList::new(entries)
+}
+
+/// The biomes an overworld biome source can return, in id order.
+pub fn overworld_biomes() -> impl Iterator<Item = Biome> {
+    let mut seen: Vec<u16> = generated::OVERWORLD.iter().map(|e| e.2).collect();
+    seen.sort_unstable();
+    seen.dedup();
+    seen.into_iter().map(Biome)
 }
 
 /// Overworld biome source for one seed: climate noises + biome lookup.

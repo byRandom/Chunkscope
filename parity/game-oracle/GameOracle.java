@@ -96,6 +96,7 @@ public class GameOracle {
         aquifers(lookup);
         structures(lookup);
         spawnOrigins(lookup);
+        netherBiomes(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -565,6 +566,22 @@ public class GameOracle {
             }
             entries.append("], ").append(p.offset()).append(", ").append(biomes.indexOf(biome)).append("),\n");
         }
+        // The Nether preset, after the overworld one: its biomes and ranges are appended, so the
+        // overworld indices do not change.
+        var netherParams = MultiNoiseBiomeSourceParameterList.knownPresets().get(MultiNoiseBiomeSourceParameterList.Preset.NETHER);
+        StringBuilder netherEntries = new StringBuilder();
+        for (var pair : netherParams.values()) {
+            Climate.ParameterPoint p = pair.getFirst();
+            String biome = pair.getSecond().identifier().toString();
+            if (!biomes.contains(biome)) biomes.add(biome);
+            netherEntries.append("    ([");
+            Climate.Parameter[] ps = {p.temperature(), p.humidity(), p.continentalness(), p.erosion(), p.depth(), p.weirdness()};
+            for (int i = 0; i < 6; i++) {
+                if (!parameters.contains(ps[i])) parameters.add(ps[i]);
+                netherEntries.append(i == 0 ? "" : ", ").append(parameters.indexOf(ps[i]));
+            }
+            netherEntries.append("], ").append(p.offset()).append(", ").append(biomes.indexOf(biome)).append("),\n");
+        }
         out.append("/// Biome registry names; `Biome(i)` is `BIOMES[i]`.\npub const BIOMES: [&str; ").append(biomes.size()).append("] = [\n");
         for (String b : biomes) out.append("    \"").append(b).append("\",\n");
         out.append("];\n\n/// Distinct climate ranges used by `OVERWORLD`.\npub const PARAMETERS: [Parameter; ")
@@ -575,6 +592,9 @@ public class GameOracle {
                 .append("/// and weirdness, then the offset, then the index into `BIOMES`.\n")
                 .append("pub static OVERWORLD: [([u16; 6], i64, u16); ").append(params.values().size()).append("] = [\n")
                 .append(entries).append("];\n");
+        out.append("\n/// The `minecraft:nether` parameter list, in game order, like `OVERWORLD`.\n")
+                .append("pub static NETHER: [([u16; 6], i64, u16); ").append(netherParams.values().size()).append("] = [\n")
+                .append(netherEntries).append("];\n");
 
         // The overworld spawn targets (NoiseGeneratorSettings.spawnTarget): climate ranges of
         // the five climate density functions, which are the noise router's own.
@@ -602,6 +622,34 @@ public class GameOracle {
         }
         out.append("];\n");
         Files.writeString(rs, out);
+    }
+
+    /** Nether biomes and climate (legacy random source) at random quart positions. */
+    static void netherBiomes(HolderLookup.Provider lookup) throws IOException {
+        NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.NETHER).value();
+        var preset = MultiNoiseBiomeSourceParameterList.knownPresets().get(MultiNoiseBiomeSourceParameterList.Preset.NETHER);
+        List<Long> worldSeeds = new ArrayList<>(List.of(0L, 1L, -1L, Long.MIN_VALUE, -4172144997902289642L, 7598295893756170300L));
+        for (int i = 0; i < 6; i++) worldSeeds.add(INPUTS.nextLong());
+        try (PrintWriter w = writer("nether_biomes.txt")) {
+            for (long seed : worldSeeds) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                var sampler = rs.createClimateSampler(SamplerContext.builder().build());
+                // MultiNoiseBiomeSource.getNoiseBiome is parameters.findValue(sampler.sample(...)).
+                // A fresh R-tree per seed: its search starts from nothing, like Chunkscope's.
+                var parameters = new Climate.ParameterList<>(preset.values());
+                for (int i = 0; i < 400; i++) {
+                    int range = i % 2 == 0 ? 2_000 : 500_000;
+                    int qx = INPUTS.nextInt(-range, range), qz = INPUTS.nextInt(-range, range);
+                    int qy = i % 10 == 0 ? INPUTS.nextInt(-40, 80) : INPUTS.nextInt(0, 32);
+                    var target = sampler.sample(qx, qy, qz);
+                    var biome = parameters.findValue(target).identifier();
+                    w.println(seed + " " + qx + " " + qy + " " + qz + " " + target.temperature() + " " + target.humidity()
+                            + " " + target.continentalness() + " " + target.erosion() + " " + target.depth() + " " + target.weirdness()
+                            + " " + biome);
+                }
+            }
+        }
     }
 
     /** NoiseSpawnFinder.findSpawnPosition and NoiseBasedChunkGenerator.getOrigin for many seeds. */
