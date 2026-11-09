@@ -4,6 +4,7 @@
 
 mod app;
 mod biome_colors;
+mod finder_ui;
 mod icons;
 mod structures;
 mod theme;

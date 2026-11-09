@@ -14,6 +14,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
 | 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts and ruined portals), world spawn origin | In progress |
+| 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
 | 3    | cubiomes (cross-check)                   | Large-scale differential testing of biomes and structures                                  | Planned     |
 
 In every tier, the Rust tests recompute the same values and must match **bit
@@ -224,7 +225,14 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   walks 11×11 chunks in a spiral and stands the player on the first column
   whose top is not a fluid, measured on fully generated chunks (trees,
   lakes, ice). Chunkscope runs the same walk on its terrain, without
-  features, so its spawn block is an estimate; the app says so.
+  features, so its spawn block is an estimate; the app says so. Measured
+  against 32 real 26.3 servers (`parity/server-oracle/run.sh`, which starts
+  the official server for each seed and reads the spawn from `level.dat`):
+  31 have the same x and z, 23 are exact. When only y differs, the real
+  spawn is 3 to 10 blocks higher, on a tree. The one x, z miss is on a
+  shore. That script runs the real server, so it needs the Minecraft EULA
+  accepted (`MINECRAFT_EULA=true`) and about 15 seconds per seed; it is
+  run by hand when the target version changes, not in CI.
 
 ## Known non-determinism in the game itself
 
@@ -239,6 +247,16 @@ x86_64 HotSpot result and document the caveat.
 
 `java.util.Random.nextGaussian()` uses `StrictMath` and is deterministic; it is
 implemented in `java-compat`.
+
+### The spawn block's height
+
+Two runs of the same 26.3 server with the same seed can stand the player at
+different heights: on 2 of the 32 seeds of `parity/server-oracle`, the spawn
+y changed between runs (109 and 106, 79 and 83) while x and z stayed the
+same. The server generates chunks on several threads, and whether a tree
+near the spawn column has been placed when the spawn is chosen depends on
+that timing. So the spawn y cannot be predicted exactly, by Chunkscope or
+anyone; x and z were stable in both runs.
 
 ### `Math.sin` / `Math.cos` in stronghold rings
 

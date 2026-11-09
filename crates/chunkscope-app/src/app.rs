@@ -32,6 +32,7 @@ const MARKER_SPACING_PX: f64 = 48.0;
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Tab {
     World,
+    Finder,
     About,
 }
 
@@ -53,6 +54,7 @@ pub struct ChunkscopeApp {
     tiles: TileCache,
     strongholds: Strongholds,
     spawn: Spawn,
+    finder: crate::finder_ui::FinderUi,
     markers: StructureCache,
     source: OverworldBiomeSource,
 
@@ -85,6 +87,7 @@ impl ChunkscopeApp {
             tiles: TileCache::new(&cc.egui_ctx),
             strongholds: Strongholds::new(seed, &cc.egui_ctx),
             spawn: Spawn::new(seed, &cc.egui_ctx),
+            finder: Default::default(),
             markers: StructureCache::new(&cc.egui_ctx),
             source: OverworldBiomeSource::new(seed),
             hover: None,
@@ -154,6 +157,17 @@ impl eframe::App for ChunkscopeApp {
             .frame(theme::panel_frame())
             .show(ui, |ui| match self.tab {
                 Tab::World => self.world_panel(ui),
+                Tab::Finder => {
+                    if let Some(crate::finder_ui::Action::Open { seed, center }) =
+                        self.finder.ui(ui)
+                    {
+                        let ctx = ui.ctx().clone();
+                        self.seed_text = seed.to_string();
+                        self.set_seed(seed, &ctx);
+                        self.center = (center.0 as f64, center.1 as f64);
+                        self.zoom = self.zoom.max(0.25);
+                    }
+                }
                 Tab::About => about_panel(ui),
             });
         egui::Panel::right("inspector")
@@ -241,6 +255,7 @@ impl ChunkscopeApp {
         ui.vertical_centered(|ui| {
             for (tab, icon, label) in [
                 (Tab::World, Icon::Map, "Map"),
+                (Tab::Finder, Icon::Search, "Finder"),
                 (Tab::About, Icon::Info, "About"),
             ] {
                 let active = self.tab == tab;
@@ -249,8 +264,6 @@ impl ChunkscopeApp {
                 }
                 ui.add_space(6.0);
             }
-            rail_button(ui, Icon::Search, "Finder", false, false)
-                .on_disabled_hover_text("Seed finder: coming soon");
         });
     }
 
@@ -967,7 +980,7 @@ fn about_panel(ui: &mut egui::Ui) {
     });
 }
 
-fn panel_header(ui: &mut egui::Ui, title: &str, subtitle: Option<&str>) {
+pub(crate) fn panel_header(ui: &mut egui::Ui, title: &str, subtitle: Option<&str>) {
     egui::Frame::new()
         .inner_margin(Margin {
             left: 14,
@@ -985,7 +998,7 @@ fn panel_header(ui: &mut egui::Ui, title: &str, subtitle: Option<&str>) {
     theme::divider(ui);
 }
 
-fn section(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
+pub(crate) fn section(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
     egui::Frame::new()
         .inner_margin(Margin::symmetric(14, 10))
         .show(ui, |ui| {
@@ -1006,7 +1019,7 @@ fn pill(ui: &mut egui::Ui, text: &str) {
 }
 
 /// A read-only value in an input-like box.
-fn field_box(ui: &mut egui::Ui, text: &str) {
+pub(crate) fn field_box(ui: &mut egui::Ui, text: &str) {
     egui::Frame::new()
         .fill(FIELD)
         .corner_radius(CornerRadius::same(theme::RADIUS))
@@ -1042,7 +1055,7 @@ fn swatch_box(ui: &mut egui::Ui, color: Color32, text: &str) {
 /// never makes a side panel wider than it is. egui gives the extra width of
 /// an overflowing right panel to the map, which then draws over the panel.
 /// Selecting and copying the label still copies the whole text.
-fn fit_label(ui: &mut egui::Ui, text: RichText) -> egui::Response {
+pub(crate) fn fit_label(ui: &mut egui::Ui, text: RichText) -> egui::Response {
     ui.add(egui::Label::new(text).truncate())
 }
 
@@ -1137,7 +1150,7 @@ fn rail_button(
 
 /// A square icon button; `active` fills it with the accent, like the
 /// selected tool of a design app.
-fn icon_button(ui: &mut egui::Ui, icon: Icon, active: bool) -> egui::Response {
+pub(crate) fn icon_button(ui: &mut egui::Ui, icon: Icon, active: bool) -> egui::Response {
     let (rect, response) = ui.allocate_exact_size(vec2(30.0, 30.0), Sense::click());
     let p = ui.painter();
     let color = if active {
@@ -1158,7 +1171,7 @@ fn icon_button(ui: &mut egui::Ui, icon: Icon, active: bool) -> egui::Response {
     response
 }
 
-fn accent_button(ui: &mut egui::Ui, text: &str) -> egui::Response {
+pub(crate) fn accent_button(ui: &mut egui::Ui, text: &str) -> egui::Response {
     let button = egui::Button::new(RichText::new(text).color(ON_ACCENT).strong())
         .fill(ACCENT)
         .corner_radius(CornerRadius::same(theme::RADIUS));

@@ -209,9 +209,15 @@ pub struct OverworldBiomeSource {
 
 impl OverworldBiomeSource {
     pub fn new(world_seed: i64) -> Self {
+        // The parameter list does not depend on the seed and takes ~30 ms to
+        // build: build it once per thread and give each source a copy (with
+        // its own search state).
+        thread_local! {
+            static PARAMETERS: ParameterList<Biome> = overworld_parameters();
+        }
         Self {
             climate: OverworldClimate::new(world_seed),
-            parameters: overworld_parameters(),
+            parameters: PARAMETERS.with(ParameterList::clone),
         }
     }
 
