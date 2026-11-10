@@ -382,10 +382,18 @@ impl ChunkscopeApp {
                     if kind.dimension != self.dimension {
                         continue;
                     }
+                    // A layer too dense for this zoom is not drawn: say so, and
+                    // from which zoom it shows.
+                    let min_zoom = structures::spacing_blocks(i).map(|s| MARKER_SPACING_PX / s);
                     let note = if kind.set == SPAWN {
-                        Some("estimate")
+                        Some("estimate".to_owned())
+                    } else if let Some(z) = min_zoom
+                        && self.kinds_on[i]
+                        && (self.zoom as f64) < z
+                    {
+                        Some(format!("zoom in ({:.0}%+)", (z * 100.0).ceil()))
                     } else {
-                        (!structures::validated(i)).then_some("possible")
+                        (!structures::validated(i)).then(|| "possible".to_owned())
                     };
                     layer_row(
                         ui,
@@ -393,7 +401,7 @@ impl ChunkscopeApp {
                         Icon::Pin,
                         Some((kind.glyph, kind.color)),
                         kind.label,
-                        note,
+                        note.as_deref(),
                     );
                 }
                 ui.add_space(6.0);
