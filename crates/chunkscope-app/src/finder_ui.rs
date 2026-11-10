@@ -66,6 +66,7 @@ fn kind_label(kind: usize) -> String {
     match k.dimension {
         Dimension::Overworld => k.label.to_owned(),
         Dimension::Nether => format!("{} (Nether)", k.label),
+        Dimension::End => format!("{} (End)", k.label),
     }
 }
 
@@ -110,6 +111,7 @@ impl FinderUi {
                 dimension: match kind.dimension {
                     Dimension::Overworld => FinderDimension::Overworld,
                     Dimension::Nether => FinderDimension::Nether,
+                    Dimension::End => FinderDimension::End,
                 },
                 only: kind.only,
             });
@@ -263,12 +265,14 @@ impl FinderUi {
         if self
             .filters
             .iter()
-            .any(|f| KINDS[f.kind].dimension == Dimension::Nether)
+            .any(|f| KINDS[f.kind].dimension != Dimension::Overworld)
         {
             ui.label(
-                RichText::new("Nether structures are measured from the Nether's 0, 0.")
-                    .color(TEXT_WEAK)
-                    .small(),
+                RichText::new(
+                    "Nether and End structures are measured from 0, 0 in their dimension.",
+                )
+                .color(TEXT_WEAK)
+                .small(),
             );
         }
         if ui.button("+ Add structure").clicked() {
@@ -366,13 +370,13 @@ impl FinderUi {
                 .found
                 .iter()
                 .map(|f| {
-                    let nether = if f.dimension == FinderDimension::Nether {
-                        " (Nether)"
-                    } else {
-                        ""
+                    let dimension = match f.dimension {
+                        FinderDimension::Overworld => "",
+                        FinderDimension::Nether => " (Nether)",
+                        FinderDimension::End => " (End)",
                     };
                     format!(
-                        "{}{nether} {:.0}m",
+                        "{}{dimension} {:.0}m",
                         biome_colors::display_name(f.name),
                         f.distance
                     )

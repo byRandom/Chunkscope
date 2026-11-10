@@ -241,7 +241,12 @@ fn compute(source: &BiomeSource, key: TileKey, palette: &[Color32]) -> Done {
             let qx = qx0 + px as i64 * step;
             let qz = qz0 + pz as i64 * step;
             let b = source.biome(clamp_i32(qx), qy, clamp_i32(qz)).0;
-            pixels[pz * n + px] = palette.get(b as usize).copied().unwrap_or(Color32::RED);
+            let mut color = palette.get(b as usize).copied().unwrap_or(Color32::RED);
+            // The End: the void between the islands, darkened.
+            if source.end_land(clamp_i32(qx * 4), clamp_i32(qz * 4)) == Some(false) {
+                color = void_shade(color);
+            }
+            pixels[pz * n + px] = color;
         }
     }
     Done {
@@ -249,6 +254,12 @@ fn compute(source: &BiomeSource, key: TileKey, palette: &[Color32]) -> Done {
         image: ColorImage::new([n, n], pixels),
         millis: 0.0,
     }
+}
+
+/// A biome color darkened for the End's void.
+fn void_shade(c: Color32) -> Color32 {
+    let f = |v: u8| (v as u16 * 7 / 20) as u8;
+    Color32::from_rgb(f(c.r()), f(c.g()), f(c.b()))
 }
 
 fn clamp_i32(v: i64) -> i32 {
