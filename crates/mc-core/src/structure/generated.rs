@@ -301,8 +301,8 @@ pub static STRUCTURE_SETS: [StructureSet; 21] = [
     },
 ];
 
-/// The structures of the overworld and Nether structure sets (strongholds excepted), sorted by name.
-pub static STRUCTURES: [Structure; 50] = [
+/// The structures of every structure set but strongholds, sorted by name.
+pub static STRUCTURES: [Structure; 51] = [
     Structure {
         name: "minecraft:abandoned_camp_bamboo_jungle",
         biomes: &["minecraft:bamboo_jungle"],
@@ -532,6 +532,11 @@ pub static STRUCTURES: [Structure; 50] = [
         name: "minecraft:desert_pyramid",
         biomes: &["minecraft:desert"],
         kind: StructureKind::SinglePiece { width: 21, depth: 21 },
+    },
+    Structure {
+        name: "minecraft:end_city",
+        biomes: &["minecraft:end_highlands", "minecraft:end_midlands"],
+        kind: StructureKind::EndCity,
     },
     Structure {
         name: "minecraft:fortress",

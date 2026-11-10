@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions, End biomes and terrain (simplex noise, islands) | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions, End biomes, terrain (simplex noise, islands) and end cities | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
 | 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
 
@@ -278,6 +278,10 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   there. Two mutations no vanilla data can catch: the Nether's air-pocket
   range (its probability is 0) and the block above or below the column
   (never read).
+- **End cities** use the woodland mansions' check: a random rotation and
+  the lowest corner of a 5 x 5 footprint from the chunk's (7, 7), at y 60 or
+  more, on the End terrain. The End is 256 blocks high for structures and
+  128 for terrain, like the Nether.
 - Not ported yet: mineshafts (their height comes from their pieces). The
   app shows them as possible.
 - Two checks cannot be told apart by any vanilla data, so no fixture

@@ -168,3 +168,81 @@ fn end_island_density_matches_the_game() {
     }
     assert!(checked > 3000);
 }
+
+fn point(p: Option<(i32, i32, i32)>) -> String {
+    match p {
+        Some((x, y, z)) => format!("{x},{y},{z}"),
+        None => "no".to_owned(),
+    }
+}
+
+/// End city attempts (`end_cities.txt`) and generation points on clusters
+/// of chunks on the outer islands (`end_city_points.txt`).
+#[test]
+fn end_cities_match_the_game() {
+    use mc_core::biome::EndBiomeSource;
+    use mc_core::structure::validate::{Structure, StructureGenerator};
+    use mc_core::structure::{STRUCTURE_SETS, StructureSets};
+    use mc_core::terrain::EndTerrain;
+
+    let mut world: Option<(i64, EndBiomeSource, EndTerrain)> = None;
+    let (mut checked, mut generates, mut mismatches) = (0, 0, Vec::new());
+    for line in fixture("end_cities.txt").lines() {
+        let mut parts = line.split(' ');
+        let seed: i64 = parts.next().unwrap().parse().unwrap();
+        let set = STRUCTURE_SETS.find_set(parts.next().unwrap()).unwrap();
+        let cx: i32 = parts.next().unwrap().parse().unwrap();
+        let cz: i32 = parts.next().unwrap().parse().unwrap();
+        let expected: Vec<&str> = parts.collect();
+        if world.as_ref().is_none_or(|w| w.0 != seed) {
+            world = Some((seed, EndBiomeSource::new(seed), EndTerrain::new(seed)));
+        }
+        let (_, biomes, terrain) = world.as_ref().unwrap();
+        assert_eq!(
+            set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz),
+            Some(true)
+        );
+        let outcome = StructureGenerator::end(seed, biomes, terrain).attempt(set, cx, cz);
+        let got: Vec<String> = outcome
+            .attempts()
+            .iter()
+            .map(|a| {
+                let name = a.structure.name.trim_start_matches("minecraft:");
+                format!("{name}:{}", point(a.point))
+            })
+            .collect();
+        checked += 1;
+        generates += usize::from(outcome.generated().is_some());
+        if got != expected {
+            mismatches.push(format!("{line}\n    got {}", got.join(" ")));
+        }
+    }
+    let city = Structure::find("minecraft:end_city").unwrap();
+    let mut points = 0;
+    for line in fixture("end_city_points.txt").lines() {
+        let mut parts = line.split(' ');
+        let seed: i64 = parts.next().unwrap().parse().unwrap();
+        parts.next();
+        let (biomes, terrain) = (EndBiomeSource::new(seed), EndTerrain::new(seed));
+        let generator = StructureGenerator::end(seed, &biomes, &terrain);
+        for entry in parts {
+            let (chunk, expected) = entry.split_once(':').unwrap();
+            let (cx, cz) = chunk.split_once(',').unwrap();
+            let (cx, cz): (i32, i32) = (cx.parse().unwrap(), cz.parse().unwrap());
+            let got = point(generator.try_structure(city, cx, cz).expect("ported"));
+            points += 1;
+            if got != expected {
+                mismatches.push(format!("point {cx},{cz}: expected {expected}, got {got}"));
+            }
+        }
+    }
+    println!(
+        "{checked} attempts ({generates} generate), {points} points, {} mismatches",
+        mismatches.len()
+    );
+    for m in mismatches.iter().take(8) {
+        println!("  {m}");
+    }
+    assert!(generates > 50);
+    assert!(mismatches.is_empty());
+}

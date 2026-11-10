@@ -102,6 +102,7 @@ public class GameOracle {
         ruinedPortals(lookup);
         endIslands();
         endTerrain(lookup, Path.of(args[5]));
+        endCities(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -852,7 +853,7 @@ public class GameOracle {
     static void writeStructures(HolderLookup.Provider lookup,
             List<net.minecraft.core.Holder.Reference<net.minecraft.world.level.levelgen.structure.StructureSet>> sets,
             StringBuilder out) {
-        java.util.Set<String> skip = java.util.Set.of("minecraft:strongholds", "minecraft:end_cities");
+        java.util.Set<String> skip = java.util.Set.of("minecraft:strongholds");
         List<String> names = new ArrayList<>();
         for (var ref : sets) {
             if (skip.contains(ref.key().identifier().toString())) continue;
@@ -861,7 +862,7 @@ public class GameOracle {
         java.util.Collections.sort(names);
         var registry = lookup.lookupOrThrow(Registries.STRUCTURE);
         Map<String, Object[]> startPools = new java.util.TreeMap<>();
-        out.append("\n/// The structures of the overworld and Nether structure sets (strongholds excepted), sorted by name.\n");
+        out.append("\n/// The structures of every structure set but strongholds, sorted by name.\n");
         out.append("pub static STRUCTURES: [Structure; ").append(names.size()).append("] = [\n");
         for (String name : names) {
             var structure = registry.getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse(name))).value();
@@ -930,6 +931,8 @@ public class GameOracle {
                 kind = "StructureKind::RuinedPortal(&[" + list + "\n        ])";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.NetherFortressStructure) {
                 kind = "StructureKind::NetherFortress";
+            } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.EndCityStructure) {
+                kind = "StructureKind::EndCity";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.WoodlandMansionStructure) {
                 kind = "StructureKind::WoodlandMansion";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.OceanMonumentStructure) {
@@ -2205,6 +2208,86 @@ public class GameOracle {
                 }
                 densities.println(d);
             }
+        }
+    }
+
+    /** End city attempts on several seeds, and generation points on clusters of chunks on the outer islands. */
+    static void endCities(HolderLookup.Provider lookup) throws Exception {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.END);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.TheEndBiomeSource.create(lookup.lookupOrThrow(Registries.BIOME));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        // dimension_type/the_end.json: y 0 to 255.
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(0, 256);
+        List<net.minecraft.core.Registry<?>> registries = new ArrayList<>();
+        for (var key : List.of(Registries.TEMPLATE_POOL, Registries.PROCESSOR_LIST)) registries.add(copyRegistry(lookup, key));
+        net.minecraft.core.registries.BuiltInRegistries.REGISTRY.forEach(registries::add);
+        var registryAccess = new net.minecraft.core.RegistryAccess.ImmutableRegistryAccess(registries);
+        var templates = templateManager(lookup);
+        Map<String, java.util.Set<String>> structureBiomes = new java.util.HashMap<>();
+        for (var ref : lookup.lookupOrThrow(Registries.STRUCTURE).listElements().toList()) {
+            String tag = ((net.minecraft.core.HolderSet.Named<Biome>) ref.value().biomes()).key().location().toString();
+            structureBiomes.put(ref.key().identifier().toString(), new java.util.HashSet<>(biomeTag(tag)));
+        }
+        var sets = structureSets(lookup);
+        var citySet = sets.stream().filter(r -> r.key().identifier().toString().equals("minecraft:end_cities")).findFirst().orElseThrow();
+        var placement = (net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement) citySet.value().placement();
+        try (PrintWriter w = writer("end_cities.txt"); PrintWriter p = writer("end_city_points.txt")) {
+            for (long seed : List.of(0L, -4172144997902289642L, INPUTS.nextLong(), INPUTS.nextLong())) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                var ctor = net.minecraft.world.level.chunk.ChunkGeneratorStructureState.class.getDeclaredConstructor(
+                        RandomState.class, net.minecraft.world.level.biome.BiomeSource.class, long.class,
+                        net.minecraft.world.level.ChunkPos.class, long.class, List.class);
+                ctor.setAccessible(true);
+                var state = ctor.newInstance(rs, biomeSource, seed, new net.minecraft.world.level.ChunkPos(0, 0), seed, List.copyOf(sets));
+                List<int[]> regions = new ArrayList<>();
+                for (int rz = -10; rz < 10; rz++) for (int rx = -10; rx < 10; rx++) regions.add(new int[] {rx, rz});
+                for (int i = 0; i < 60; i++) {
+                    int range = 2_000_000 / 16 / placement.spacing();
+                    regions.add(new int[] {INPUTS.nextInt(-range, range), INPUTS.nextInt(-range, range)});
+                }
+                for (int[] r : regions) {
+                    var pos = placement.getPotentialStructureChunk(seed, r[0] * placement.spacing(), r[1] * placement.spacing());
+                    if (!placement.isStructureChunk(state, pos.x(), pos.z())) continue;
+                    StringBuilder sb = new StringBuilder(seed + " minecraft:end_cities " + pos.x() + " " + pos.z());
+                    selectStructure(sb, citySet.value(), seed, pos, registryAccess, generator, biomeSource, rs, templates, height, structureBiomes);
+                    w.println(sb);
+                }
+            }
+            // Generation points on clusters of chunks, centered on outer islands (WORLD_SURFACE_WG above 0).
+            long seed = INPUTS.nextLong();
+            RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+            var city = lookup.lookupOrThrow(Registries.STRUCTURE).getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse("minecraft:end_city")));
+            var biomes = structureBiomes.get("minecraft:end_city");
+            java.util.function.Predicate<Holder<Biome>> valid = h -> biomes.contains(h.unwrapKey().orElseThrow().identifier().toString());
+            StringBuilder sb = new StringBuilder(seed + " end_city");
+            for (int cluster = 0; cluster < 25; cluster++) {
+                int ccx = 0, ccz = 0;
+                for (int tries = 0; tries < 2000; tries++) {
+                    ccx = INPUTS.nextInt(-6000, 6000);
+                    ccz = INPUTS.nextInt(-6000, 6000);
+                    if (Math.abs(ccx) < 80 && Math.abs(ccz) < 80) continue;
+                    int h = generator.getBaseHeight(ccx * 16 + 7, ccz * 16 + 7, net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, height, rs);
+                    if (h > 55) break;
+                }
+                ccx -= 3;
+                ccz -= 3;
+                for (int dz = 0; dz < 6; dz++) for (int dx = 0; dx < 6; dx++) {
+                    var pos = new net.minecraft.world.level.ChunkPos(ccx + dx, ccz + dz);
+                    var context = new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(
+                            registryAccess, generator, biomeSource, rs.createClimateSampler(SamplerContext.builder().enableCaches().build()),
+                            rs, templates, seed, pos, height, valid);
+                    var point = city.value().findValidGenerationPoint(context);
+                    sb.append(' ').append(pos.x()).append(',').append(pos.z()).append(':');
+                    if (point.isPresent()) {
+                        var q = point.get().position();
+                        sb.append(q.getX()).append(',').append(q.getY()).append(',').append(q.getZ());
+                    } else {
+                        sb.append("no");
+                    }
+                }
+            }
+            p.println(sb);
         }
     }
 
