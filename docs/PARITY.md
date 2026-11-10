@@ -229,6 +229,18 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   Nether fossil's `below_top: 2` is y = 125. A fossil picks a random column
   and height, then walks down to the first air block on a solid one, and
   needs that point above the lava sea (y = 32).
+- **The End islands use `SimplexNoise` in `double`.** Only the final sum
+  is converted to `float` (`70 * (n0 + n1 + n2)`), unlike Perlin noise. The
+  End's noise is built from `LegacyRandomSource(seed)` after skipping 17292
+  values, with offsets scaled by 0 (`new SimplexNoise(random, true)`; the
+  three offset doubles are still drawn). `getHeightValue` divides with
+  Java's truncating `/` and `%` (not floor), and since 26.x it no longer
+  contains the main island: it starts from -100 and only adds outer islands
+  (cells with x² + z² > 4096 and noise below -0.9). Mutations no fixture can
+  catch: the simplex diagonal tie (`x0 > y0` vs `>=`: the middle corner
+  then lies at squared distance 0.5 or more and adds 0), and re-associating
+  the `double` sums (the last-bit difference disappears in the `float`
+  cast); a noise value of exactly -0.9 never occurs.
 - **Sets with several structures retry.** Villages, ocean ruins,
   shipwrecks and abandoned camps pick a structure by weight with a random
   seeded by `setLargeFeatureSeed`; if it does not generate, the game removes

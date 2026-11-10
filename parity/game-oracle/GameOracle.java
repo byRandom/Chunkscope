@@ -100,6 +100,7 @@ public class GameOracle {
         netherStructures(lookup);
         netherTerrain(lookup, Path.of(args[5]));
         ruinedPortals(lookup);
+        endIslands();
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -2053,6 +2054,69 @@ public class GameOracle {
                         }
                     }
                     points.println(sb);
+                }
+            }
+        }
+    }
+
+    /**
+     * SimplexNoise (2D) and EndIslandFunction.getHeightValue, seeded like EndIslandFunction.compileSampler:
+     * LegacyRandomSource(seed), 17292 values skipped, then new SimplexNoise(random, true).
+     */
+    static void endIslands() throws Exception {
+        Method height = net.minecraft.world.level.levelgen.densityfunction.generator.EndIslandFunction.class
+                .getDeclaredMethod("getHeightValue", net.minecraft.world.level.levelgen.synth.SimplexNoise.class, int.class, int.class);
+        height.setAccessible(true);
+        try (PrintWriter w = writer("end_islands.txt")) {
+            // Seeds with an island cell right on the main island's edge (x^2 + z^2 == 4096).
+            List<Long> edgeSeeds = new ArrayList<>();
+            for (long seed = 0; edgeSeeds.size() < 3; seed++) {
+                RandomSource r = new LegacyRandomSource(seed);
+                r.consumeCount(17292);
+                var noise = new net.minecraft.world.level.levelgen.synth.SimplexNoise(r, true);
+                if (noise.get(64, 0) < -0.9f || noise.get(-64, 0) < -0.9f || noise.get(0, 64) < -0.9f || noise.get(0, -64) < -0.9f) edgeSeeds.add(seed);
+            }
+            for (long seed : edgeSeeds) {
+                RandomSource r = new LegacyRandomSource(seed);
+                r.consumeCount(17292);
+                var noise = new net.minecraft.world.level.levelgen.synth.SimplexNoise(r, true);
+                StringBuilder sb = new StringBuilder("height " + seed);
+                for (int x = -150; x <= 150; x += 3) for (int z = -150; z <= 150; z += 3) {
+                    if (Math.abs(x) < 110 && Math.abs(z) < 110) continue;
+                    sb.append(' ').append(x).append(',').append(z).append('=')
+                            .append(Float.floatToRawIntBits((float) height.invoke(null, noise, x, z)));
+                }
+                w.println(sb);
+            }
+            for (long seed : seeds(6)) {
+                for (boolean zero : new boolean[] {true, false}) {
+                    RandomSource r = new LegacyRandomSource(seed);
+                    r.consumeCount(17292);
+                    var noise = new net.minecraft.world.level.levelgen.synth.SimplexNoise(r, zero);
+                    StringBuilder sb = new StringBuilder("simplex " + seed + " " + zero);
+                    for (int i = 0; i < 1500; i++) {
+                        // Doubles, integers (the islands sample integer cells), and the diagonal x == y.
+                        double x, y;
+                        if (i < 300) { x = INPUTS.nextDouble(-50, 50); y = INPUTS.nextDouble(-50, 50); }
+                        else if (i < 1100) { x = INPUTS.nextInt(-5000, 5000); y = INPUTS.nextInt(-5000, 5000); }
+                        else if (i < 1300) { x = INPUTS.nextInt(-5000, 5000); y = x; }
+                        else { x = INPUTS.nextDouble(-3e7, 3e7); y = INPUTS.nextDouble(-3e7, 3e7); }
+                        sb.append(' ').append(Double.doubleToRawLongBits(x)).append(',').append(Double.doubleToRawLongBits(y))
+                                .append('=').append(Float.floatToRawIntBits(noise.get(x, y)));
+                    }
+                    w.println(sb);
+                    if (!zero) continue;
+                    sb = new StringBuilder("height " + seed);
+                    for (int i = 0; i < 300; i++) {
+                        // Grid coordinates (8 blocks): around the main island's edge, and far out.
+                        int x, z;
+                        if (i < 100) { x = INPUTS.nextInt(-160, 160); z = INPUTS.nextInt(-160, 160); }
+                        else if (i < 280) { x = INPUTS.nextInt(-20000, 20000); z = INPUTS.nextInt(-20000, 20000); }
+                        else { x = INPUTS.nextInt(-3_750_000, 3_750_000); z = INPUTS.nextInt(-3_750_000, 3_750_000); }
+                        sb.append(' ').append(x).append(',').append(z).append('=')
+                                .append(Float.floatToRawIntBits((float) height.invoke(null, noise, x, z)));
+                    }
+                    w.println(sb);
                 }
             }
         }
