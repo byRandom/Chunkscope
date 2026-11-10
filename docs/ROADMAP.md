@@ -63,7 +63,12 @@ The Nether uses the same machinery as the Overworld with other data.
 Done when: Nether biomes, terrain and every Nether structure match the
 game, and ruined portals are validated in both dimensions.
 
-## 0.5: the End
+## 0.5: the End (done)
+
+Released in 0.5.0, without end gateways (step 4), which stay optional for
+1.0. The map draws the outer islands from their density rather than from
+full terrain columns, which would be far slower; the edges are approximate,
+the biomes and structures are exact.
 
 1. **End biomes.** `TheEndBiomeSource`: the main island inside 64 chunks of
    the origin, else highlands, midlands, small islands or barrens by the
