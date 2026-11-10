@@ -28,6 +28,8 @@ struct FilterRow {
     kind: usize,
     radius: i32,
     count: u32,
+    /// End cities: only those with a ship.
+    ship: bool,
 }
 
 struct Running {
@@ -82,6 +84,7 @@ impl Default for FinderUi {
                 kind: village,
                 radius: 300,
                 count: 1,
+                ship: false,
             }],
             biome: None,
             from: "0".to_owned(),
@@ -114,6 +117,7 @@ impl FinderUi {
                     Dimension::End => FinderDimension::End,
                 },
                 only: kind.only,
+                ship: f.ship && kind.set == "minecraft:end_cities",
             });
         }
         Some(Query {
@@ -256,6 +260,9 @@ impl FinderUi {
                         ui.label(RichText::new("at least").color(TEXT_WEAK).small());
                         ui.add(egui::DragValue::new(&mut f.count).range(1..=20));
                     });
+                    if KINDS[f.kind].set == "minecraft:end_cities" {
+                        ui.checkbox(&mut f.ship, "With a ship (elytra)");
+                    }
                 });
             ui.add_space(4.0);
         }
@@ -281,6 +288,7 @@ impl FinderUi {
                 kind,
                 radius: 500,
                 count: 1,
+                ship: false,
             });
         }
         ui.add_space(6.0);

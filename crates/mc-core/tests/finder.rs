@@ -84,6 +84,7 @@ fn nether_filters_agree_with_a_direct_scan() {
             min_count: 1,
             dimension: Dimension::Nether,
             only: Some("minecraft:fortress"),
+            ship: false,
         }],
         center_biomes: None,
     };
@@ -143,6 +144,7 @@ fn end_filters_agree_with_a_direct_scan() {
             min_count: 1,
             dimension: Dimension::End,
             only: None,
+            ship: false,
         }],
         center_biomes: None,
     };
@@ -177,4 +179,39 @@ fn end_filters_agree_with_a_direct_scan() {
         matches > 0 && matches < 16,
         "the test needs both outcomes ({matches})"
     );
+}
+
+/// The ship filter keeps only end cities with a ship.
+#[test]
+fn end_city_ship_filter() {
+    use mc_core::finder::Dimension;
+    use mc_core::structure::end_city::end_city_has_ship;
+
+    let set = STRUCTURE_SETS.find_set("minecraft:end_cities").unwrap();
+    let (mut with, mut without) = (0, 0);
+    for seed in 0..24i64 {
+        let filter = |ship| Query {
+            center: Center::Zero,
+            structures: vec![StructureFilter {
+                set,
+                radius: 1400,
+                min_count: 1,
+                dimension: Dimension::End,
+                only: None,
+                ship,
+            }],
+            center_biomes: None,
+        };
+        let any = check(seed, &filter(false));
+        let shipped = check(seed, &filter(true));
+        if let Some(m) = &shipped {
+            let f = &m.found[0];
+            assert!(end_city_has_ship(seed, f.x >> 4, f.z >> 4), "seed {seed}");
+            assert!(any.is_some());
+            with += 1;
+        } else if any.is_some() {
+            without += 1;
+        }
+    }
+    assert!(with > 0 && without > 0, "{with} with, {without} without");
 }

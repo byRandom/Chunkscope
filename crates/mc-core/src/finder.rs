@@ -49,6 +49,8 @@ pub struct StructureFilter {
     /// Only structures whose name starts with this (e.g. `minecraft:bastion`
     /// in the set they share with fortresses).
     pub only: Option<&'static str>,
+    /// End cities: only those with a ship.
+    pub ship: bool,
 }
 
 impl StructureFilter {
@@ -60,6 +62,7 @@ impl StructureFilter {
             min_count,
             dimension: Dimension::Overworld,
             only: None,
+            ship: false,
         }
     }
 }
@@ -206,6 +209,12 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
                 outcome @ Outcome::Generates(_) => {
                     let (s, _) = outcome.generated().expect("generates");
                     if f.only.is_some_and(|prefix| !s.name.starts_with(prefix)) {
+                        continue;
+                    }
+                    if f.ship
+                        && s.name == "minecraft:end_city"
+                        && !crate::structure::end_city::end_city_has_ship(seed, cx, cz)
+                    {
                         continue;
                     }
                     Found {

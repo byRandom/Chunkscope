@@ -282,6 +282,20 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   the lowest corner of a 5 x 5 footprint from the chunk's (7, 7), at y 60 or
   more, on the End terrain. The End is 256 blocks high for structures and
   128 for terrain, like the Nether.
+- **End city ships come from the city's pieces.** `EndCityPieces` builds
+  the city from its start with the structure's random, right after the
+  rotation draw of `findGenerationPoint`: four section generators (house
+  tower, tower, bridge, fat tower) calling each other through
+  `recursiveChildren`, which keeps a section only if none of its pieces
+  hits a piece of another branch (`findCollisionPiece` returns the first
+  hit, compared by `genDepth` with the parent). The bridge generator places
+  the ship (`nextInt(10 - depth) == 0`, once per city: `shipCreated` is
+  generator state reset by `startHouseTower`). Pieces depend on the seed,
+  the chunk and the start only, not on the terrain. Fixtures compare whole
+  piece lists: template, rotation, gen depth and bounding box. Mutations no
+  fixture can catch: the `genDepth = -1` of the last `bridge_end` (always
+  overwritten before it is read) and of the first `bridge_piece` (read only
+  if a house hits the start of its own bridge).
 - Not ported yet: mineshafts (their height comes from their pieces). The
   app shows them as possible.
 - Two checks cannot be told apart by any vanilla data, so no fixture

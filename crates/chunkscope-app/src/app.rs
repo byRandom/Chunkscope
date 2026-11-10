@@ -406,6 +406,13 @@ impl ChunkscopeApp {
                     .color(TEXT_WEAK)
                     .small(),
                 );
+                if self.dimension == Dimension::End {
+                    ui.label(
+                        RichText::new("A green dot marks end cities with a ship (an elytra).")
+                            .color(TEXT_WEAK)
+                            .small(),
+                    );
+                }
             });
         });
     }
@@ -453,11 +460,7 @@ impl ChunkscopeApp {
                             10.0,
                         );
                         ui.add_space(26.0);
-                        ui.label(
-                            RichText::new(kind.label.trim_end_matches('s'))
-                                .color(TEXT)
-                                .strong(),
-                        );
+                        ui.label(RichText::new(singular(kind.label)).color(TEXT).strong());
                     });
                     xz_row(ui, ("X", &m.x.to_string()), ("Z", &m.z.to_string()));
                     if kind.set == SPAWN {
@@ -475,6 +478,10 @@ impl ChunkscopeApp {
                             field_box(ui, &biome_colors::display_name(name));
                             theme::field_label(ui, "Start");
                             field_box(ui, &format!("{sx}, {sy}, {sz}"));
+                        }
+                        if let Some(ship) = m.ship {
+                            theme::field_label(ui, "Ship");
+                            field_box(ui, if ship { "Yes (elytra)" } else { "No" });
                         }
                         theme::field_label(ui, "Status");
                         field_box(
@@ -831,6 +838,7 @@ impl ChunkscopeApp {
                 z,
                 exact: false,
                 start: Some(("chunkscope:spawn", x, y, z)),
+                ship: None,
             });
         }
         if let Some(i) = KINDS.iter().position(|k| k.set == STRONGHOLDS)
@@ -843,6 +851,7 @@ impl ChunkscopeApp {
                 z,
                 exact: true,
                 start: None,
+                ship: None,
             }));
         }
 
@@ -863,6 +872,16 @@ impl ChunkscopeApp {
                 }
             }
             marker_badge(&painter, p, KINDS[m.kind].glyph, KINDS[m.kind].color, r);
+            if m.ship == Some(true) {
+                // End cities with a ship: a small accent dot on the badge.
+                let dot = p + vec2(r * 0.75, -r * 0.75);
+                painter.circle(
+                    dot,
+                    r * 0.38,
+                    ACCENT,
+                    Stroke::new(1.5, Color32::from_rgb(0x1a, 0x1a, 0x1a)),
+                );
+            }
         }
         self.hover_marker = hovered.map(|(_, m)| m);
         for (m, color) in [(self.hover_marker, Color32::WHITE), (self.selected, ACCENT)] {
@@ -878,14 +897,19 @@ impl ChunkscopeApp {
             let name = match m.start {
                 _ if kind.set == SPAWN => kind.label.to_owned(),
                 Some((structure, ..)) => biome_colors::display_name(structure),
-                None => kind.label.trim_end_matches('s').to_owned(),
+                None => singular(kind.label),
             };
             let possible = match (m.exact, kind.set == SPAWN) {
                 (true, _) => "",
                 (false, true) => " (estimate)",
                 (false, false) => " (possible)",
             };
-            let label = format!("{name}{possible}  {}, {}", m.x, m.z);
+            let ship = if m.ship == Some(true) {
+                " with a ship"
+            } else {
+                ""
+            };
+            let label = format!("{name}{ship}{possible}  {}, {}", m.x, m.z);
             let galley = painter.layout_no_wrap(label, FontId::proportional(12.0), TEXT);
             let pos = p + vec2(r + 8.0, -galley.size().y / 2.0);
             let bg = Rect::from_min_size(pos, galley.size()).expand2(vec2(8.0, 5.0));
@@ -1279,6 +1303,14 @@ fn layer_row(
 }
 
 /// A round structure marker with its glyph.
+/// A layer's name in the singular: "End cities" -> "End city".
+fn singular(label: &str) -> String {
+    match label.strip_suffix("ies") {
+        Some(stem) => format!("{stem}y"),
+        None => label.trim_end_matches('s').to_owned(),
+    }
+}
+
 fn marker_badge(painter: &egui::Painter, center: Pos2, glyph: &str, color: Color32, radius: f32) {
     painter.circle_filled(
         center + vec2(0.0, 1.0),

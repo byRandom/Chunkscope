@@ -2112,5 +2112,28 @@ pub static GIANT_RUINED_PORTALS: [[i32; 3]; 3] = [
     [16, 16, 16], // ruined_portal/giant_portal_3
 ];
 
+/// End city templates (`end_city/<name>`) and their sizes (x, y, z).
+pub static END_CITY_TEMPLATES: [(&str, [i32; 3]); 19] = [
+    ("base_floor", [10, 4, 10]),
+    ("base_roof", [12, 2, 12]),
+    ("bridge_end", [5, 6, 2]),
+    ("bridge_gentle_stairs", [5, 7, 8]),
+    ("bridge_piece", [5, 6, 4]),
+    ("bridge_steep_stairs", [5, 7, 4]),
+    ("fat_tower_base", [13, 4, 13]),
+    ("fat_tower_middle", [13, 8, 13]),
+    ("fat_tower_top", [17, 6, 17]),
+    ("second_floor_1", [12, 8, 12]),
+    ("second_floor_2", [12, 8, 12]),
+    ("second_roof", [14, 2, 14]),
+    ("ship", [13, 24, 29]),
+    ("third_floor_1", [14, 8, 14]),
+    ("third_floor_2", [14, 8, 14]),
+    ("third_roof", [16, 2, 16]),
+    ("tower_base", [7, 7, 7]),
+    ("tower_piece", [7, 4, 7]),
+    ("tower_top", [9, 5, 9]),
+];
+
 /// `#minecraft:required_ocean_monument_surrounding`.
 pub static OCEAN_MONUMENT_SURROUNDING: &[&str] = &["minecraft:deep_frozen_ocean", "minecraft:deep_cold_ocean", "minecraft:deep_ocean", "minecraft:deep_lukewarm_ocean", "minecraft:frozen_ocean", "minecraft:ocean", "minecraft:cold_ocean", "minecraft:lukewarm_ocean", "minecraft:warm_ocean", "minecraft:river", "minecraft:frozen_river"];
