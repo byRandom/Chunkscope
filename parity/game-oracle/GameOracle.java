@@ -2146,7 +2146,8 @@ public class GameOracle {
         String structure = null;
         List<Long> worldSeeds = new ArrayList<>(List.of(0L, 1L, -1L, -4172144997902289642L));
         for (int i = 0; i < 4; i++) worldSeeds.add(INPUTS.nextLong());
-        try (PrintWriter w = writer("end_terrain.txt"); PrintWriter b = writer("end_biomes.txt")) {
+        try (PrintWriter w = writer("end_terrain.txt"); PrintWriter b = writer("end_biomes.txt");
+                PrintWriter densities = writer("end_density.txt")) {
             for (long seed : worldSeeds) {
                 RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
                 // Columns: the main island, its edge, and the outer islands.
@@ -2193,6 +2194,16 @@ public class GameOracle {
                     }
                 }
                 b.println(sb);
+                // The islands' density at arbitrary blocks (not only multiples of 8), by raw bits.
+                var islands = rs.createClimateSampler(SamplerContext.builder().build()).erosion();
+                StringBuilder d = new StringBuilder(Long.toString(seed));
+                for (int i = 0; i < 400; i++) {
+                    int range = i % 2 == 0 ? 3_000 : 400_000;
+                    int x = INPUTS.nextInt(-range, range), y = INPUTS.nextInt(0, 128), z = INPUTS.nextInt(-range, range);
+                    d.append(' ').append(x).append(',').append(y).append(',').append(z).append('=')
+                            .append(Float.floatToRawIntBits(islands.sampleValue(x, y, z)));
+                }
+                densities.println(d);
             }
         }
     }

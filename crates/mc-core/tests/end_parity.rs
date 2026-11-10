@@ -96,3 +96,75 @@ fn end_biomes_match_the_game() {
     }
     assert!(mismatches.is_empty());
 }
+
+/// End base columns and `WORLD_SURFACE_WG` heights (`getBaseColumn`, `getBaseHeight`).
+#[test]
+fn end_terrain_matches_the_game() {
+    use mc_core::terrain::{EndTerrain, Heightmap, Substance};
+    let mut terrain: Option<(i64, EndTerrain)> = None;
+    let (mut checked, mut solid, mut mismatches) = (0, 0, Vec::new());
+    for line in fixture("end_terrain.txt").lines() {
+        let parts: Vec<&str> = line.split(' ').collect();
+        let seed: i64 = parts[0].parse().unwrap();
+        let (x, z): (i32, i32) = (parts[1].parse().unwrap(), parts[2].parse().unwrap());
+        let surface: i32 = parts[3].parse().unwrap();
+        if terrain.as_ref().is_none_or(|t| t.0 != seed) {
+            terrain = Some((seed, EndTerrain::new(seed)));
+        }
+        let (_, t) = terrain.as_ref().unwrap();
+        let blocks: String = t
+            .base_column(x, z)
+            .into_iter()
+            .map(|s| match s {
+                Substance::Solid => 's',
+                Substance::Air => 'a',
+                Substance::Water => 'w',
+                Substance::Lava => 'l',
+            })
+            .collect();
+        let got_surface = t.base_height(x, z, Heightmap::WorldSurface);
+        checked += 1;
+        solid += usize::from(surface > 0);
+        if blocks != parts[4] || got_surface != surface {
+            mismatches.push(format!(
+                "seed {seed} at {x}, {z}: game {surface} {}\n   got {got_surface} {blocks}",
+                parts[4]
+            ));
+        }
+    }
+    println!(
+        "{checked} End columns ({solid} with land), {} mismatches",
+        mismatches.len()
+    );
+    for m in mismatches.iter().take(5) {
+        println!("{m}");
+    }
+    assert!(solid > 20, "the fixture needs columns on land");
+    assert!(mismatches.is_empty());
+}
+
+/// The islands' density (the End's `erosion`) at arbitrary blocks, by raw bits.
+#[test]
+fn end_island_density_matches_the_game() {
+    use mc_core::biome::EndBiomeSource;
+    let mut checked = 0;
+    for line in fixture("end_density.txt").lines() {
+        let mut parts = line.split(' ');
+        let seed: i64 = parts.next().unwrap().parse().unwrap();
+        let source = EndBiomeSource::new(seed);
+        for entry in parts {
+            let (pos, v) = entry.split_once('=').unwrap();
+            let p: Vec<i32> = pos.split(',').map(|v| v.parse().unwrap()).collect();
+            let expected = v.parse::<i32>().unwrap() as u32;
+            let got = source.island_density(p[0], p[1], p[2]);
+            assert_eq!(
+                got.to_bits(),
+                expected,
+                "seed {seed} at {pos}: {got} vs {}",
+                f32::from_bits(expected)
+            );
+            checked += 1;
+        }
+    }
+    assert!(checked > 3000);
+}
