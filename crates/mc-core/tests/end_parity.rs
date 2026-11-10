@@ -66,3 +66,33 @@ fn end_islands_match_the_game() {
     println!("{simplex} simplex values, {heights} heights ({islands} on islands)");
     assert!(simplex > 1000 && heights > 3000 && islands > 300);
 }
+
+/// `TheEndBiomeSource` at quart positions near the main island's edge and far out.
+#[test]
+fn end_biomes_match_the_game() {
+    use mc_core::biome::EndBiomeSource;
+    let mut checked = 0;
+    let mut mismatches = Vec::new();
+    for line in fixture("end_biomes.txt").lines() {
+        let mut parts = line.split(' ');
+        let seed: i64 = parts.next().unwrap().parse().unwrap();
+        let source = EndBiomeSource::new(seed);
+        for entry in parts {
+            let (pos, expected) = entry.split_once('=').unwrap();
+            let q: Vec<i32> = pos.split(',').map(|v| v.parse().unwrap()).collect();
+            let got = source.biome(q[0], q[1], q[2]);
+            let got = got.name().trim_start_matches("minecraft:");
+            checked += 1;
+            if got != expected {
+                mismatches.push(format!(
+                    "seed {seed} at {pos}: expected {expected}, got {got}"
+                ));
+            }
+        }
+    }
+    println!("{checked} End biomes, {} mismatches", mismatches.len());
+    for m in mismatches.iter().take(10) {
+        println!("  {m}");
+    }
+    assert!(mismatches.is_empty());
+}

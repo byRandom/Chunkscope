@@ -241,6 +241,18 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   then lies at squared distance 0.5 or more and adds 0), and re-associating
   the `double` sums (the last-bit difference disappears in the `float`
   cast); a noise value of exactly -0.9 never occurs.
+- **The End's biomes read the noise router's `erosion`**, which in 26.x
+  is `end/islands`: `max(slice_y0((clamp(100 - distance_to_origin, -100,
+  80) - 8) / 128), end_islands)`. The main island is a `distance_to_point`
+  density now, no longer part of `EndIslandFunction`. `TheEndBiomeSource`
+  returns `the_end` for sections with x² + z² <= 4096, and otherwise
+  compares the density at the section's center block ((s * 2 + 1) * 8)
+  with 0.25, -0.0625 and -0.21875. Mutations no fixture can catch: the
+  three comparisons (`>` or `>=`): at a section center the distance to an
+  island cell is the square root of a sum of two odd squares, never an
+  integer, so the density never lands exactly on a threshold. A Euclidean
+  distance in `float` and through `double` are the same (square roots are
+  correctly rounded), and the slice evaluates it at y = 0.
 - **Sets with several structures retry.** Villages, ocean ruins,
   shipwrecks and abandoned camps pick a structure by weight with a random
   seeded by `setLargeFeatureSeed`; if it does not generate, the game removes

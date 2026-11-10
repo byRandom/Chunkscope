@@ -19,6 +19,30 @@ pub enum Axis {
     Z,
 }
 
+/// `DistanceMetric`
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum DistanceMetric {
+    Euclidean,
+    EuclideanSquared,
+    Manhattan,
+    Chebyshev,
+}
+
+impl DistanceMetric {
+    /// `DistanceMetric.compute(float, float, float)`.
+    pub fn compute(self, x: f32, y: f32, z: f32) -> f32 {
+        use java_compat::math::max_f32;
+        let squared = || x * x + y * y + z * z;
+        match self {
+            // Mth.length: Mth.sqrt(lengthSquared), through double.
+            DistanceMetric::Euclidean => (squared() as f64).sqrt() as f32,
+            DistanceMetric::EuclideanSquared => squared(),
+            DistanceMetric::Manhattan => x.abs() + y.abs() + z.abs(),
+            DistanceMetric::Chebyshev => max_f32(max_f32(x.abs(), y.abs()), z.abs()),
+        }
+    }
+}
+
 /// Where a node's noise comes from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum NoiseSource {
@@ -50,6 +74,17 @@ pub enum Node {
         noise: u16,
         xz_scale: f64,
         y_scale: f64,
+    },
+    /// `EndIslandFunction.Sampler`: the End's outer islands (see
+    /// [`crate::terrain::EndIslands`]), the same at every Y.
+    EndIslands,
+    /// `DistanceToPointFunction.Sampler`: the distance from the point to
+    /// the sampled block.
+    DistanceToPoint {
+        x: i32,
+        y: i32,
+        z: i32,
+        metric: DistanceMetric,
     },
     /// `ShiftNoiseFunction.ShiftB` (compiled): `noise(z / 4, x / 4, 0) * 4`.
     ShiftB { noise: u16 },

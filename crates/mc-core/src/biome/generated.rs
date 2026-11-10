@@ -582,7 +582,7 @@ pub const OFFSET: Spline = Spline::Multipoint(&Multipoint {
 });
 
 /// Biome registry names; `Biome(i)` is `BIOMES[i]`.
-pub const BIOMES: [&str; 61] = [
+pub const BIOMES: [&str; 66] = [
     "minecraft:mushroom_fields",
     "minecraft:deep_frozen_ocean",
     "minecraft:frozen_ocean",
@@ -644,6 +644,11 @@ pub const BIOMES: [&str; 61] = [
     "minecraft:crimson_forest",
     "minecraft:warped_forest",
     "minecraft:basalt_deltas",
+    "minecraft:the_end",
+    "minecraft:end_highlands",
+    "minecraft:end_midlands",
+    "minecraft:small_end_islands",
+    "minecraft:end_barrens",
 ];
 
 /// Distinct climate ranges used by `OVERWORLD`.

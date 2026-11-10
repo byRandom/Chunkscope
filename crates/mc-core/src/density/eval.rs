@@ -71,6 +71,8 @@ fn block_pos_as_long(x: i32, y: i32, z: i32) -> i64 {
 pub struct DensitySampler {
     tree: Tree,
     noises: Vec<NoiseStack>,
+    /// The End islands, when the tree uses them.
+    end_islands: Option<crate::terrain::EndIslands>,
 }
 
 impl DensitySampler {
@@ -113,7 +115,22 @@ impl DensitySampler {
                 NoiseSource::BlendedMain => blended.as_ref().expect("blended noise").main.clone(),
             })
             .collect();
-        Self { tree, noises }
+        let end_islands = tree
+            .nodes
+            .iter()
+            .any(|n| matches!(n, Node::EndIslands))
+            .then(|| crate::terrain::EndIslands::new(world_seed));
+        Self {
+            tree,
+            noises,
+            end_islands,
+        }
+    }
+
+    fn end_islands(&self) -> &crate::terrain::EndIslands {
+        self.end_islands
+            .as_ref()
+            .expect("built for trees with End islands")
     }
 
     pub fn tree(&self) -> &Tree {
@@ -136,6 +153,36 @@ impl DensitySampler {
         };
         match self.tree.nodes[id as usize] {
             Node::Constant(c) => out.fill(c),
+            Node::EndIslands => {
+                // EndIslandFunction.Sampler.sampleVolume: one value per column.
+                let islands = self.end_islands();
+                for zi in 0..v.size_z {
+                    let z = v.block_z(zi);
+                    for xi in 0..v.size_x {
+                        let value = islands.sample(v.block_x(xi), z);
+                        let start = v.index(xi, 0, zi);
+                        out[start..start + v.size_y as usize].fill(value);
+                    }
+                }
+            }
+            Node::DistanceToPoint {
+                x: px,
+                y: py,
+                z: pz,
+                metric,
+            } => {
+                for zi in 0..v.size_z {
+                    for xi in 0..v.size_x {
+                        for yi in 0..v.size_y {
+                            out[v.index(xi, yi, zi)] = metric.compute(
+                                px.wrapping_sub(v.block_x(xi)) as f32,
+                                py.wrapping_sub(v.block_y(yi)) as f32,
+                                pz.wrapping_sub(v.block_z(zi)) as f32,
+                            );
+                        }
+                    }
+                }
+            }
             Node::Noise {
                 noise,
                 xz_scale,
@@ -516,6 +563,17 @@ impl DensitySampler {
         let at = |n: NodeId| self.sample_value(ctx, n, x, y, z);
         match self.tree.nodes[id as usize] {
             Node::Constant(c) => c,
+            Node::EndIslands => self.end_islands().sample(x, z),
+            Node::DistanceToPoint {
+                x: px,
+                y: py,
+                z: pz,
+                metric,
+            } => metric.compute(
+                px.wrapping_sub(x) as f32,
+                py.wrapping_sub(y) as f32,
+                pz.wrapping_sub(z) as f32,
+            ),
             Node::Noise {
                 noise,
                 xz_scale,

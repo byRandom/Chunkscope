@@ -101,6 +101,7 @@ public class GameOracle {
         netherTerrain(lookup, Path.of(args[5]));
         ruinedPortals(lookup);
         endIslands();
+        endTerrain(lookup, Path.of(args[5]));
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -586,6 +587,9 @@ public class GameOracle {
             }
             netherEntries.append("], ").append(p.offset()).append(", ").append(biomes.indexOf(biome)).append("),\n");
         }
+        // The End's biomes (TheEndBiomeSource), last.
+        for (String b : List.of("minecraft:the_end", "minecraft:end_highlands", "minecraft:end_midlands",
+                "minecraft:small_end_islands", "minecraft:end_barrens")) if (!biomes.contains(b)) biomes.add(b);
         out.append("/// Biome registry names; `Biome(i)` is `BIOMES[i]`.\npub const BIOMES: [&str; ").append(biomes.size()).append("] = [\n");
         for (String b : biomes) out.append("    \"").append(b).append("\",\n");
         out.append("];\n\n/// Distinct climate ranges used by `OVERWORLD`.\npub const PARAMETERS: [Parameter; ")
@@ -1296,6 +1300,13 @@ public class GameOracle {
             if (known != null) return known;
             String cls = s.getClass().getName().replace(DF, "");
             String def = switch (cls) {
+                case "generator.EndIslandFunction$Sampler" -> "Node::EndIslands";
+                case "generator.DistanceToPointFunction$Sampler" -> {
+                    String metric = java.util.Arrays.stream(fieldAny(s, "metric").toString().split("_"))
+                            .map(w -> w.charAt(0) + w.substring(1).toLowerCase()).collect(java.util.stream.Collectors.joining());
+                    yield "Node::DistanceToPoint { x: " + fieldAny(s, "x") + ", y: " + fieldAny(s, "y") + ", z: " + fieldAny(s, "z")
+                            + ", metric: DistanceMetric::" + metric + " }";
+                }
                 case "generator.ConstantFunction$Sampler" -> "Node::Constant(" + rustF32Any((float) fieldAny(s, "value")) + ")";
                 case "generator.NoiseFunction$Sampler" -> "Node::Noise { noise: " + noise(fieldAny(s, "noise")) + ", xz_scale: "
                         + rustF64((double) fieldAny(s, "xzScale")) + ", y_scale: " + rustF64((double) fieldAny(s, "yScale")) + " }";
@@ -1524,7 +1535,7 @@ public class GameOracle {
                 .append(Files.readString(out().resolve("VERSION")).trim()).append(". Do not edit.\n");
         out.append("//! The overworld `final_density` exactly as the game compiles it for\n");
         out.append("//! `getBaseHeight` (one `NoiseChunk` column).\n\n");
-        out.append("use super::tree::{Axis, Node, NoiseSource, Tree};\n");
+        out.append("use super::tree::{Axis, DistanceMetric, Node, NoiseSource, Tree};\n");
         out.append("use crate::biome::spline::{Multipoint, Spline};\nuse crate::noise::blended::BlendedNoiseParams;\n\n");
         out.append(densityTreeSection(t, "", "OVERWORLD", "overworld", false));
         Files.writeString(rs, out);
@@ -2118,6 +2129,70 @@ public class GameOracle {
                     }
                     w.println(sb);
                 }
+            }
+        }
+    }
+
+    /**
+     * The End: its compiled final_density and the climate sampler's erosion (the islands, which
+     * TheEndBiomeSource reads), base columns, and biomes from TheEndBiomeSource itself.
+     */
+    static void endTerrain(HolderLookup.Provider lookup, Path densityRs) throws Exception {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.END);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.TheEndBiomeSource.create(lookup.lookupOrThrow(Registries.BIOME));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+        String structure = null;
+        List<Long> worldSeeds = new ArrayList<>(List.of(0L, 1L, -1L, -4172144997902289642L));
+        for (int i = 0; i < 4; i++) worldSeeds.add(INPUTS.nextLong());
+        try (PrintWriter w = writer("end_terrain.txt"); PrintWriter b = writer("end_biomes.txt")) {
+            for (long seed : worldSeeds) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                // Columns: the main island, its edge, and the outer islands.
+                List<int[]> columns = new ArrayList<>(List.of(new int[] {0, 0}, new int[] {8, -8}, new int[] {90, 30}, new int[] {-120, 0}));
+                for (int i = 0; i < 30; i++) {
+                    int range = i % 3 == 0 ? 200 : i % 3 == 1 ? 3_000 : 1_000_000;
+                    columns.add(new int[] {INPUTS.nextInt(-range, range), INPUTS.nextInt(-range, range)});
+                }
+                for (int[] xz : columns) {
+                    Column col = column(rs, settings, xz[0], xz[1]);
+                    TreeExport t = exportFinalDensity(lookup, rs, settings, col, seed);
+                    t.roots.put("EROSION", t.node(rs.createClimateSampler(SamplerContext.builder().build()).erosion().sampler()));
+                    String s = String.join("\n", t.nodes) + String.join("\n", t.noises);
+                    if (structure == null) {
+                        structure = s;
+                        String file = Files.readString(densityRs);
+                        Files.writeString(densityRs, file + "\n// ---- The End ----------------------------------------------------------\n\n"
+                                + densityTreeSection(t, "END_", "END", "end", true));
+                    } else if (!structure.equals(s)) {
+                        throw new IllegalStateException("compiled End tree differs between columns or seeds");
+                    }
+                    col.chunk().close();
+                    int ws = generator.getBaseHeight(xz[0], xz[1], net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, height, rs);
+                    var column = generator.getBaseColumn(xz[0], xz[1], height, rs);
+                    StringBuilder blocks = new StringBuilder();
+                    for (int y = height.getMinY(); y < height.getMinY() + height.getHeight(); y++) blocks.append(substance(column.getBlock(y), settings));
+                    w.println(seed + " " + xz[0] + " " + xz[1] + " " + ws + " " + blocks);
+                }
+                // Biomes at quart positions: near the main island's edge (64 chunks), and far out.
+                var resolver = biomeSource.createResolver(rs.createClimateSampler(SamplerContext.builder().build()));
+                StringBuilder sb = new StringBuilder(Long.toString(seed));
+                for (int i = 0; i < 1500; i++) {
+                    int range = i % 3 == 0 ? 300 : i % 3 == 1 ? 3_000 : 500_000;
+                    int qx = INPUTS.nextInt(-range, range), qz = INPUTS.nextInt(-range, range), qy = INPUTS.nextInt(-10, 80);
+                    sb.append(' ').append(qx).append(',').append(qy).append(',').append(qz).append('=')
+                            .append(resolver.getNoiseBiome(qx, qy, qz).unwrapKey().orElseThrow().identifier().getPath());
+                }
+                // The main island's edge: sections with x^2 + z^2 == 4096, and their neighbours.
+                for (int[] sec : new int[][] {{64, 0}, {-64, 0}, {0, 64}, {0, -64}, {65, 0}, {-65, 0}, {0, 65}, {0, -65}}) {
+                    for (int dq = 0; dq < 4; dq++) {
+                        int qx = sec[0] * 4 + dq, qz = sec[1] * 4 + (3 - dq), qy = 16;
+                        sb.append(' ').append(qx).append(',').append(qy).append(',').append(qz).append('=')
+                                .append(resolver.getNoiseBiome(qx, qy, qz).unwrapKey().orElseThrow().identifier().getPath());
+                    }
+                }
+                b.println(sb);
             }
         }
     }

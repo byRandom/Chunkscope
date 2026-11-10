@@ -2,7 +2,7 @@
 //! The overworld `final_density` exactly as the game compiles it for
 //! `getBaseHeight` (one `NoiseChunk` column).
 
-use super::tree::{Axis, Node, NoiseSource, Tree};
+use super::tree::{Axis, DistanceMetric, Node, NoiseSource, Tree};
 use crate::biome::spline::{Multipoint, Spline};
 use crate::noise::blended::BlendedNoiseParams;
 
@@ -396,5 +396,64 @@ pub static NETHER_FINAL_DENSITY: Tree = Tree {
     root: 16,
     noises: &NETHER_NOISES,
     blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.375, xz_factor: 80.0, y_factor: 60.0, smear_scale_multiplier: 8.0 }),
+    legacy_random: true,
+};
+
+// ---- The End ----------------------------------------------------------
+
+static END_NODES: [Node; 30] = [
+    /* 0 */ Node::ClampedGradient { axis: Axis::Y, from_coordinate: 4, min_coordinate: 4, max_coordinate: 32, from_value: 0.0, coordinate_factor: 0.035714287 },
+    /* 1 */ Node::ClampedGradient { axis: Axis::Y, from_coordinate: 56, min_coordinate: 56, max_coordinate: 312, from_value: 1.0, coordinate_factor: -0.00390625 },
+    /* 2 */ Node::DistanceToPoint { x: 0, y: 0, z: 0, metric: DistanceMetric::Euclidean },
+    /* 3 */ Node::ConstSub(100.0, 2),
+    /* 4 */ Node::Clamp { input: 3, min: -100.0, max: 80.0 },
+    /* 5 */ Node::ConstAdd(4, -8.0),
+    /* 6 */ Node::ConstMul(5, 0.0078125),
+    /* 7 */ Node::SliceY { input: 6, y: 0 },
+    /* 8 */ Node::EndIslands,
+    /* 9 */ Node::Max { left: 7, right: 8, right_max_value: 0.5625 },
+    /* 10 */ Node::SliceY { input: 9, y: 0 },
+    /* 11 */ Node::Cache { input: 10, id: 0 },
+    /* 12 */ Node::SliceY { input: 11, y: 0 },
+    /* 13 */ Node::Noise { noise: 0, xz_scale: 2.1387875000000003, y_scale: 1.0693937500000001 },
+    /* 14 */ Node::ConstAdd(13, 0.5),
+    /* 15 */ Node::Clamp { input: 14, min: 0.0, max: 1.0 },
+    /* 16 */ Node::Noise { noise: 1, xz_scale: 171.103, y_scale: 171.103 },
+    /* 17 */ Node::Noise { noise: 2, xz_scale: 171.103, y_scale: 171.103 },
+    /* 18 */ Node::Lerp { alpha: 15, first: 16, second: 17 },
+    /* 19 */ Node::Add(12, 18),
+    /* 20 */ Node::LerpConstFirst { alpha: 1, first: -23.4375, second: 19 },
+    /* 21 */ Node::LerpConstFirst { alpha: 0, first: -0.234375, second: 20 },
+    /* 22 */ Node::Blend(21),
+    /* 23 */ Node::ConstMul(22, 0.64),
+    /* 24 */ Node::Interpolated { input: 23, cell_size_xz: 8, cell_size_y: 4, cell_size_xz_inv: 0.125, cell_size_y_inv: 0.25 },
+    /* 25 */ Node::Squeeze(24),
+    /* 26 */ Node::Constant(0.0),
+    /* 27 */ Node::ContextBound { key: "minecraft:beardifier", fallback: 26 },
+    /* 28 */ Node::Add(25, 27),
+    /* 29 */ Node::SliceY { input: 11, y: 0 },
+];
+
+static END_NOISES: [NoiseSource; 3] = [
+    NoiseSource::BlendedMain,
+    NoiseSource::BlendedMinLimit,
+    NoiseSource::BlendedMaxLimit,
+];
+
+/// The compiled `final_density` of `noise_settings/end.json`.
+pub static END_FINAL_DENSITY: Tree = Tree {
+    nodes: &END_NODES,
+    root: 28,
+    noises: &END_NOISES,
+    blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.25, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 4.0 }),
+    legacy_random: true,
+};
+
+/// The compiled `erosion` of `noise_settings/end.json`.
+pub static END_EROSION: Tree = Tree {
+    nodes: &END_NODES,
+    root: 29,
+    noises: &END_NOISES,
+    blended: Some(BlendedNoiseParams { xz_scale: 0.25, y_scale: 0.25, xz_factor: 80.0, y_factor: 160.0, smear_scale_multiplier: 4.0 }),
     legacy_random: true,
 };
