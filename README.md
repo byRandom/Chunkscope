@@ -58,7 +58,7 @@ Bedrock Edition is out of scope for now.
 - [x] Smeared Perlin, blended and simplex noise (terrain, End islands)
 - [x] Overworld biomes (climate sampling, terrain offset spline, biome R-tree)
 - [x] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
-- [x] End: biomes, islands, end cities (0.5)
+- [x] End: biomes, islands, end cities (0.5), and whether each end city has a ship (0.5.1)
 - [ ] Mineshafts, no "possible" markers left, saved settings (0.6)
 - [ ] Large-scale verification against the game (0.7)
 - [ ] Stable command line and formats, signed builds (0.8)

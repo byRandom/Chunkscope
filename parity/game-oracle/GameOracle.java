@@ -103,6 +103,7 @@ public class GameOracle {
         endIslands();
         endTerrain(lookup, Path.of(args[5]));
         endCities(lookup);
+        endCityPieces(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -947,8 +948,38 @@ public class GameOracle {
         for (String b : biomeTag("minecraft:required_ocean_monument_surrounding")) surrounding.append(surrounding.length() == 0 ? "" : ", ").append('"').append(b).append('"');
         writeStartPools(lookup, startPools, out);
         writePortalTemplates(lookup, out);
+        writeEndCityTemplates(lookup, out);
         out.append("\n/// `#minecraft:required_ocean_monument_surrounding`.\npub static OCEAN_MONUMENT_SURROUNDING: &[&str] = &[")
                 .append(surrounding).append("];\n");
+    }
+
+    static final List<String> END_CITY_TEMPLATES = List.of("base_floor", "base_roof", "bridge_end", "bridge_gentle_stairs",
+            "bridge_piece", "bridge_steep_stairs", "fat_tower_base", "fat_tower_middle", "fat_tower_top", "second_floor_1",
+            "second_floor_2", "second_roof", "ship", "third_floor_1", "third_floor_2", "third_roof", "tower_base", "tower_piece", "tower_top");
+
+    /** The sizes of the end city templates (end_city/<name>). */
+    static void writeEndCityTemplates(HolderLookup.Provider lookup, StringBuilder out) {
+        try {
+            var templates = templateManager(lookup);
+            out.append("\n/// End city templates (`end_city/<name>`) and their sizes (x, y, z).\n");
+            out.append("pub static END_CITY_TEMPLATES: [(&str, [i32; 3]); ").append(END_CITY_TEMPLATES.size()).append("] = [\n");
+            for (String name : END_CITY_TEMPLATES) {
+                var size = templates.getOrCreate(Identifier.withDefaultNamespace("end_city/" + name)).getSize();
+                out.append("    (\"").append(name).append("\", [").append(size.getX()).append(", ").append(size.getY()).append(", ")
+                        .append(size.getZ()).append("]),\n");
+            }
+            out.append("];\n");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** One end city piece: template, rotation, gen depth and bounding box. */
+    static String cityPiece(net.minecraft.world.level.levelgen.structure.StructurePiece piece) {
+        var t = (net.minecraft.world.level.levelgen.structure.TemplateStructurePiece) piece;
+        var b = piece.getBoundingBox();
+        return get(t, "templateName") + "/" + t.placeSettings().getRotation().ordinal() + "/" + piece.getGenDepth() + "/"
+                + b.minX() + "," + b.minY() + "," + b.minZ() + "," + b.maxX() + "," + b.maxY() + "," + b.maxZ();
     }
 
     /** The sizes of the ruined portal templates, in the game's order. */
@@ -2288,6 +2319,69 @@ public class GameOracle {
                 }
             }
             p.println(sb);
+        }
+    }
+
+    /**
+     * End city pieces (EndCityPieces.startHouseTower), seeded like a generating city: the chunk's large
+     * feature seed, the rotation draw, then the pieces. Directly for many chunks (pieces do not depend on
+     * the terrain), and through the whole structure for cities that really generate.
+     */
+    static void endCityPieces(HolderLookup.Provider lookup) throws Exception {
+        var templates = templateManager(lookup);
+        try (PrintWriter w = writer("end_city_pieces.txt")) {
+            int ships = 0;
+            for (int i = 0; i < 600; i++) {
+                long seed = i < 300 ? i : INPUTS.nextLong();
+                int cx = INPUTS.nextInt(-100_000, 100_000), cz = INPUTS.nextInt(-100_000, 100_000), y = INPUTS.nextInt(60, 100);
+                WorldgenRandom random = new WorldgenRandom(new LegacyRandomSource(0L));
+                random.setLargeFeatureSeed(seed, cx, cz);
+                var rotation = net.minecraft.world.level.block.Rotation.getRandom(random);
+                List<net.minecraft.world.level.levelgen.structure.StructurePiece> pieces = new ArrayList<>();
+                net.minecraft.world.level.levelgen.structure.structures.EndCityPieces.startHouseTower(templates,
+                        new net.minecraft.core.BlockPos(cx * 16 + 7, y, cz * 16 + 7), rotation, pieces, random);
+                StringBuilder sb = new StringBuilder(seed + " " + cx + " " + cz + " " + y);
+                for (var piece : pieces) {
+                    sb.append(' ').append(cityPiece(piece));
+                    if (get(piece, "templateName").equals("ship")) ships++;
+                }
+                w.println(sb);
+            }
+            System.out.println("end city pieces: " + ships + " ships in 600 cities");
+        }
+        // Whole structures: findValidGenerationPoint, then the stub's pieces (Structure.generate's order).
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.END);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.TheEndBiomeSource.create(lookup.lookupOrThrow(Registries.BIOME));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(0, 256);
+        List<net.minecraft.core.Registry<?>> registries = new ArrayList<>();
+        for (var key : List.of(Registries.TEMPLATE_POOL, Registries.PROCESSOR_LIST)) registries.add(copyRegistry(lookup, key));
+        net.minecraft.core.registries.BuiltInRegistries.REGISTRY.forEach(registries::add);
+        var registryAccess = new net.minecraft.core.RegistryAccess.ImmutableRegistryAccess(registries);
+        var city = lookup.lookupOrThrow(Registries.STRUCTURE).getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse("minecraft:end_city")));
+        String tag = ((net.minecraft.core.HolderSet.Named<Biome>) city.value().biomes()).key().location().toString();
+        var biomes = new java.util.HashSet<>(biomeTag(tag));
+        java.util.function.Predicate<Holder<Biome>> valid = h -> biomes.contains(h.unwrapKey().orElseThrow().identifier().toString());
+        try (PrintWriter w = writer("end_city_structures.txt")) {
+            long seed = INPUTS.nextLong();
+            RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+            int found = 0;
+            for (int i = 0; i < 20_000 && found < 40; i++) {
+                int cx = INPUTS.nextInt(-3000, 3000), cz = INPUTS.nextInt(-3000, 3000);
+                if (Math.abs(cx) < 70 && Math.abs(cz) < 70) continue;
+                var pos = new net.minecraft.world.level.ChunkPos(cx, cz);
+                var context = new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(
+                        registryAccess, generator, biomeSource, rs.createClimateSampler(SamplerContext.builder().enableCaches().build()),
+                        rs, templates, seed, pos, height, valid);
+                var stub = city.value().findValidGenerationPoint(context);
+                if (stub.isEmpty()) continue;
+                found++;
+                var p = stub.get().position();
+                StringBuilder sb = new StringBuilder(seed + " " + cx + " " + cz + " " + p.getX() + "," + p.getY() + "," + p.getZ());
+                for (var piece : stub.get().getPiecesBuilder().build().pieces()) sb.append(' ').append(cityPiece(piece));
+                w.println(sb);
+            }
         }
     }
 

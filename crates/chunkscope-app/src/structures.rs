@@ -275,6 +275,8 @@ pub struct Marker {
     /// The structure that generates (e.g. `minecraft:village_plains`) and
     /// its start position, when validated.
     pub start: Option<(&'static str, i32, i32, i32)>,
+    /// End cities: whether the city has a ship (an elytra).
+    pub ship: Option<bool>,
 }
 
 /// Whether the structures of a layer are validated against biome and
@@ -336,12 +338,15 @@ pub fn markers(
             {
                 return;
             }
+            let ship = (structure.name == "minecraft:end_city")
+                .then(|| mc_core::structure::end_city::end_city_has_ship(seed, cx, cz));
             out.push(Marker {
                 kind,
                 x,
                 z,
                 exact: true,
                 start: Some((structure.name, sx, sy, sz)),
+                ship,
             });
         } else if let Outcome::Unknown(_) = outcome {
             out.push(Marker {
@@ -350,6 +355,7 @@ pub fn markers(
                 z,
                 exact: false,
                 start: None,
+                ship: None,
             });
         }
     };
