@@ -122,3 +122,59 @@ fn nether_filters_agree_with_a_direct_scan() {
     }
     assert!(matches > 0 && matches < 40, "the test needs both outcomes");
 }
+
+/// End filters, measured from the End's (0, 0).
+#[test]
+fn end_filters_agree_with_a_direct_scan() {
+    use mc_core::biome::EndBiomeSource;
+    use mc_core::finder::Dimension;
+    use mc_core::terrain::EndTerrain;
+
+    let set = STRUCTURE_SETS.find_set("minecraft:end_cities").unwrap();
+    let StructurePlacement::RandomSpread(p) = &set.placement else {
+        unreachable!()
+    };
+    let radius = 1250;
+    let query = Query {
+        center: Center::Spawn,
+        structures: vec![StructureFilter {
+            set,
+            radius,
+            min_count: 1,
+            dimension: Dimension::End,
+            only: None,
+        }],
+        center_biomes: None,
+    };
+    let mut matches = 0;
+    for seed in 0..16i64 {
+        let biomes = EndBiomeSource::new(seed);
+        let terrain = EndTerrain::new(seed);
+        let generator = StructureGenerator::end(seed, &biomes, &terrain);
+        let mut cities = 0;
+        for rz in -6..=6 {
+            for rx in -6..=6 {
+                let (cx, cz) = p.region_chunk(seed, rx, rz);
+                if set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz) != Some(true) {
+                    continue;
+                }
+                let (x, _, z) = p.locate_pos(cx, cz);
+                if ((x as f64).powi(2) + (z as f64).powi(2)).sqrt() > radius as f64 {
+                    continue;
+                }
+                cities += usize::from(generator.attempt(set, cx, cz).generated().is_some());
+            }
+        }
+        let got = check(seed, &query);
+        assert_eq!(got.is_some(), cities > 0, "seed {seed}");
+        if let Some(m) = got {
+            matches += 1;
+            assert_eq!(m.found[0].name, "minecraft:end_city");
+            assert_eq!(m.found[0].dimension, Dimension::End);
+        }
+    }
+    assert!(
+        matches > 0 && matches < 16,
+        "the test needs both outcomes ({matches})"
+    );
+}

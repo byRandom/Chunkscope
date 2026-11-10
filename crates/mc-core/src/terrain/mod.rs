@@ -3,9 +3,13 @@
 //! `getBaseHeight`), which is what structure placement checks use.
 
 mod aquifer;
+mod end;
+mod end_islands;
 mod nether;
 
 pub use aquifer::{Aquifer, AquiferRoots, FluidStatus, GlobalFluidPicker, Substance};
+pub use end::{END_HEIGHT, END_MIN_Y, EndTerrain};
+pub use end_islands::EndIslands;
 pub use nether::{NETHER_HEIGHT, NETHER_MIN_Y, NETHER_SEA_LEVEL, NetherTerrain};
 
 use crate::density::generated::{

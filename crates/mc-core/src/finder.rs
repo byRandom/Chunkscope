@@ -1,7 +1,7 @@
 //! Seed finder: search seeds for structures near the spawn and for biomes.
 //!
-//! Overworld structures are measured from the query's center; Nether
-//! structures from the Nether's (0, 0).
+//! Overworld structures are measured from the query's center; Nether and
+//! End structures from (0, 0) in their dimension.
 //!
 //! Each seed is checked with the cheap tests first: where structure sets
 //! *attempt* structures near the center (a few random numbers per region),
@@ -10,11 +10,13 @@
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-use crate::biome::{Biome, NetherBiomeSource, OverworldBiomeSource, OverworldClimate};
+use crate::biome::{
+    Biome, EndBiomeSource, NetherBiomeSource, OverworldBiomeSource, OverworldClimate,
+};
 use crate::spawn::spawn_origin;
 use crate::structure::validate::{Outcome, StructureGenerator};
 use crate::structure::{STRUCTURE_SETS, StructurePlacement, StructureSet};
-use crate::terrain::{Heightmap, NetherTerrain, OverworldTerrain};
+use crate::terrain::{EndTerrain, Heightmap, NetherTerrain, OverworldTerrain};
 
 /// Where distances are measured from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -32,6 +34,8 @@ pub enum Dimension {
     Overworld,
     /// Measured from the Nether's (0, 0), whatever the query's center.
     Nether,
+    /// Measured from the End's (0, 0), whatever the query's center.
+    End,
 }
 
 /// At least `min_count` structures of `set` within `radius` blocks of the
@@ -150,7 +154,7 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
     };
     let filter_center = |f: &StructureFilter| match f.dimension {
         Dimension::Overworld => center,
-        Dimension::Nether => (0, 0),
+        Dimension::Nether | Dimension::End => (0, 0),
     };
     // Cheap pass: enough attempts near the center for every filter?
     let mut attempts = Vec::with_capacity(query.structures.len());
@@ -181,11 +185,20 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
     let nether_generator = nether
         .as_ref()
         .map(|(b, t)| StructureGenerator::nether(seed, b, t));
+    let end = query
+        .structures
+        .iter()
+        .any(|f| f.dimension == Dimension::End)
+        .then(|| (EndBiomeSource::new(seed), EndTerrain::new(seed)));
+    let end_generator = end
+        .as_ref()
+        .map(|(b, t)| StructureGenerator::end(seed, b, t));
     let mut found = Vec::new();
     for (f, attempts) in query.structures.iter().zip(attempts) {
         let generator = match f.dimension {
             Dimension::Overworld => &generator,
             Dimension::Nether => nether_generator.as_ref().expect("built for Nether filters"),
+            Dimension::End => end_generator.as_ref().expect("built for End filters"),
         };
         let mut count = 0;
         for ((cx, cz), (x, z), distance) in attempts {

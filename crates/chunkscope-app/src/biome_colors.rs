@@ -82,6 +82,12 @@ pub fn color_of(name: &str) -> Color32 {
         "warped_forest" => 0x2a8f86,
         "soul_sand_valley" => 0x6b5a4a,
         "basalt_deltas" => 0x5c5a5e,
+        // The End: end stone for the islands, darker toward the void.
+        "the_end" => 0xd8d29a,
+        "end_highlands" => 0xbcb47e,
+        "end_midlands" => 0x9a9468,
+        "end_barrens" => 0x5e5a6e,
+        "small_end_islands" => 0x262333,
         _ => 0xff00ff,
     })
 }

@@ -11,13 +11,13 @@ Edition**, written in Rust. Think of an offline tool that shows biomes,
 structures and slime chunks for any seed, and can search millions of seeds for
 the features you care about.
 
-**Status:** early. Overworld and Nether biomes already match the game: the
-random number generators, seed handling, noise, climate sampling and biome
-lookup are all verified against the real JDK and the real game classes.
-Structure positions match too: where each structure set attempts to
-generate, and the biome and terrain checks that decide whether a structure
-really generates there (every Overworld and Nether structure except
-mineshafts).
+**Status:** early. Biomes in the Overworld, the Nether and the End already
+match the game: the random number generators, seed handling, noise, climate
+sampling and biome lookup are all verified against the real JDK and the
+real game classes. Structure positions match too: where each structure set
+attempts to generate, and the biome and terrain checks that decide whether
+a structure really generates there (every structure in the three
+dimensions except mineshafts).
 
 Target: Minecraft **26.3** (Java 25).
 
@@ -55,10 +55,10 @@ Bedrock Edition is out of scope for now.
 - [x] Xoroshiro128++, `RandomSupport` seeding and positional random factories
 - [x] `WorldgenRandom` decoration / feature / structure seeding
 - [x] Perlin noise and normal (double-Perlin) noise, with all vanilla noise parameters
-- [ ] Smeared Perlin, blended and simplex noise (terrain, End islands)
+- [x] Smeared Perlin, blended and simplex noise (terrain, End islands)
 - [x] Overworld biomes (climate sampling, terrain offset spline, biome R-tree)
 - [x] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
-- [ ] End: biomes, islands, end cities (0.5)
+- [x] End: biomes, islands, end cities (0.5)
 - [ ] Mineshafts, no "possible" markers left, saved settings (0.6)
 - [ ] Large-scale verification against the game (0.7)
 - [ ] Stable command line and formats, signed builds (0.8)
@@ -102,7 +102,9 @@ Drag to pan, scroll to zoom, click a marker to select it, right-click the map
 to copy a position or a `/tp` command. The **Finder** tab searches seeds for
 structures near the spawn; click a result to open it on the map. Structures are checked against biome
 and terrain like the game does; mineshafts are not checked yet and are marked
-as possible. On Linux the app needs the usual X11 or Wayland libraries
+as possible. In the End, the void between the islands is drawn darker (the
+islands' shape comes from their density, so the edges are approximate). On
+Linux the app needs the usual X11 or Wayland libraries
 (for example `libxkbcommon-x11-0` on X11).
 
 Command-line examples:

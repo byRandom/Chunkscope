@@ -12,9 +12,9 @@
 use std::sync::OnceLock;
 
 use super::placement::{StructurePlacement, StructureSet};
-use crate::biome::{Biome, NetherBiomeSource, OverworldBiomeSource};
+use crate::biome::{Biome, EndBiomeSource, NetherBiomeSource, OverworldBiomeSource};
 use crate::random::{LegacyRandomSource, RandomSource, WorldgenRandom};
-use crate::terrain::{Heightmap, NetherTerrain, OverworldTerrain, Substance};
+use crate::terrain::{EndTerrain, Heightmap, NetherTerrain, OverworldTerrain, Substance};
 
 /// `HeightProvider` of a jigsaw structure's start, with absolute anchors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -70,6 +70,8 @@ pub enum StructureKind {
     RuinedPortal(&'static [PortalSetup]),
     /// `WoodlandMansionStructure`
     WoodlandMansion,
+    /// `EndCityStructure`: the same check as woodland mansions.
+    EndCity,
     /// `OceanMonumentStructure`
     OceanMonument,
     /// Not ported yet (mineshafts).
@@ -251,6 +253,12 @@ impl BiomeLookup for OverworldBiomeSource {
     }
 }
 
+impl BiomeLookup for EndBiomeSource {
+    fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome {
+        EndBiomeSource::biome(self, quart_x, quart_y, quart_z)
+    }
+}
+
 impl BiomeLookup for NetherBiomeSource {
     fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome {
         NetherBiomeSource::biome(self, quart_x, quart_y, quart_z)
@@ -262,6 +270,7 @@ impl BiomeLookup for NetherBiomeSource {
 enum TerrainRef<'a> {
     Overworld(&'a OverworldTerrain),
     Nether(&'a NetherTerrain),
+    End(&'a EndTerrain),
 }
 
 impl TerrainRef<'_> {
@@ -269,6 +278,7 @@ impl TerrainRef<'_> {
         match self {
             TerrainRef::Overworld(t) => t.base_height(x, z, heightmap),
             TerrainRef::Nether(t) => t.base_height(x, z, heightmap),
+            TerrainRef::End(t) => t.base_height(x, z, heightmap),
         }
     }
 
@@ -277,6 +287,7 @@ impl TerrainRef<'_> {
         match self {
             TerrainRef::Overworld(t) => (t.base_column(x, z), crate::terrain::MIN_Y),
             TerrainRef::Nether(t) => (t.base_column(x, z), crate::terrain::NETHER_MIN_Y),
+            TerrainRef::End(t) => (t.base_column(x, z), crate::terrain::END_MIN_Y),
         }
     }
 }
@@ -325,6 +336,21 @@ impl<'a> StructureGenerator<'a> {
             sea_level: crate::terrain::NETHER_SEA_LEVEL,
             gen_min_y: crate::terrain::NETHER_MIN_Y,
             gen_depth: crate::terrain::NETHER_HEIGHT,
+        }
+    }
+
+    /// The End: a level from y 0 to 255 (`dimension_type/the_end.json`)
+    /// whose terrain is generated from y 0 to 127, with sea level 0.
+    pub fn end(seed: i64, biomes: &'a EndBiomeSource, terrain: &'a EndTerrain) -> Self {
+        Self {
+            seed,
+            biomes,
+            terrain: Some(TerrainRef::End(terrain)),
+            min_y: 0,
+            height: 256,
+            sea_level: 0,
+            gen_min_y: crate::terrain::END_MIN_Y,
+            gen_depth: crate::terrain::END_HEIGHT,
         }
     }
 
@@ -453,7 +479,7 @@ impl<'a> StructureGenerator<'a> {
             StructureKind::SinglePiece { width, depth } => ctx.single_piece(width, depth),
             StructureKind::OnTopOfChunkCenter(heightmap) => ctx.on_top_of_chunk_center(heightmap),
             StructureKind::RuinedPortal(setups) => ctx.ruined_portal(setups),
-            StructureKind::WoodlandMansion => ctx.woodland_mansion(),
+            StructureKind::WoodlandMansion | StructureKind::EndCity => ctx.lowest_5x5_point(),
             StructureKind::OceanMonument => ctx.ocean_monument(),
             StructureKind::Jigsaw {
                 start_pool,
@@ -733,8 +759,10 @@ impl Context<'_, '_> {
         Some(self.on_top_without_biome_check(Heightmap::WorldSurface))
     }
 
-    /// `WoodlandMansionStructure.findGenerationPoint`
-    fn woodland_mansion(&mut self) -> Option<(i32, i32, i32)> {
+    /// `WoodlandMansionStructure` and `EndCityStructure`
+    /// `.findGenerationPoint`: a random rotation, then the lowest corner of a
+    /// 5 x 5 footprint from the chunk's (7, 7), which must be at y 60 or more.
+    fn lowest_5x5_point(&mut self) -> Option<(i32, i32, i32)> {
         let (x, z) = ((self.chunk_x << 4) + 7, (self.chunk_z << 4) + 7);
         if !self.could_valid_biome_exist_in_terrain_column(x, z) {
             return None;

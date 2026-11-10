@@ -16,5 +16,5 @@ pub mod tree;
 mod volume;
 
 pub use eval::{DensitySampler, EvalContext};
-pub use tree::{Node, NodeId, NoiseSource, Tree};
+pub use tree::{DistanceMetric, Node, NodeId, NoiseSource, Tree};
 pub use volume::DensityVolume;

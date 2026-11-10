@@ -252,6 +252,15 @@ pub static KINDS: &[Kind] = &[
         color: rgb(0xa77bd9),
         default_on: false,
     },
+    Kind {
+        dimension: Dimension::End,
+        only: None,
+        set: "minecraft:end_cities",
+        label: "End cities",
+        glyph: "EC",
+        color: rgb(0xd8c6f0),
+        default_on: true,
+    },
 ];
 
 /// A structure marker on the map, at the position `/locate` reports.
@@ -472,6 +481,8 @@ struct World {
     terrain: OverworldTerrain,
     nether: mc_core::biome::NetherBiomeSource,
     nether_terrain: mc_core::terrain::NetherTerrain,
+    end: mc_core::biome::EndBiomeSource,
+    end_terrain: mc_core::terrain::EndTerrain,
 }
 
 impl World {
@@ -481,6 +492,8 @@ impl World {
             terrain: OverworldTerrain::new(seed),
             nether: mc_core::biome::NetherBiomeSource::new(seed),
             nether_terrain: mc_core::terrain::NetherTerrain::new(seed),
+            end: mc_core::biome::EndBiomeSource::new(seed),
+            end_terrain: mc_core::terrain::EndTerrain::new(seed),
         }
     }
 }
@@ -505,6 +518,7 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egu
         let generator = match KINDS[key.kind].dimension {
             Dimension::Overworld => StructureGenerator::new(key.seed, &w.overworld, &w.terrain),
             Dimension::Nether => StructureGenerator::nether(key.seed, &w.nether, &w.nether_terrain),
+            Dimension::End => StructureGenerator::end(key.seed, &w.end, &w.end_terrain),
         };
         let c = (key.bx * BLOCK_CHUNKS, key.bz * BLOCK_CHUNKS);
         let bounds = (c.0, c.1, c.0 + BLOCK_CHUNKS - 1, c.1 + BLOCK_CHUNKS - 1);

@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions, End biomes, terrain (simplex noise, islands) and end cities | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
 | 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
 
@@ -229,6 +229,36 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   Nether fossil's `below_top: 2` is y = 125. A fossil picks a random column
   and height, then walks down to the first air block on a solid one, and
   needs that point above the lava sea (y = 32).
+- **The End islands use `SimplexNoise` in `double`.** Only the final sum
+  is converted to `float` (`70 * (n0 + n1 + n2)`), unlike Perlin noise. The
+  End's noise is built from `LegacyRandomSource(seed)` after skipping 17292
+  values, with offsets scaled by 0 (`new SimplexNoise(random, true)`; the
+  three offset doubles are still drawn). `getHeightValue` divides with
+  Java's truncating `/` and `%` (not floor), and since 26.x it no longer
+  contains the main island: it starts from -100 and only adds outer islands
+  (cells with x² + z² > 4096 and noise below -0.9). Mutations no fixture can
+  catch: the simplex diagonal tie (`x0 > y0` vs `>=`: the middle corner
+  then lies at squared distance 0.5 or more and adds 0), and re-associating
+  the `double` sums (the last-bit difference disappears in the `float`
+  cast); a noise value of exactly -0.9 never occurs.
+- **The End's biomes read the noise router's `erosion`**, which in 26.x
+  is `end/islands`: `max(slice_y0((clamp(100 - distance_to_origin, -100,
+  80) - 8) / 128), end_islands)`. The main island is a `distance_to_point`
+  density now, no longer part of `EndIslandFunction`. `TheEndBiomeSource`
+  returns `the_end` for sections with x² + z² <= 4096, and otherwise
+  compares the density at the section's center block ((s * 2 + 1) * 8)
+  with 0.25, -0.0625 and -0.21875. Mutations no fixture can catch: the
+  three comparisons (`>` or `>=`): at a section center the distance to an
+  island cell is the square root of a sum of two odd squares, never an
+  integer, so the density never lands exactly on a threshold. A Euclidean
+  distance in `float` and through `double` are the same (square roots are
+  correctly rounded), and the slice evaluates it at y = 0.
+- **The End terrain** is the End's compiled `final_density` (legacy
+  random source, blended noise and the islands), with no aquifers and air
+  as the default fluid: every non-solid block is air. The island density
+  divides block coordinates by 8 with Java's truncating division; terrain
+  and biomes only sample multiples of 8, so a fixture of arbitrary blocks
+  covers it.
 - **Sets with several structures retry.** Villages, ocean ruins,
   shipwrecks and abandoned camps pick a structure by weight with a random
   seeded by `setLargeFeatureSeed`; if it does not generate, the game removes
@@ -248,6 +278,10 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   there. Two mutations no vanilla data can catch: the Nether's air-pocket
   range (its probability is 0) and the block above or below the column
   (never read).
+- **End cities** use the woodland mansions' check: a random rotation and
+  the lowest corner of a 5 x 5 footprint from the chunk's (7, 7), at y 60 or
+  more, on the End terrain. The End is 256 blocks high for structures and
+  128 for terrain, like the Nether.
 - Not ported yet: mineshafts (their height comes from their pieces). The
   app shows them as possible.
 - Two checks cannot be told apart by any vanilla data, so no fixture

@@ -100,6 +100,9 @@ public class GameOracle {
         netherStructures(lookup);
         netherTerrain(lookup, Path.of(args[5]));
         ruinedPortals(lookup);
+        endIslands();
+        endTerrain(lookup, Path.of(args[5]));
+        endCities(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -585,6 +588,9 @@ public class GameOracle {
             }
             netherEntries.append("], ").append(p.offset()).append(", ").append(biomes.indexOf(biome)).append("),\n");
         }
+        // The End's biomes (TheEndBiomeSource), last.
+        for (String b : List.of("minecraft:the_end", "minecraft:end_highlands", "minecraft:end_midlands",
+                "minecraft:small_end_islands", "minecraft:end_barrens")) if (!biomes.contains(b)) biomes.add(b);
         out.append("/// Biome registry names; `Biome(i)` is `BIOMES[i]`.\npub const BIOMES: [&str; ").append(biomes.size()).append("] = [\n");
         for (String b : biomes) out.append("    \"").append(b).append("\",\n");
         out.append("];\n\n/// Distinct climate ranges used by `OVERWORLD`.\npub const PARAMETERS: [Parameter; ")
@@ -847,7 +853,7 @@ public class GameOracle {
     static void writeStructures(HolderLookup.Provider lookup,
             List<net.minecraft.core.Holder.Reference<net.minecraft.world.level.levelgen.structure.StructureSet>> sets,
             StringBuilder out) {
-        java.util.Set<String> skip = java.util.Set.of("minecraft:strongholds", "minecraft:end_cities");
+        java.util.Set<String> skip = java.util.Set.of("minecraft:strongholds");
         List<String> names = new ArrayList<>();
         for (var ref : sets) {
             if (skip.contains(ref.key().identifier().toString())) continue;
@@ -856,7 +862,7 @@ public class GameOracle {
         java.util.Collections.sort(names);
         var registry = lookup.lookupOrThrow(Registries.STRUCTURE);
         Map<String, Object[]> startPools = new java.util.TreeMap<>();
-        out.append("\n/// The structures of the overworld and Nether structure sets (strongholds excepted), sorted by name.\n");
+        out.append("\n/// The structures of every structure set but strongholds, sorted by name.\n");
         out.append("pub static STRUCTURES: [Structure; ").append(names.size()).append("] = [\n");
         for (String name : names) {
             var structure = registry.getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse(name))).value();
@@ -925,6 +931,8 @@ public class GameOracle {
                 kind = "StructureKind::RuinedPortal(&[" + list + "\n        ])";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.NetherFortressStructure) {
                 kind = "StructureKind::NetherFortress";
+            } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.EndCityStructure) {
+                kind = "StructureKind::EndCity";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.WoodlandMansionStructure) {
                 kind = "StructureKind::WoodlandMansion";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.OceanMonumentStructure) {
@@ -1295,6 +1303,13 @@ public class GameOracle {
             if (known != null) return known;
             String cls = s.getClass().getName().replace(DF, "");
             String def = switch (cls) {
+                case "generator.EndIslandFunction$Sampler" -> "Node::EndIslands";
+                case "generator.DistanceToPointFunction$Sampler" -> {
+                    String metric = java.util.Arrays.stream(fieldAny(s, "metric").toString().split("_"))
+                            .map(w -> w.charAt(0) + w.substring(1).toLowerCase()).collect(java.util.stream.Collectors.joining());
+                    yield "Node::DistanceToPoint { x: " + fieldAny(s, "x") + ", y: " + fieldAny(s, "y") + ", z: " + fieldAny(s, "z")
+                            + ", metric: DistanceMetric::" + metric + " }";
+                }
                 case "generator.ConstantFunction$Sampler" -> "Node::Constant(" + rustF32Any((float) fieldAny(s, "value")) + ")";
                 case "generator.NoiseFunction$Sampler" -> "Node::Noise { noise: " + noise(fieldAny(s, "noise")) + ", xz_scale: "
                         + rustF64((double) fieldAny(s, "xzScale")) + ", y_scale: " + rustF64((double) fieldAny(s, "yScale")) + " }";
@@ -1523,7 +1538,7 @@ public class GameOracle {
                 .append(Files.readString(out().resolve("VERSION")).trim()).append(". Do not edit.\n");
         out.append("//! The overworld `final_density` exactly as the game compiles it for\n");
         out.append("//! `getBaseHeight` (one `NoiseChunk` column).\n\n");
-        out.append("use super::tree::{Axis, Node, NoiseSource, Tree};\n");
+        out.append("use super::tree::{Axis, DistanceMetric, Node, NoiseSource, Tree};\n");
         out.append("use crate::biome::spline::{Multipoint, Spline};\nuse crate::noise::blended::BlendedNoiseParams;\n\n");
         out.append(densityTreeSection(t, "", "OVERWORLD", "overworld", false));
         Files.writeString(rs, out);
@@ -2055,6 +2070,224 @@ public class GameOracle {
                     points.println(sb);
                 }
             }
+        }
+    }
+
+    /**
+     * SimplexNoise (2D) and EndIslandFunction.getHeightValue, seeded like EndIslandFunction.compileSampler:
+     * LegacyRandomSource(seed), 17292 values skipped, then new SimplexNoise(random, true).
+     */
+    static void endIslands() throws Exception {
+        Method height = net.minecraft.world.level.levelgen.densityfunction.generator.EndIslandFunction.class
+                .getDeclaredMethod("getHeightValue", net.minecraft.world.level.levelgen.synth.SimplexNoise.class, int.class, int.class);
+        height.setAccessible(true);
+        try (PrintWriter w = writer("end_islands.txt")) {
+            // Seeds with an island cell right on the main island's edge (x^2 + z^2 == 4096).
+            List<Long> edgeSeeds = new ArrayList<>();
+            for (long seed = 0; edgeSeeds.size() < 3; seed++) {
+                RandomSource r = new LegacyRandomSource(seed);
+                r.consumeCount(17292);
+                var noise = new net.minecraft.world.level.levelgen.synth.SimplexNoise(r, true);
+                if (noise.get(64, 0) < -0.9f || noise.get(-64, 0) < -0.9f || noise.get(0, 64) < -0.9f || noise.get(0, -64) < -0.9f) edgeSeeds.add(seed);
+            }
+            for (long seed : edgeSeeds) {
+                RandomSource r = new LegacyRandomSource(seed);
+                r.consumeCount(17292);
+                var noise = new net.minecraft.world.level.levelgen.synth.SimplexNoise(r, true);
+                StringBuilder sb = new StringBuilder("height " + seed);
+                for (int x = -150; x <= 150; x += 3) for (int z = -150; z <= 150; z += 3) {
+                    if (Math.abs(x) < 110 && Math.abs(z) < 110) continue;
+                    sb.append(' ').append(x).append(',').append(z).append('=')
+                            .append(Float.floatToRawIntBits((float) height.invoke(null, noise, x, z)));
+                }
+                w.println(sb);
+            }
+            for (long seed : seeds(6)) {
+                for (boolean zero : new boolean[] {true, false}) {
+                    RandomSource r = new LegacyRandomSource(seed);
+                    r.consumeCount(17292);
+                    var noise = new net.minecraft.world.level.levelgen.synth.SimplexNoise(r, zero);
+                    StringBuilder sb = new StringBuilder("simplex " + seed + " " + zero);
+                    for (int i = 0; i < 1500; i++) {
+                        // Doubles, integers (the islands sample integer cells), and the diagonal x == y.
+                        double x, y;
+                        if (i < 300) { x = INPUTS.nextDouble(-50, 50); y = INPUTS.nextDouble(-50, 50); }
+                        else if (i < 1100) { x = INPUTS.nextInt(-5000, 5000); y = INPUTS.nextInt(-5000, 5000); }
+                        else if (i < 1300) { x = INPUTS.nextInt(-5000, 5000); y = x; }
+                        else { x = INPUTS.nextDouble(-3e7, 3e7); y = INPUTS.nextDouble(-3e7, 3e7); }
+                        sb.append(' ').append(Double.doubleToRawLongBits(x)).append(',').append(Double.doubleToRawLongBits(y))
+                                .append('=').append(Float.floatToRawIntBits(noise.get(x, y)));
+                    }
+                    w.println(sb);
+                    if (!zero) continue;
+                    sb = new StringBuilder("height " + seed);
+                    for (int i = 0; i < 300; i++) {
+                        // Grid coordinates (8 blocks): around the main island's edge, and far out.
+                        int x, z;
+                        if (i < 100) { x = INPUTS.nextInt(-160, 160); z = INPUTS.nextInt(-160, 160); }
+                        else if (i < 280) { x = INPUTS.nextInt(-20000, 20000); z = INPUTS.nextInt(-20000, 20000); }
+                        else { x = INPUTS.nextInt(-3_750_000, 3_750_000); z = INPUTS.nextInt(-3_750_000, 3_750_000); }
+                        sb.append(' ').append(x).append(',').append(z).append('=')
+                                .append(Float.floatToRawIntBits((float) height.invoke(null, noise, x, z)));
+                    }
+                    w.println(sb);
+                }
+            }
+        }
+    }
+
+    /**
+     * The End: its compiled final_density and the climate sampler's erosion (the islands, which
+     * TheEndBiomeSource reads), base columns, and biomes from TheEndBiomeSource itself.
+     */
+    static void endTerrain(HolderLookup.Provider lookup, Path densityRs) throws Exception {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.END);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.TheEndBiomeSource.create(lookup.lookupOrThrow(Registries.BIOME));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+        String structure = null;
+        List<Long> worldSeeds = new ArrayList<>(List.of(0L, 1L, -1L, -4172144997902289642L));
+        for (int i = 0; i < 4; i++) worldSeeds.add(INPUTS.nextLong());
+        try (PrintWriter w = writer("end_terrain.txt"); PrintWriter b = writer("end_biomes.txt");
+                PrintWriter densities = writer("end_density.txt")) {
+            for (long seed : worldSeeds) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                // Columns: the main island, its edge, and the outer islands.
+                List<int[]> columns = new ArrayList<>(List.of(new int[] {0, 0}, new int[] {8, -8}, new int[] {90, 30}, new int[] {-120, 0}));
+                for (int i = 0; i < 30; i++) {
+                    int range = i % 3 == 0 ? 200 : i % 3 == 1 ? 3_000 : 1_000_000;
+                    columns.add(new int[] {INPUTS.nextInt(-range, range), INPUTS.nextInt(-range, range)});
+                }
+                for (int[] xz : columns) {
+                    Column col = column(rs, settings, xz[0], xz[1]);
+                    TreeExport t = exportFinalDensity(lookup, rs, settings, col, seed);
+                    t.roots.put("EROSION", t.node(rs.createClimateSampler(SamplerContext.builder().build()).erosion().sampler()));
+                    String s = String.join("\n", t.nodes) + String.join("\n", t.noises);
+                    if (structure == null) {
+                        structure = s;
+                        String file = Files.readString(densityRs);
+                        Files.writeString(densityRs, file + "\n// ---- The End ----------------------------------------------------------\n\n"
+                                + densityTreeSection(t, "END_", "END", "end", true));
+                    } else if (!structure.equals(s)) {
+                        throw new IllegalStateException("compiled End tree differs between columns or seeds");
+                    }
+                    col.chunk().close();
+                    int ws = generator.getBaseHeight(xz[0], xz[1], net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, height, rs);
+                    var column = generator.getBaseColumn(xz[0], xz[1], height, rs);
+                    StringBuilder blocks = new StringBuilder();
+                    for (int y = height.getMinY(); y < height.getMinY() + height.getHeight(); y++) blocks.append(substance(column.getBlock(y), settings));
+                    w.println(seed + " " + xz[0] + " " + xz[1] + " " + ws + " " + blocks);
+                }
+                // Biomes at quart positions: near the main island's edge (64 chunks), and far out.
+                var resolver = biomeSource.createResolver(rs.createClimateSampler(SamplerContext.builder().build()));
+                StringBuilder sb = new StringBuilder(Long.toString(seed));
+                for (int i = 0; i < 1500; i++) {
+                    int range = i % 3 == 0 ? 300 : i % 3 == 1 ? 3_000 : 500_000;
+                    int qx = INPUTS.nextInt(-range, range), qz = INPUTS.nextInt(-range, range), qy = INPUTS.nextInt(-10, 80);
+                    sb.append(' ').append(qx).append(',').append(qy).append(',').append(qz).append('=')
+                            .append(resolver.getNoiseBiome(qx, qy, qz).unwrapKey().orElseThrow().identifier().getPath());
+                }
+                // The main island's edge: sections with x^2 + z^2 == 4096, and their neighbours.
+                for (int[] sec : new int[][] {{64, 0}, {-64, 0}, {0, 64}, {0, -64}, {65, 0}, {-65, 0}, {0, 65}, {0, -65}}) {
+                    for (int dq = 0; dq < 4; dq++) {
+                        int qx = sec[0] * 4 + dq, qz = sec[1] * 4 + (3 - dq), qy = 16;
+                        sb.append(' ').append(qx).append(',').append(qy).append(',').append(qz).append('=')
+                                .append(resolver.getNoiseBiome(qx, qy, qz).unwrapKey().orElseThrow().identifier().getPath());
+                    }
+                }
+                b.println(sb);
+                // The islands' density at arbitrary blocks (not only multiples of 8), by raw bits.
+                var islands = rs.createClimateSampler(SamplerContext.builder().build()).erosion();
+                StringBuilder d = new StringBuilder(Long.toString(seed));
+                for (int i = 0; i < 400; i++) {
+                    int range = i % 2 == 0 ? 3_000 : 400_000;
+                    int x = INPUTS.nextInt(-range, range), y = INPUTS.nextInt(0, 128), z = INPUTS.nextInt(-range, range);
+                    d.append(' ').append(x).append(',').append(y).append(',').append(z).append('=')
+                            .append(Float.floatToRawIntBits(islands.sampleValue(x, y, z)));
+                }
+                densities.println(d);
+            }
+        }
+    }
+
+    /** End city attempts on several seeds, and generation points on clusters of chunks on the outer islands. */
+    static void endCities(HolderLookup.Provider lookup) throws Exception {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.END);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.TheEndBiomeSource.create(lookup.lookupOrThrow(Registries.BIOME));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        // dimension_type/the_end.json: y 0 to 255.
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(0, 256);
+        List<net.minecraft.core.Registry<?>> registries = new ArrayList<>();
+        for (var key : List.of(Registries.TEMPLATE_POOL, Registries.PROCESSOR_LIST)) registries.add(copyRegistry(lookup, key));
+        net.minecraft.core.registries.BuiltInRegistries.REGISTRY.forEach(registries::add);
+        var registryAccess = new net.minecraft.core.RegistryAccess.ImmutableRegistryAccess(registries);
+        var templates = templateManager(lookup);
+        Map<String, java.util.Set<String>> structureBiomes = new java.util.HashMap<>();
+        for (var ref : lookup.lookupOrThrow(Registries.STRUCTURE).listElements().toList()) {
+            String tag = ((net.minecraft.core.HolderSet.Named<Biome>) ref.value().biomes()).key().location().toString();
+            structureBiomes.put(ref.key().identifier().toString(), new java.util.HashSet<>(biomeTag(tag)));
+        }
+        var sets = structureSets(lookup);
+        var citySet = sets.stream().filter(r -> r.key().identifier().toString().equals("minecraft:end_cities")).findFirst().orElseThrow();
+        var placement = (net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement) citySet.value().placement();
+        try (PrintWriter w = writer("end_cities.txt"); PrintWriter p = writer("end_city_points.txt")) {
+            for (long seed : List.of(0L, -4172144997902289642L, INPUTS.nextLong(), INPUTS.nextLong())) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                var ctor = net.minecraft.world.level.chunk.ChunkGeneratorStructureState.class.getDeclaredConstructor(
+                        RandomState.class, net.minecraft.world.level.biome.BiomeSource.class, long.class,
+                        net.minecraft.world.level.ChunkPos.class, long.class, List.class);
+                ctor.setAccessible(true);
+                var state = ctor.newInstance(rs, biomeSource, seed, new net.minecraft.world.level.ChunkPos(0, 0), seed, List.copyOf(sets));
+                List<int[]> regions = new ArrayList<>();
+                for (int rz = -10; rz < 10; rz++) for (int rx = -10; rx < 10; rx++) regions.add(new int[] {rx, rz});
+                for (int i = 0; i < 60; i++) {
+                    int range = 2_000_000 / 16 / placement.spacing();
+                    regions.add(new int[] {INPUTS.nextInt(-range, range), INPUTS.nextInt(-range, range)});
+                }
+                for (int[] r : regions) {
+                    var pos = placement.getPotentialStructureChunk(seed, r[0] * placement.spacing(), r[1] * placement.spacing());
+                    if (!placement.isStructureChunk(state, pos.x(), pos.z())) continue;
+                    StringBuilder sb = new StringBuilder(seed + " minecraft:end_cities " + pos.x() + " " + pos.z());
+                    selectStructure(sb, citySet.value(), seed, pos, registryAccess, generator, biomeSource, rs, templates, height, structureBiomes);
+                    w.println(sb);
+                }
+            }
+            // Generation points on clusters of chunks, centered on outer islands (WORLD_SURFACE_WG above 0).
+            long seed = INPUTS.nextLong();
+            RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+            var city = lookup.lookupOrThrow(Registries.STRUCTURE).getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse("minecraft:end_city")));
+            var biomes = structureBiomes.get("minecraft:end_city");
+            java.util.function.Predicate<Holder<Biome>> valid = h -> biomes.contains(h.unwrapKey().orElseThrow().identifier().toString());
+            StringBuilder sb = new StringBuilder(seed + " end_city");
+            for (int cluster = 0; cluster < 25; cluster++) {
+                int ccx = 0, ccz = 0;
+                for (int tries = 0; tries < 2000; tries++) {
+                    ccx = INPUTS.nextInt(-6000, 6000);
+                    ccz = INPUTS.nextInt(-6000, 6000);
+                    if (Math.abs(ccx) < 80 && Math.abs(ccz) < 80) continue;
+                    int h = generator.getBaseHeight(ccx * 16 + 7, ccz * 16 + 7, net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, height, rs);
+                    if (h > 55) break;
+                }
+                ccx -= 3;
+                ccz -= 3;
+                for (int dz = 0; dz < 6; dz++) for (int dx = 0; dx < 6; dx++) {
+                    var pos = new net.minecraft.world.level.ChunkPos(ccx + dx, ccz + dz);
+                    var context = new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(
+                            registryAccess, generator, biomeSource, rs.createClimateSampler(SamplerContext.builder().enableCaches().build()),
+                            rs, templates, seed, pos, height, valid);
+                    var point = city.value().findValidGenerationPoint(context);
+                    sb.append(' ').append(pos.x()).append(',').append(pos.z()).append(':');
+                    if (point.isPresent()) {
+                        var q = point.get().position();
+                        sb.append(q.getX()).append(',').append(q.getY()).append(',').append(q.getZ());
+                    } else {
+                        sb.append("no");
+                    }
+                }
+            }
+            p.println(sb);
         }
     }
 
