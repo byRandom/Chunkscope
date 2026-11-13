@@ -3,6 +3,7 @@
 
 use mc_core::biome::OverworldBiomeSource;
 use mc_core::finder::{Center, Query, StructureFilter, check};
+use mc_core::structure::scan::SetFilter;
 use mc_core::structure::validate::StructureGenerator;
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSets};
 use mc_core::terrain::OverworldTerrain;
@@ -79,12 +80,14 @@ fn nether_filters_agree_with_a_direct_scan() {
     let query = Query {
         center: Center::Spawn,
         structures: vec![StructureFilter {
-            set,
+            select: SetFilter {
+                set,
+                only: Some("minecraft:fortress"),
+                ship_only: false,
+            },
             radius,
             min_count: 1,
             dimension: Dimension::Nether,
-            only: Some("minecraft:fortress"),
-            ship: false,
         }],
         center_biomes: None,
     };
@@ -139,12 +142,10 @@ fn end_filters_agree_with_a_direct_scan() {
     let query = Query {
         center: Center::Spawn,
         structures: vec![StructureFilter {
-            set,
+            select: SetFilter::all(set),
             radius,
             min_count: 1,
             dimension: Dimension::End,
-            only: None,
-            ship: false,
         }],
         center_biomes: None,
     };
@@ -193,12 +194,14 @@ fn end_city_ship_filter() {
         let filter = |ship| Query {
             center: Center::Zero,
             structures: vec![StructureFilter {
-                set,
+                select: SetFilter {
+                    set,
+                    only: None,
+                    ship_only: ship,
+                },
                 radius: 1400,
                 min_count: 1,
                 dimension: Dimension::End,
-                only: None,
-                ship,
             }],
             center_biomes: None,
         };

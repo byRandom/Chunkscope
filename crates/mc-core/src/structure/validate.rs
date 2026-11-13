@@ -310,6 +310,11 @@ pub struct StructureGenerator<'a> {
 }
 
 impl<'a> StructureGenerator<'a> {
+    /// The world seed.
+    pub fn seed(&self) -> i64 {
+        self.seed
+    }
+
     /// The overworld.
     pub fn new(seed: i64, biomes: &'a OverworldBiomeSource, terrain: &'a OverworldTerrain) -> Self {
         Self {

@@ -4,7 +4,7 @@
 //! End structures from (0, 0) in their dimension.
 //!
 //! Each seed is checked with the cheap tests first: where structure sets
-//! *attempt* structures near the center (a few random numbers per region),
+//! try to place structures near the center (a few random numbers per region),
 //! then the biome at the center, and only then the full structure validation
 //! (biome and terrain), which is what makes a match exact.
 
@@ -14,8 +14,9 @@ use crate::biome::{
     Biome, EndBiomeSource, NetherBiomeSource, OverworldBiomeSource, OverworldClimate,
 };
 use crate::spawn::spawn_origin;
-use crate::structure::validate::{Outcome, StructureGenerator};
-use crate::structure::{STRUCTURE_SETS, StructurePlacement, StructureSet};
+use crate::structure::StructureSet;
+use crate::structure::scan::{Candidate, ChunkRect, SetFilter, candidates};
+use crate::structure::validate::StructureGenerator;
 use crate::terrain::{EndTerrain, Heightmap, NetherTerrain, OverworldTerrain};
 
 /// Where distances are measured from.
@@ -38,31 +39,25 @@ pub enum Dimension {
     End,
 }
 
-/// At least `min_count` structures of `set` within `radius` blocks of the
+/// At least `min_count` structures of a set within `radius` blocks of the
 /// center (measured to the position `/locate` reports).
 #[derive(Clone, Copy, Debug)]
 pub struct StructureFilter {
-    pub set: &'static StructureSet,
+    /// The set and which of its structures count.
+    pub select: SetFilter,
     pub radius: i32,
     pub min_count: u32,
     pub dimension: Dimension,
-    /// Only structures whose name starts with this (e.g. `minecraft:bastion`
-    /// in the set they share with fortresses).
-    pub only: Option<&'static str>,
-    /// End cities: only those with a ship.
-    pub ship: bool,
 }
 
 impl StructureFilter {
     /// A filter on every structure of an overworld set.
     pub fn overworld(set: &'static StructureSet, radius: i32, min_count: u32) -> Self {
         Self {
-            set,
+            select: SetFilter::all(set),
             radius,
             min_count,
             dimension: Dimension::Overworld,
-            only: None,
-            ship: false,
         }
     }
 }
@@ -99,53 +94,20 @@ pub struct Match {
     pub found: Vec<Found>,
 }
 
-/// An attempt chunk, its locate position and its distance to the center.
-type Attempt = ((i32, i32), (i32, i32), f64);
-
-/// Attempt chunks of `set` whose locate position is within `radius` of
-/// `center`, nearest first, with their locate position and distance.
-fn attempts_near(set: &StructureSet, seed: i64, (x, z): (i32, i32), radius: i32) -> Vec<Attempt> {
-    let StructurePlacement::RandomSpread(p) = &set.placement else {
-        return Vec::new();
-    };
-    let mut out = Vec::new();
-    let r = radius as i64;
-    let (cx0, cz0) = (
-        ((x as i64 - r) >> 4) as i32 - 1,
-        ((z as i64 - r) >> 4) as i32 - 1,
-    );
-    let (cx1, cz1) = (
-        ((x as i64 + r) >> 4) as i32 + 1,
-        ((z as i64 + r) >> 4) as i32 + 1,
-    );
-    let mut push = |cx: i32, cz: i32| {
-        if set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz) != Some(true) {
-            return;
-        }
-        let (bx, _, bz) = p.locate_pos(cx, cz);
-        let d = (((bx - x) as f64).powi(2) + ((bz - z) as f64).powi(2)).sqrt();
-        if d <= radius as f64 {
-            out.push(((cx, cz), (bx, bz), d));
-        }
-    };
-    if p.spacing == 1 {
-        for cz in cz0..=cz1 {
-            for cx in cx0..=cx1 {
-                push(cx, cz);
-            }
-        }
-    } else {
-        let s = p.spacing;
-        for rz in cz0.div_euclid(s)..=cz1.div_euclid(s) {
-            for rx in cx0.div_euclid(s)..=cx1.div_euclid(s) {
-                let (cx, cz) = p.region_chunk(seed, rx, rz);
-                if (cx0..=cx1).contains(&cx) && (cz0..=cz1).contains(&cz) {
-                    push(cx, cz);
-                }
-            }
-        }
-    }
-    out.sort_by(|a, b| a.2.total_cmp(&b.2));
+/// The candidates of `set` whose locate position is within `radius` of
+/// `center`, nearest first, with their distance.
+fn candidates_near(
+    set: &'static StructureSet,
+    seed: i64,
+    center: (i32, i32),
+    radius: i32,
+) -> Vec<(Candidate, f64)> {
+    let rect = ChunkRect::around_block(center.0, center.1, radius);
+    let mut out: Vec<_> = candidates(set, seed, rect)
+        .map(|c| (c, c.distance(center)))
+        .filter(|&(_, d)| d <= radius as f64)
+        .collect();
+    out.sort_by(|a, b| a.1.total_cmp(&b.1));
     out
 }
 
@@ -159,14 +121,14 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
         Dimension::Overworld => center,
         Dimension::Nether | Dimension::End => (0, 0),
     };
-    // Cheap pass: enough attempts near the center for every filter?
-    let mut attempts = Vec::with_capacity(query.structures.len());
+    // Cheap pass: enough candidates near the center for every filter?
+    let mut near = Vec::with_capacity(query.structures.len());
     for f in &query.structures {
-        let a = attempts_near(f.set, seed, filter_center(f), f.radius);
+        let a = candidates_near(f.select.set, seed, filter_center(f), f.radius);
         if (a.len() as u32) < f.min_count {
             return None;
         }
-        attempts.push(a);
+        near.push(a);
     }
     let biomes = OverworldBiomeSource::new(seed);
     let terrain = OverworldTerrain::new(seed);
@@ -197,44 +159,25 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
         .as_ref()
         .map(|(b, t)| StructureGenerator::end(seed, b, t));
     let mut found = Vec::new();
-    for (f, attempts) in query.structures.iter().zip(attempts) {
+    for (f, near) in query.structures.iter().zip(near) {
         let generator = match f.dimension {
             Dimension::Overworld => &generator,
             Dimension::Nether => nether_generator.as_ref().expect("built for Nether filters"),
             Dimension::End => end_generator.as_ref().expect("built for End filters"),
         };
         let mut count = 0;
-        for ((cx, cz), (x, z), distance) in attempts {
-            let entry = match generator.attempt(f.set, cx, cz) {
-                outcome @ Outcome::Generates(_) => {
-                    let (s, _) = outcome.generated().expect("generates");
-                    if f.only.is_some_and(|prefix| !s.name.starts_with(prefix)) {
-                        continue;
-                    }
-                    if f.ship
-                        && s.name == "minecraft:end_city"
-                        && !crate::structure::end_city::end_city_has_ship(seed, cx, cz)
-                    {
-                        continue;
-                    }
-                    Found {
-                        name: s.name,
-                        dimension: f.dimension,
-                        x,
-                        z,
-                        distance,
-                        exact: true,
-                    }
-                }
-                Outcome::Nothing(_) => continue,
-                Outcome::Unknown(_) => Found {
-                    name: f.set.name,
-                    dimension: f.dimension,
-                    x,
-                    z,
-                    distance,
-                    exact: false,
-                },
+        for (candidate, distance) in near {
+            let Some(hit) = generator.hit(&f.select, candidate) else {
+                continue;
+            };
+            let (x, z) = candidate.locate;
+            let entry = Found {
+                name: hit.generated.map_or(f.select.set.name, |g| g.name),
+                dimension: f.dimension,
+                x,
+                z,
+                distance,
+                exact: hit.generated.is_some(),
             };
             found.push(entry);
             count += 1;

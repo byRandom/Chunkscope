@@ -326,6 +326,16 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   shore. That script runs the real server, so it needs the Minecraft EULA
   accepted (`MINECRAFT_EULA=true`) and about 15 seconds per seed; it is
   run by hand when the target version changes, not in CI.
+- **One scan finds the candidates of an area.** The map, the finder and the
+  examples all get a set's candidate chunks from `structure::scan`, which
+  walks the regions overlapping a chunk rectangle and keeps each region's
+  candidate if it falls inside. `tests/structure_scan.rs` compares it with
+  a check of every chunk on its own, for every random-spread set, on
+  rectangles that straddle region edges, the origin and the world border.
+  Treating one-chunk regions (mineshafts, buried treasure) like any other
+  region is an equivalent mutation: with a spacing of 1 the region's
+  candidate is the region's own chunk. The shortcut only skips the random
+  numbers.
 
 ## Known non-determinism in the game itself
 

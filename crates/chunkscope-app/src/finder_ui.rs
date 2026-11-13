@@ -108,7 +108,7 @@ impl FinderUi {
         for f in &self.filters {
             let kind = &KINDS[f.kind];
             structures_.push(StructureFilter {
-                set: structures::set(kind.set)?,
+                select: structures::select(f.kind, f.ship)?,
                 radius: f.radius,
                 min_count: f.count,
                 dimension: match kind.dimension {
@@ -116,8 +116,6 @@ impl FinderUi {
                     Dimension::Nether => FinderDimension::Nether,
                     Dimension::End => FinderDimension::End,
                 },
-                only: kind.only,
-                ship: f.ship && kind.set == "minecraft:end_cities",
             });
         }
         Some(Query {

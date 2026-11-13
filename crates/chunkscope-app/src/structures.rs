@@ -1,7 +1,7 @@
 //! Structure layers: the structures that generate in each structure set of
 //! the Overworld and the Nether, and stronghold positions.
 //!
-//! Each set attempts a structure at one chunk per region; whether it really
+//! Each set tries to place a structure at one chunk per region; whether it really
 //! generates there (and which structure of the set) is checked against
 //! biome and terrain like the game does, on background threads. Mineshafts
 //! are not validated yet: their attempts are shown as possible.
@@ -12,8 +12,9 @@ use std::thread;
 
 use eframe::egui::{self, Color32};
 use mc_core::biome::OverworldBiomeSource;
+use mc_core::structure::scan::{ChunkRect, SetFilter};
 use mc_core::structure::stronghold::ring_positions;
-use mc_core::structure::validate::{Outcome, StructureGenerator};
+use mc_core::structure::validate::StructureGenerator;
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSet, StructureSets};
 use mc_core::terrain::OverworldTerrain;
 
@@ -310,73 +311,36 @@ pub fn spacing_blocks(kind: usize) -> Option<f64> {
     Some(p.spacing as f64 * 16.0 / f64::from(p.frequency).sqrt())
 }
 
-/// The markers of `kind` whose chunk lies in `cx0..=cx1`, `cz0..=cz1`:
-/// attempts that generate, plus attempts that cannot be validated yet.
-pub fn markers(
-    kind: usize,
-    seed: i64,
-    (cx0, cz0, cx1, cz1): (i32, i32, i32, i32),
-    generator: &StructureGenerator,
-) -> Vec<Marker> {
-    let mut out = Vec::new();
-    let Some(set) = set(KINDS[kind].set) else {
-        return out;
+/// The structures of layer `kind` that count, or `None` for layers that
+/// are not a structure set (the spawn). `ship_only` keeps end cities with a
+/// ship.
+pub fn select(kind: usize, ship_only: bool) -> Option<SetFilter> {
+    Some(SetFilter {
+        set: set(KINDS[kind].set)?,
+        only: KINDS[kind].only,
+        ship_only,
+    })
+}
+
+/// The markers of `kind` whose chunk lies in `rect`: structures that
+/// generate, plus candidates that cannot be validated yet.
+pub fn markers(kind: usize, rect: ChunkRect, generator: &StructureGenerator) -> Vec<Marker> {
+    let Some(select) = select(kind, false) else {
+        return Vec::new();
     };
-    let StructurePlacement::RandomSpread(p) = &set.placement else {
-        return out;
-    };
-    let mut push = |cx: i32, cz: i32| {
-        if set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz) != Some(true) {
-            return;
-        }
-        let (x, _, z) = p.locate_pos(cx, cz);
-        let outcome = generator.attempt(set, cx, cz);
-        if let Some((structure, (sx, sy, sz))) = outcome.generated() {
-            if KINDS[kind]
-                .only
-                .is_some_and(|prefix| !structure.name.starts_with(prefix))
-            {
-                return;
-            }
-            let ship = (structure.name == "minecraft:end_city")
-                .then(|| mc_core::structure::end_city::end_city_has_ship(seed, cx, cz));
-            out.push(Marker {
-                kind,
-                x,
-                z,
-                exact: true,
-                start: Some((structure.name, sx, sy, sz)),
-                ship,
-            });
-        } else if let Outcome::Unknown(_) = outcome {
-            out.push(Marker {
-                kind,
-                x,
-                z,
-                exact: false,
-                start: None,
-                ship: None,
-            });
-        }
-    };
-    if p.spacing == 1 {
-        for cz in cz0..=cz1 {
-            for cx in cx0..=cx1 {
-                push(cx, cz);
-            }
-        }
-        return out;
-    }
-    let s = p.spacing;
-    for rz in cz0.div_euclid(s)..=cz1.div_euclid(s) {
-        for rx in cx0.div_euclid(s)..=cx1.div_euclid(s) {
-            let (cx, cz) = p.region_chunk(seed, rx, rz);
-            if (cx0..=cx1).contains(&cx) && (cz0..=cz1).contains(&cz) {
-                push(cx, cz);
-            }
-        }
-    }
-    out
+    generator
+        .hits(&select, rect)
+        .map(|hit| Marker {
+            kind,
+            x: hit.candidate.locate.0,
+            z: hit.candidate.locate.1,
+            exact: hit.generated.is_some(),
+            start: hit
+                .generated
+                .map(|g| (g.name, g.start.0, g.start.1, g.start.2)),
+            ship: hit.generated.and_then(|g| g.ship),
+        })
+        .collect()
 }
 
 /// Structure markers are computed in squares of this many chunks.
@@ -527,8 +491,13 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egu
             Dimension::End => StructureGenerator::end(key.seed, &w.end, &w.end_terrain),
         };
         let c = (key.bx * BLOCK_CHUNKS, key.bz * BLOCK_CHUNKS);
-        let bounds = (c.0, c.1, c.0 + BLOCK_CHUNKS - 1, c.1 + BLOCK_CHUNKS - 1);
-        let found = markers(key.kind, key.seed, bounds, &generator);
+        let rect = ChunkRect {
+            x0: c.0,
+            z0: c.1,
+            x1: c.0 + BLOCK_CHUNKS - 1,
+            z1: c.1 + BLOCK_CHUNKS - 1,
+        };
+        let found = markers(key.kind, rect, &generator);
         let closed = tx.send((key, found)).is_err();
         shared
             .queue
