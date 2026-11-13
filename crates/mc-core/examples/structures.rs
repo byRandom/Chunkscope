@@ -1,5 +1,5 @@
 //! List the structures near a position: where each overworld structure set
-//! attempts a structure, checked against biome and terrain like the game
+//! tries to place a structure, checked against biome and terrain like the game
 //! does. Mineshafts are not validated yet; they are listed as possible.
 //!
 //! ```text
@@ -8,8 +8,9 @@
 
 use mc_core::biome::OverworldBiomeSource;
 use mc_core::parse_seed;
+use mc_core::structure::scan::{ChunkRect, SetFilter};
 use mc_core::structure::stronghold::ring_positions;
-use mc_core::structure::validate::{Outcome, StructureGenerator};
+use mc_core::structure::validate::StructureGenerator;
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSets};
 use mc_core::terrain::OverworldTerrain;
 
@@ -48,33 +49,18 @@ fn main() {
         if p.spacing == 1 {
             continue; // mineshafts and buried treasure: almost every chunk is a candidate
         }
-        let span = (radius >> 4) / p.spacing + 1;
-        let (rx0, rz0) = (
-            (x >> 4).div_euclid(p.spacing),
-            (z >> 4).div_euclid(p.spacing),
-        );
-        for rz in rz0 - span..=rz0 + span {
-            for rx in rx0 - span..=rx0 + span {
-                let (cx, cz) = p.region_chunk(seed, rx, rz);
-                if set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz) != Some(true) {
-                    continue;
-                }
-                let (bx, _, bz) = p.locate_pos(cx, cz);
-                let d = (((bx - x) as f64).powi(2) + ((bz - z) as f64).powi(2)).sqrt();
-                if d > radius as f64 {
-                    continue;
-                }
-                match generator.attempt(set, cx, cz) {
-                    Outcome::Generates(attempts) => {
-                        let name = attempts.last().unwrap().structure.name;
-                        found.push((d, name.to_owned(), bx, bz));
-                    }
-                    Outcome::Nothing(_) => {}
-                    Outcome::Unknown(_) => {
-                        found.push((d, format!("{} (possible)", set.name), bx, bz))
-                    }
-                }
+        let rect = ChunkRect::around_block(x, z, radius);
+        for hit in generator.hits(&SetFilter::all(set), rect) {
+            let d = hit.candidate.distance((x, z));
+            if d > radius as f64 {
+                continue;
             }
+            let name = match hit.generated {
+                Some(g) => g.name.to_owned(),
+                None => format!("{} (possible)", set.name),
+            };
+            let (bx, bz) = hit.candidate.locate;
+            found.push((d, name, bx, bz));
         }
     }
     // Strongholds: exact positions (they need the biome search, ~1 s).
