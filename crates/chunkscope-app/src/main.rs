@@ -7,6 +7,7 @@ mod biome_colors;
 mod dimension;
 mod finder_ui;
 mod icons;
+mod settings;
 mod structures;
 mod theme;
 mod tiles;

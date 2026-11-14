@@ -19,14 +19,29 @@ use mc_core::terrain::OverworldTerrain;
 
 use crate::dimension::Dimension;
 
+/// What a layer shows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Source {
+    /// The world spawn (an estimate, see [`Spawn`]).
+    Spawn,
+    /// Stronghold positions (see [`Strongholds`]).
+    Strongholds,
+    /// The structures of a structure set that generate.
+    Set {
+        /// Structure set registry name.
+        set: &'static str,
+        /// Only the structures of the set whose name starts with this (the
+        /// Nether's fortresses and bastions share one set).
+        only: Option<&'static str>,
+    },
+}
+
 /// One structure layer of the map.
 pub struct Kind {
+    /// Stable name, kept in saved settings: never rename one.
+    pub id: &'static str,
     pub dimension: Dimension,
-    /// Structure set registry name.
-    pub set: &'static str,
-    /// Only the structures of the set whose name starts with this (the
-    /// Nether's fortresses and bastions share one set).
-    pub only: Option<&'static str>,
+    pub source: Source,
     pub label: &'static str,
     /// Up to two letters drawn on the marker.
     pub glyph: &'static str,
@@ -39,223 +54,325 @@ const fn rgb(hex: u32) -> Color32 {
     Color32::from_rgb((hex >> 16) as u8, (hex >> 8) as u8, hex as u8)
 }
 
-pub const STRONGHOLDS: &str = "minecraft:strongholds";
-/// The world spawn layer (not a structure set).
-pub const SPAWN: &str = "chunkscope:spawn";
+impl Kind {
+    pub fn is_spawn(&self) -> bool {
+        self.source == Source::Spawn
+    }
+
+    /// Whether the seed finder can search this layer (structure sets only).
+    pub fn searchable(&self) -> bool {
+        matches!(self.source, Source::Set { .. })
+    }
+
+    /// End cities, whose markers and filters know about ships.
+    pub fn has_ships(&self) -> bool {
+        matches!(
+            self.source,
+            Source::Set {
+                set: "minecraft:end_cities",
+                ..
+            }
+        )
+    }
+
+    /// The structures of this layer that count, for a structure set layer.
+    /// `ship_only` keeps end cities with a ship.
+    pub fn select(&self, ship_only: bool) -> Option<SetFilter> {
+        let Source::Set { set: name, only } = self.source else {
+            return None;
+        };
+        Some(SetFilter {
+            set: set(name)?,
+            only,
+            ship_only,
+        })
+    }
+}
+
+/// The index in [`KINDS`] of the layer with this id.
+pub fn kind_index(id: &str) -> Option<usize> {
+    KINDS.iter().position(|k| k.id == id)
+}
 
 /// Overworld structure layers, in legend order.
 pub static KINDS: &[Kind] = &[
     Kind {
+        id: "spawn",
         dimension: Dimension::Overworld,
-        only: None,
-        set: SPAWN,
+        source: Source::Spawn,
         label: "World spawn",
         glyph: "W",
         color: rgb(0xf4f4f4),
         default_on: true,
     },
     Kind {
+        id: "villages",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:villages",
+        source: Source::Set {
+            set: "minecraft:villages",
+            only: None,
+        },
         label: "Villages",
         glyph: "V",
         color: rgb(0xe0a458),
         default_on: true,
     },
     Kind {
+        id: "strongholds",
         dimension: Dimension::Overworld,
-        only: None,
-        set: STRONGHOLDS,
+        source: Source::Strongholds,
         label: "Strongholds",
         glyph: "S",
         color: rgb(0xb67cf2),
         default_on: true,
     },
     Kind {
+        id: "woodland_mansions",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:woodland_mansions",
+        source: Source::Set {
+            set: "minecraft:woodland_mansions",
+            only: None,
+        },
         label: "Woodland mansions",
         glyph: "WM",
         color: rgb(0x9a6b3f),
         default_on: true,
     },
     Kind {
+        id: "ocean_monuments",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:ocean_monuments",
+        source: Source::Set {
+            set: "minecraft:ocean_monuments",
+            only: None,
+        },
         label: "Ocean monuments",
         glyph: "OM",
         color: rgb(0x4fd1c5),
         default_on: true,
     },
     Kind {
+        id: "pillager_outposts",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:pillager_outposts",
+        source: Source::Set {
+            set: "minecraft:pillager_outposts",
+            only: None,
+        },
         label: "Pillager outposts",
         glyph: "PO",
         color: rgb(0x9aa0a6),
         default_on: true,
     },
     Kind {
+        id: "desert_pyramids",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:desert_pyramids",
+        source: Source::Set {
+            set: "minecraft:desert_pyramids",
+            only: None,
+        },
         label: "Desert pyramids",
         glyph: "DP",
         color: rgb(0xf2d16b),
         default_on: false,
     },
     Kind {
+        id: "jungle_temples",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:jungle_temples",
+        source: Source::Set {
+            set: "minecraft:jungle_temples",
+            only: None,
+        },
         label: "Jungle temples",
         glyph: "JT",
         color: rgb(0x7bc96f),
         default_on: false,
     },
     Kind {
+        id: "swamp_huts",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:swamp_huts",
+        source: Source::Set {
+            set: "minecraft:swamp_huts",
+            only: None,
+        },
         label: "Swamp huts",
         glyph: "SH",
         color: rgb(0x6f8f5f),
         default_on: false,
     },
     Kind {
+        id: "igloos",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:igloos",
+        source: Source::Set {
+            set: "minecraft:igloos",
+            only: None,
+        },
         label: "Igloos",
         glyph: "IG",
         color: rgb(0xcfe8ff),
         default_on: false,
     },
     Kind {
+        id: "ancient_cities",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:ancient_cities",
+        source: Source::Set {
+            set: "minecraft:ancient_cities",
+            only: None,
+        },
         label: "Ancient cities",
         glyph: "AC",
         color: rgb(0x3aa7a0),
         default_on: false,
     },
     Kind {
+        id: "trial_chambers",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:trial_chambers",
+        source: Source::Set {
+            set: "minecraft:trial_chambers",
+            only: None,
+        },
         label: "Trial chambers",
         glyph: "TC",
         color: rgb(0xd9824a),
         default_on: false,
     },
     Kind {
+        id: "trail_ruins",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:trail_ruins",
+        source: Source::Set {
+            set: "minecraft:trail_ruins",
+            only: None,
+        },
         label: "Trail ruins",
         glyph: "TR",
         color: rgb(0xc98b6b),
         default_on: false,
     },
     Kind {
+        id: "abandoned_camps",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:abandoned_camp",
+        source: Source::Set {
+            set: "minecraft:abandoned_camp",
+            only: None,
+        },
         label: "Abandoned camps",
         glyph: "AB",
         color: rgb(0xb5a36a),
         default_on: false,
     },
     Kind {
+        id: "ruined_portals",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:ruined_portals",
+        source: Source::Set {
+            set: "minecraft:ruined_portals",
+            only: None,
+        },
         label: "Ruined portals",
         glyph: "RP",
         color: rgb(0xa77bd9),
         default_on: false,
     },
     Kind {
+        id: "shipwrecks",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:shipwrecks",
+        source: Source::Set {
+            set: "minecraft:shipwrecks",
+            only: None,
+        },
         label: "Shipwrecks",
         glyph: "SW",
         color: rgb(0x8c6d4f),
         default_on: false,
     },
     Kind {
+        id: "ocean_ruins",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:ocean_ruins",
+        source: Source::Set {
+            set: "minecraft:ocean_ruins",
+            only: None,
+        },
         label: "Ocean ruins",
         glyph: "OR",
         color: rgb(0x5d8fb3),
         default_on: false,
     },
     Kind {
+        id: "buried_treasures",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:buried_treasures",
+        source: Source::Set {
+            set: "minecraft:buried_treasures",
+            only: None,
+        },
         label: "Buried treasure",
         glyph: "BT",
         color: rgb(0xf5c542),
         default_on: false,
     },
     Kind {
+        id: "mineshafts",
         dimension: Dimension::Overworld,
-        only: None,
-        set: "minecraft:mineshafts",
+        source: Source::Set {
+            set: "minecraft:mineshafts",
+            only: None,
+        },
         label: "Mineshafts",
         glyph: "M",
         color: rgb(0x8f7a66),
         default_on: false,
     },
     Kind {
+        id: "fortresses",
         dimension: Dimension::Nether,
-        only: Some("minecraft:fortress"),
-        set: "minecraft:nether_complexes",
+        source: Source::Set {
+            set: "minecraft:nether_complexes",
+            only: Some("minecraft:fortress"),
+        },
         label: "Fortresses",
         glyph: "F",
         color: rgb(0xd9534f),
         default_on: true,
     },
     Kind {
+        id: "bastions",
         dimension: Dimension::Nether,
-        only: Some("minecraft:bastion"),
-        set: "minecraft:nether_complexes",
+        source: Source::Set {
+            set: "minecraft:nether_complexes",
+            only: Some("minecraft:bastion"),
+        },
         label: "Bastions",
         glyph: "B",
         color: rgb(0x8c8c96),
         default_on: true,
     },
     Kind {
+        id: "nether_fossils",
         dimension: Dimension::Nether,
-        only: None,
-        set: "minecraft:nether_fossils",
+        source: Source::Set {
+            set: "minecraft:nether_fossils",
+            only: None,
+        },
         label: "Nether fossils",
         glyph: "NF",
         color: rgb(0xe8e0c8),
         default_on: false,
     },
     Kind {
+        id: "nether_ruined_portals",
         dimension: Dimension::Nether,
-        only: None,
-        set: "minecraft:ruined_portals",
+        source: Source::Set {
+            set: "minecraft:ruined_portals",
+            only: None,
+        },
         label: "Ruined portals",
         glyph: "RP",
         color: rgb(0xa77bd9),
         default_on: false,
     },
     Kind {
+        id: "end_cities",
         dimension: Dimension::End,
-        only: None,
-        set: "minecraft:end_cities",
+        source: Source::Set {
+            set: "minecraft:end_cities",
+            only: None,
+        },
         label: "End cities",
         glyph: "EC",
         color: rgb(0xd8c6f0),
@@ -283,27 +400,16 @@ pub fn set(name: &str) -> Option<&'static StructureSet> {
 /// Expected distance between two attempts of a random-spread set, in
 /// blocks (`None` for strongholds).
 pub fn spacing_blocks(kind: usize) -> Option<f64> {
-    let StructurePlacement::RandomSpread(p) = &set(KINDS[kind].set)?.placement else {
+    let StructurePlacement::RandomSpread(p) = &KINDS[kind].select(false)?.set.placement else {
         return None;
     };
     Some(p.spacing as f64 * 16.0 / f64::from(p.frequency).sqrt())
 }
 
-/// The structures of layer `kind` that count, or `None` for layers that
-/// are not a structure set (the spawn). `ship_only` keeps end cities with a
-/// ship.
-pub fn select(kind: usize, ship_only: bool) -> Option<SetFilter> {
-    Some(SetFilter {
-        set: set(KINDS[kind].set)?,
-        only: KINDS[kind].only,
-        ship_only,
-    })
-}
-
 /// The markers of `kind` whose chunk lies in `rect`: the structures that
 /// generate.
 pub fn markers(kind: usize, rect: ChunkRect, generator: &StructureGenerator) -> Vec<Marker> {
-    let Some(select) = select(kind, false) else {
+    let Some(select) = KINDS[kind].select(false) else {
         return Vec::new();
     };
     generator
@@ -553,7 +659,7 @@ impl Strongholds {
         thread::Builder::new()
             .name("strongholds".into())
             .spawn(move || {
-                let positions = set(STRONGHOLDS)
+                let positions = set("minecraft:strongholds")
                     .and_then(|s| s.concentric_rings())
                     .map(|rings| ring_positions(seed, &rings, &OverworldBiomeSource::new(seed)))
                     .unwrap_or_default();

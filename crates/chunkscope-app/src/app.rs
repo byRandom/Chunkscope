@@ -12,10 +12,11 @@ use mc_core::biome::Biome;
 use mc_core::{is_slime_chunk, parse_seed};
 
 use crate::biome_colors;
+use crate::finder_ui::FinderUi;
 use crate::icons::{self, Icon};
+use crate::settings::{self, Settings};
 use crate::structures::{
-    self, BLOCK_CHUNKS, BlockKey, KINDS, Marker, SPAWN, STRONGHOLDS, Spawn, Strongholds,
-    StructureCache,
+    self, BLOCK_CHUNKS, BlockKey, KINDS, Marker, Source, Spawn, Strongholds, StructureCache,
 };
 use crate::theme::{
     self, ACCENT, ACCENT_DIM, BG, BORDER, FIELD, ON_ACCENT, PANEL, TEXT, TEXT_WEAK,
@@ -73,26 +74,36 @@ pub struct ChunkscopeApp {
 impl ChunkscopeApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         theme::apply(&cc.egui_ctx);
-        let seed_text = "Chunkscope".to_owned();
+        let saved: Settings = cc
+            .storage
+            .and_then(|s| eframe::get_value(s, settings::KEY))
+            .unwrap_or_default();
+        let seed_text = saved.seed_text.clone();
         let seed = parse_seed(&seed_text).unwrap_or(0);
+        let dimension = saved.dimension();
+        let finite = |v: f64| if v.is_finite() { v } else { 0.0 };
         Self {
             tab: Tab::World,
             seed_text,
             seed,
-            y: 64,
-            center: (0.0, 0.0),
-            zoom: 0.25,
-            show_biomes: true,
-            show_slime: false,
-            show_grid: true,
-            kinds_on: KINDS.iter().map(|k| k.default_on).collect(),
+            y: saved.y.clamp(-64, 319),
+            center: (finite(saved.center.0), finite(saved.center.1)),
+            zoom: if saved.zoom.is_finite() {
+                saved.zoom.clamp(MIN_ZOOM, MAX_ZOOM)
+            } else {
+                Settings::default().zoom
+            },
+            show_biomes: saved.show_biomes,
+            show_slime: saved.show_slime,
+            show_grid: saved.show_grid,
+            kinds_on: saved.layers_on(),
             tiles: TileCache::new(&cc.egui_ctx),
             strongholds: Strongholds::new(seed, &cc.egui_ctx),
             spawn: Spawn::new(seed, &cc.egui_ctx),
-            finder: Default::default(),
+            finder: FinderUi::from_settings(&saved.finder),
             markers: StructureCache::new(&cc.egui_ctx),
-            dimension: Dimension::Overworld,
-            source: BiomeSource::new(Dimension::Overworld, seed),
+            dimension,
+            source: BiomeSource::new(dimension, seed),
             hover: None,
             hover_biome: None,
             hover_marker: None,
@@ -101,6 +112,30 @@ impl ChunkscopeApp {
             toast: None,
             menu_at: None,
         }
+    }
+
+    /// What to remember until the next run.
+    fn settings(&self) -> Settings {
+        // The seed on the map, even if the field holds unfinished text.
+        let seed_text = if parse_seed(&self.seed_text) == Some(self.seed) {
+            self.seed_text.clone()
+        } else {
+            self.seed.to_string()
+        };
+        let mut s = Settings {
+            seed_text,
+            dimension: self.dimension.id().to_owned(),
+            center: self.center,
+            zoom: self.zoom,
+            y: self.y,
+            show_biomes: self.show_biomes,
+            show_slime: self.show_slime,
+            show_grid: self.show_grid,
+            finder: self.finder.settings(),
+            ..Settings::default()
+        };
+        s.set_layers_on(&self.kinds_on);
+        s
     }
 
     fn set_seed(&mut self, seed: i64, ctx: &egui::Context) {
@@ -132,6 +167,10 @@ impl ChunkscopeApp {
 }
 
 impl eframe::App for ChunkscopeApp {
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, settings::KEY, &self.settings());
+    }
+
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         self.tiles.receive(&ctx);
@@ -385,7 +424,7 @@ impl ChunkscopeApp {
                     // A layer too dense for this zoom is not drawn: say so, and
                     // from which zoom it shows.
                     let min_zoom = structures::spacing_blocks(i).map(|s| MARKER_SPACING_PX / s);
-                    let note = if kind.set == SPAWN {
+                    let note = if kind.is_spawn() {
                         Some("estimate".to_owned())
                     } else if let Some(z) = min_zoom
                         && self.kinds_on[i]
@@ -470,7 +509,7 @@ impl ChunkscopeApp {
                         ui.label(RichText::new(singular(kind.label)).color(TEXT).strong());
                     });
                     xz_row(ui, ("X", &m.x.to_string()), ("Z", &m.z.to_string()));
-                    if kind.set == SPAWN {
+                    if kind.is_spawn() {
                         if let Some(((ox, oz), (sx, sy, sz))) = self.spawn.get() {
                             theme::field_label(ui, "Estimated spawn block");
                             field_box(ui, &format!("{sx}, {sy}, {sz}"));
@@ -795,11 +834,7 @@ impl ChunkscopeApp {
         let mut visible: Vec<Marker> = Vec::new();
         let mut wanted: Vec<BlockKey> = Vec::new();
         for (kind, info) in KINDS.iter().enumerate() {
-            if !self.kinds_on[kind]
-                || info.dimension != self.dimension
-                || info.set == STRONGHOLDS
-                || info.set == SPAWN
-            {
+            if !self.kinds_on[kind] || info.dimension != self.dimension || !info.searchable() {
                 continue;
             }
             if structures::spacing_blocks(kind).is_none_or(|s| s < min_spacing) {
@@ -827,7 +862,7 @@ impl ChunkscopeApp {
             d(a).total_cmp(&d(b))
         });
         self.markers.request(&wanted);
-        if let Some(i) = KINDS.iter().position(|k| k.set == SPAWN)
+        if let Some(i) = KINDS.iter().position(|k| k.source == Source::Spawn)
             && self.dimension == Dimension::Overworld
             && self.kinds_on[i]
             && let Some((_, (x, y, z))) = self.spawn.get()
@@ -840,7 +875,7 @@ impl ChunkscopeApp {
                 ship: None,
             });
         }
-        if let Some(i) = KINDS.iter().position(|k| k.set == STRONGHOLDS)
+        if let Some(i) = KINDS.iter().position(|k| k.source == Source::Strongholds)
             && self.dimension == Dimension::Overworld
             && self.kinds_on[i]
         {
@@ -893,11 +928,11 @@ impl ChunkscopeApp {
             let p = self.to_screen(rect, m.x as f64, m.z as f64);
             let kind = &KINDS[m.kind];
             let name = match m.start {
-                _ if kind.set == SPAWN => kind.label.to_owned(),
+                _ if kind.is_spawn() => kind.label.to_owned(),
                 Some((structure, ..)) => biome_colors::display_name(structure),
                 None => singular(kind.label),
             };
-            let estimate = if kind.set == SPAWN { " (estimate)" } else { "" };
+            let estimate = if kind.is_spawn() { " (estimate)" } else { "" };
             let ship = if m.ship == Some(true) {
                 " with a ship"
             } else {
