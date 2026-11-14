@@ -4,10 +4,9 @@
 
 use std::collections::BTreeMap;
 
-use mc_core::biome::OverworldBiomeSource;
-use mc_core::structure::validate::{Outcome, Structure, StructureGenerator};
+use mc_core::structure::validate::{Outcome, Structure};
 use mc_core::structure::{STRUCTURE_SETS, StructureSets};
-use mc_core::terrain::OverworldTerrain;
+use mc_core::world::{Dimension, World};
 
 fn fixture() -> String {
     std::fs::read_to_string(concat!(
@@ -36,7 +35,7 @@ fn trace(outcome: &Outcome) -> Vec<String> {
 #[test]
 fn structure_attempts_match_the_game() {
     let text = fixture();
-    let mut current: Option<(i64, OverworldBiomeSource, OverworldTerrain)> = None;
+    let mut current: Option<World> = None;
     // set -> (checked, mismatches)
     let mut stats: BTreeMap<String, (u32, Vec<String>)> = BTreeMap::new();
     for line in text.lines() {
@@ -46,15 +45,10 @@ fn structure_attempts_match_the_game() {
         let cx: i32 = parts.next().unwrap().parse().unwrap();
         let cz: i32 = parts.next().unwrap().parse().unwrap();
         let expected: Vec<&str> = parts.collect();
-        if current.as_ref().is_none_or(|c| c.0 != seed) {
-            current = Some((
-                seed,
-                OverworldBiomeSource::new(seed),
-                OverworldTerrain::new(seed),
-            ));
+        if current.as_ref().is_none_or(|c| c.seed() != seed) {
+            current = Some(World::new(seed, Dimension::Overworld));
         }
-        let (_, biomes, terrain) = current.as_ref().unwrap();
-        let generator = StructureGenerator::new(seed, biomes, terrain);
+        let generator = current.as_ref().unwrap().structures();
         let set = STRUCTURE_SETS.find_set(set_name).expect("known set");
         assert_eq!(
             set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz),
@@ -91,20 +85,15 @@ fn generation_points_match_the_game() {
     ))
     .expect("run parity/game-oracle/run.sh");
     let mut failed = false;
-    let mut sources: Option<(i64, OverworldBiomeSource, OverworldTerrain)> = None;
+    let mut sources: Option<World> = None;
     for line in text.lines() {
         let mut parts = line.split(' ');
         let seed: i64 = parts.next().unwrap().parse().unwrap();
         let name = format!("minecraft:{}", parts.next().unwrap());
-        if sources.as_ref().is_none_or(|s| s.0 != seed) {
-            sources = Some((
-                seed,
-                OverworldBiomeSource::new(seed),
-                OverworldTerrain::new(seed),
-            ));
+        if sources.as_ref().is_none_or(|s| s.seed() != seed) {
+            sources = Some(World::new(seed, Dimension::Overworld));
         }
-        let (_, biomes, terrain) = sources.as_ref().unwrap();
-        let generator = StructureGenerator::new(seed, biomes, terrain);
+        let generator = sources.as_ref().unwrap().structures();
         let structure = Structure::find(&name).expect("known structure");
         let (mut checked, mut mismatches) = (0, Vec::new());
         for entry in parts {
@@ -135,8 +124,6 @@ fn generation_points_match_the_game() {
 /// Nether biomes; fossils need the Nether terrain.
 #[test]
 fn nether_structures_match_the_game() {
-    use mc_core::biome::NetherBiomeSource;
-    use mc_core::terrain::NetherTerrain;
     let read = |name: &str| {
         std::fs::read_to_string(format!(
             "{}/../../parity/fixtures/game/{name}",
@@ -145,7 +132,7 @@ fn nether_structures_match_the_game() {
         .expect("run parity/game-oracle/run.sh")
     };
     let mut failed = false;
-    let mut source: Option<(i64, NetherBiomeSource, NetherTerrain)> = None;
+    let mut source: Option<World> = None;
     let mut stats: BTreeMap<String, (u32, Vec<String>)> = BTreeMap::new();
     for line in read("nether_structures.txt").lines() {
         let mut parts = line.split(' ');
@@ -154,11 +141,10 @@ fn nether_structures_match_the_game() {
         let cx: i32 = parts.next().unwrap().parse().unwrap();
         let cz: i32 = parts.next().unwrap().parse().unwrap();
         let expected: Vec<&str> = parts.collect();
-        if source.as_ref().is_none_or(|s| s.0 != seed) {
-            source = Some((seed, NetherBiomeSource::new(seed), NetherTerrain::new(seed)));
+        if source.as_ref().is_none_or(|s| s.seed() != seed) {
+            source = Some(World::new(seed, Dimension::Nether));
         }
-        let (_, biomes, terrain) = source.as_ref().unwrap();
-        let generator = StructureGenerator::nether(seed, biomes, terrain);
+        let generator = source.as_ref().unwrap().structures();
         let set = STRUCTURE_SETS.find_set(set_name).expect("known set");
         assert_eq!(
             set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz),
@@ -183,9 +169,8 @@ fn nether_structures_match_the_game() {
         let mut parts = line.split(' ');
         let seed: i64 = parts.next().unwrap().parse().unwrap();
         let name = format!("minecraft:{}", parts.next().unwrap());
-        let biomes = NetherBiomeSource::new(seed);
-        let terrain = NetherTerrain::new(seed);
-        let generator = StructureGenerator::nether(seed, &biomes, &terrain);
+        let world = World::new(seed, Dimension::Nether);
+        let generator = world.structures();
         let structure = Structure::find(&name).expect("known structure");
         let (mut checked, mut mismatches) = (0, Vec::new());
         for entry in parts {

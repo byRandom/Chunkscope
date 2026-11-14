@@ -1,11 +1,9 @@
 //! The area scan against brute force: every chunk of a rectangle checked
 //! on its own, without the scan's region arithmetic.
 
-use mc_core::biome::OverworldBiomeSource;
 use mc_core::structure::scan::{Candidate, ChunkRect, SetFilter, candidates};
-use mc_core::structure::validate::StructureGenerator;
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSets};
-use mc_core::terrain::OverworldTerrain;
+use mc_core::world::{Dimension, World};
 
 /// Rectangles that straddle region edges and the origin, thin ones and a
 /// single chunk.
@@ -110,9 +108,8 @@ fn around_block_covers_the_radius() {
 #[test]
 fn hits_are_the_generating_candidates() {
     let seed = 42;
-    let biomes = OverworldBiomeSource::new(seed);
-    let terrain = OverworldTerrain::new(seed);
-    let generator = StructureGenerator::new(seed, &biomes, &terrain);
+    let world = World::new(seed, Dimension::Overworld);
+    let generator = world.structures();
     let rect = ChunkRect {
         x0: -64,
         z0: -64,

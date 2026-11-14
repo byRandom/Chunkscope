@@ -8,9 +8,7 @@ use std::time::Instant;
 
 use eframe::egui::{self, RichText};
 use mc_core::biome::Biome;
-use mc_core::finder::{
-    Center, Dimension as FinderDimension, Match, Query, SearchState, Seeds, StructureFilter, search,
-};
+use mc_core::finder::{Center, Match, Query, SearchState, Seeds, StructureFilter, search};
 use mc_core::parse_seed;
 
 use crate::app::{accent_button, fit_label, icon_button, panel_header, section};
@@ -144,11 +142,7 @@ impl FinderUi {
                 select: KINDS[f.kind].select(f.ship)?,
                 radius: f.radius,
                 min_count: f.count,
-                dimension: match kind.dimension {
-                    Dimension::Overworld => FinderDimension::Overworld,
-                    Dimension::Nether => FinderDimension::Nether,
-                    Dimension::End => FinderDimension::End,
-                },
+                dimension: kind.dimension,
             });
         }
         Some(Query {
@@ -410,9 +404,9 @@ impl FinderUi {
                 .iter()
                 .map(|f| {
                     let dimension = match f.dimension {
-                        FinderDimension::Overworld => "",
-                        FinderDimension::Nether => " (Nether)",
-                        FinderDimension::End => " (End)",
+                        Dimension::Overworld => "",
+                        Dimension::Nether => " (Nether)",
+                        Dimension::End => " (End)",
                     };
                     format!(
                         "{}{dimension} {:.0}m",

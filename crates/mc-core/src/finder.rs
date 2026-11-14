@@ -10,14 +10,12 @@
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-use crate::biome::{
-    Biome, EndBiomeSource, NetherBiomeSource, OverworldBiomeSource, OverworldClimate,
-};
+use crate::biome::{Biome, OverworldClimate};
 use crate::spawn::spawn_origin;
 use crate::structure::StructureSet;
 use crate::structure::scan::{Candidate, ChunkRect, SetFilter, candidates};
-use crate::structure::validate::StructureGenerator;
-use crate::terrain::{EndTerrain, Heightmap, NetherTerrain, OverworldTerrain};
+use crate::terrain::Heightmap;
+use crate::world::World;
 
 /// Where distances are measured from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -28,16 +26,9 @@ pub enum Center {
     Zero,
 }
 
-/// The dimension a structure filter searches.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub enum Dimension {
-    #[default]
-    Overworld,
-    /// Measured from the Nether's (0, 0), whatever the query's center.
-    Nether,
-    /// Measured from the End's (0, 0), whatever the query's center.
-    End,
-}
+/// The dimension a structure filter searches. Nether and End filters are
+/// measured from (0, 0) in their dimension, whatever the query's center.
+pub use crate::world::Dimension;
 
 /// At least `min_count` structures of a set within `radius` blocks of the
 /// center (measured to the position `/locate` reports).
@@ -127,41 +118,31 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
         }
         near.push(a);
     }
-    let biomes = OverworldBiomeSource::new(seed);
-    let terrain = OverworldTerrain::new(seed);
+    let overworld = World::new(seed, Dimension::Overworld);
     // The biome where a player stands: on top of the terrain.
-    let surface = terrain.base_height(center.0, center.1, Heightmap::WorldSurface);
-    let center_biome = biomes.biome_at_block(center.0, surface, center.1);
+    let surface = overworld.base_height(center.0, center.1, Heightmap::WorldSurface);
+    let center_biome = overworld.biome_at_block(center.0, surface, center.1);
     if let Some(allowed) = &query.center_biomes
         && !allowed.contains(&center_biome)
     {
         return None;
     }
-    // Full pass: the structures that really generate.
-    let generator = StructureGenerator::new(seed, &biomes, &terrain);
-    let nether = query
-        .structures
-        .iter()
-        .any(|f| f.dimension == Dimension::Nether)
-        .then(|| (NetherBiomeSource::new(seed), NetherTerrain::new(seed)));
-    let nether_generator = nether
-        .as_ref()
-        .map(|(b, t)| StructureGenerator::nether(seed, b, t));
-    let end = query
-        .structures
-        .iter()
-        .any(|f| f.dimension == Dimension::End)
-        .then(|| (EndBiomeSource::new(seed), EndTerrain::new(seed)));
-    let end_generator = end
-        .as_ref()
-        .map(|(b, t)| StructureGenerator::end(seed, b, t));
+    // Full pass: the structures that really generate. The other dimensions
+    // are built only if a filter needs them.
+    let others: Vec<World> = [Dimension::Nether, Dimension::End]
+        .into_iter()
+        .filter(|&d| query.structures.iter().any(|f| f.dimension == d))
+        .map(|d| World::new(seed, d))
+        .collect();
+    let world = |d: Dimension| {
+        std::iter::once(&overworld)
+            .chain(&others)
+            .find(|w| w.dimension() == d)
+            .expect("built for every filter's dimension")
+    };
     let mut found = Vec::new();
     for (f, near) in query.structures.iter().zip(near) {
-        let generator = match f.dimension {
-            Dimension::Overworld => &generator,
-            Dimension::Nether => nether_generator.as_ref().expect("built for Nether filters"),
-            Dimension::End => end_generator.as_ref().expect("built for End filters"),
-        };
+        let generator = world(f.dimension).structures();
         let mut count = 0;
         for (candidate, distance) in near {
             let Some(hit) = generator.hit(&f.select, candidate) else {

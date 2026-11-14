@@ -8,7 +8,10 @@ Names in the code follow these.
 - **Seed**: the 64-bit number a world is generated from. Text seeds are
   hashed like the game does (`parse_seed`).
 - **Dimension**: the Overworld, the Nether or the End. Each has its own
-  biome source, terrain and structure sets.
+  biome source, terrain, level heights and structure sets.
+- **World**: one dimension of one seed (`mc_core::world::World`): its biome
+  source, terrain, level heights, strongholds and structure validation
+  behind one interface, so callers do not switch on the dimension.
 - **Biome source**: what gives the biome at a position (by climate in the
   Overworld and the Nether, by island density in the End).
 - **Terrain**: the blocks of a column before features: final density,

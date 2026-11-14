@@ -12,10 +12,10 @@ use std::thread;
 use eframe::egui::{self, Color32};
 use mc_core::biome::OverworldBiomeSource;
 use mc_core::structure::scan::{ChunkRect, SetFilter};
-use mc_core::structure::stronghold::ring_positions;
 use mc_core::structure::validate::StructureGenerator;
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSet, StructureSets};
 use mc_core::terrain::OverworldTerrain;
+use mc_core::world::World;
 
 use crate::dimension::Dimension;
 
@@ -531,31 +531,9 @@ impl StructureCache {
     }
 }
 
-/// The sources structure validation needs, for one seed.
-struct World {
-    overworld: OverworldBiomeSource,
-    terrain: OverworldTerrain,
-    nether: mc_core::biome::NetherBiomeSource,
-    nether_terrain: mc_core::terrain::NetherTerrain,
-    end: mc_core::biome::EndBiomeSource,
-    end_terrain: mc_core::terrain::EndTerrain,
-}
-
-impl World {
-    fn new(seed: i64) -> Self {
-        Self {
-            overworld: OverworldBiomeSource::new(seed),
-            terrain: OverworldTerrain::new(seed),
-            nether: mc_core::biome::NetherBiomeSource::new(seed),
-            nether_terrain: mc_core::terrain::NetherTerrain::new(seed),
-            end: mc_core::biome::EndBiomeSource::new(seed),
-            end_terrain: mc_core::terrain::EndTerrain::new(seed),
-        }
-    }
-}
-
 fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egui::Context) {
-    let mut world: Option<(i64, World)> = None;
+    // One world per dimension of the current seed, built when first needed.
+    let mut worlds: Vec<World> = Vec::new();
     loop {
         let key = {
             let mut q = shared.queue.lock().expect("structure queue");
@@ -567,15 +545,15 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egu
                 q = shared.wake.wait(q).expect("structure queue");
             }
         };
-        if world.as_ref().is_none_or(|w| w.0 != key.seed) {
-            world = Some((key.seed, World::new(key.seed)));
+        let dimension = KINDS[key.kind].dimension;
+        worlds.retain(|w| w.seed() == key.seed);
+        if !worlds.iter().any(|w| w.dimension() == dimension) {
+            worlds.push(World::new(key.seed, dimension));
         }
-        let (_, w) = world.as_ref().expect("world just set");
-        let generator = match KINDS[key.kind].dimension {
-            Dimension::Overworld => StructureGenerator::new(key.seed, &w.overworld, &w.terrain),
-            Dimension::Nether => StructureGenerator::nether(key.seed, &w.nether, &w.nether_terrain),
-            Dimension::End => StructureGenerator::end(key.seed, &w.end, &w.end_terrain),
-        };
+        let world = worlds
+            .iter()
+            .find(|w| w.dimension() == dimension)
+            .expect("world just built");
         let c = (key.bx * BLOCK_CHUNKS, key.bz * BLOCK_CHUNKS);
         let rect = ChunkRect {
             x0: c.0,
@@ -583,7 +561,7 @@ fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egu
             x1: c.0 + BLOCK_CHUNKS - 1,
             z1: c.1 + BLOCK_CHUNKS - 1,
         };
-        let found = markers(key.kind, rect, &generator);
+        let found = markers(key.kind, rect, &world.structures());
         let closed = tx.send((key, found)).is_err();
         shared
             .queue
@@ -659,10 +637,7 @@ impl Strongholds {
         thread::Builder::new()
             .name("strongholds".into())
             .spawn(move || {
-                let positions = set("minecraft:strongholds")
-                    .and_then(|s| s.concentric_rings())
-                    .map(|rings| ring_positions(seed, &rings, &OverworldBiomeSource::new(seed)))
-                    .unwrap_or_default();
+                let positions = World::new(seed, Dimension::Overworld).strongholds();
                 let _ = tx.send(positions);
                 ctx.request_repaint();
             })

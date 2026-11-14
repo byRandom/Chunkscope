@@ -3,10 +3,9 @@
 //! really generate (`end_city_structures.txt`). Pieces are compared whole:
 //! template, rotation, gen depth and bounding box, in the game's order.
 
-use mc_core::biome::EndBiomeSource;
 use mc_core::structure::end_city::{CityPiece, end_city_has_ship, end_city_pieces};
-use mc_core::structure::validate::{Structure, StructureGenerator};
-use mc_core::terrain::EndTerrain;
+use mc_core::structure::validate::Structure;
+use mc_core::world::{Dimension, World};
 
 fn fixture(name: &str) -> String {
     std::fs::read_to_string(format!(
@@ -67,8 +66,9 @@ fn generated_end_cities_match_the_game() {
             .map(|v| v.parse().unwrap())
             .collect();
         let expected: Vec<&str> = parts.collect();
-        let (biomes, terrain) = (EndBiomeSource::new(seed), EndTerrain::new(seed));
-        let point = StructureGenerator::end(seed, &biomes, &terrain)
+        let world = World::new(seed, Dimension::End);
+        let point = world
+            .structures()
             .try_structure(city, cx, cz)
             .expect("the city generates");
         assert_eq!([point.0, point.1, point.2], start[..]);

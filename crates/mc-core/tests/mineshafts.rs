@@ -2,11 +2,10 @@
 //! (`parity/fixtures/game/mineshaft_pieces.txt`) and their generation
 //! points, badlands ones included (`mineshaft_points.txt`).
 
-use mc_core::biome::OverworldBiomeSource;
 use mc_core::random::{LegacyRandomSource, RandomSource, WorldgenRandom};
 use mc_core::structure::mineshaft::{MineshaftPiece, PieceKind, mineshaft_pieces};
-use mc_core::structure::validate::{Structure, StructureGenerator};
-use mc_core::terrain::OverworldTerrain;
+use mc_core::structure::validate::Structure;
+use mc_core::world::{Dimension, World};
 
 fn fixture(name: &str) -> String {
     std::fs::read_to_string(format!(
@@ -68,21 +67,16 @@ fn pieces_match_the_game() {
 #[test]
 fn generation_points_match_the_game() {
     let text = fixture("mineshaft_points.txt");
-    let mut sources: Option<(i64, OverworldBiomeSource, OverworldTerrain)> = None;
+    let mut sources: Option<World> = None;
     let (mut checked, mut generated) = (0, 0);
     for line in text.lines() {
         let mut parts = line.split(' ');
         let seed: i64 = parts.next().unwrap().parse().unwrap();
         let name = format!("minecraft:{}", parts.next().unwrap());
-        if sources.as_ref().is_none_or(|s| s.0 != seed) {
-            sources = Some((
-                seed,
-                OverworldBiomeSource::new(seed),
-                OverworldTerrain::new(seed),
-            ));
+        if sources.as_ref().is_none_or(|s| s.seed() != seed) {
+            sources = Some(World::new(seed, Dimension::Overworld));
         }
-        let (_, biomes, terrain) = sources.as_ref().unwrap();
-        let generator = StructureGenerator::new(seed, biomes, terrain);
+        let generator = sources.as_ref().unwrap().structures();
         let structure = Structure::find(&name).unwrap();
         for entry in parts {
             let (chunk, want) = entry.split_once(':').unwrap();

@@ -1,12 +1,10 @@
 //! The seed finder against a direct computation: every structure that
 //! generates near the center, found without the finder's shortcuts.
 
-use mc_core::biome::OverworldBiomeSource;
 use mc_core::finder::{Center, Query, StructureFilter, check};
 use mc_core::structure::scan::SetFilter;
-use mc_core::structure::validate::StructureGenerator;
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSets};
-use mc_core::terrain::OverworldTerrain;
+use mc_core::world::{Dimension, World};
 
 /// Structures of `set` that generate with their locate position within
 /// `radius` of (0, 0), by scanning every region of a generous square.
@@ -15,9 +13,8 @@ fn direct(seed: i64, set_name: &str, radius: i32) -> usize {
     let StructurePlacement::RandomSpread(p) = &set.placement else {
         unreachable!()
     };
-    let biomes = OverworldBiomeSource::new(seed);
-    let terrain = OverworldTerrain::new(seed);
-    let generator = StructureGenerator::new(seed, &biomes, &terrain);
+    let world = World::new(seed, Dimension::Overworld);
+    let generator = world.structures();
     let span = (radius / 16) / p.spacing + 2;
     let mut n = 0;
     for rz in -span..=span {
@@ -66,9 +63,7 @@ fn finder_agrees_with_a_direct_scan() {
 /// center at the spawn, and split by structure (fortresses, not bastions).
 #[test]
 fn nether_filters_agree_with_a_direct_scan() {
-    use mc_core::biome::NetherBiomeSource;
     use mc_core::finder::Dimension;
-    use mc_core::terrain::NetherTerrain;
 
     let set = STRUCTURE_SETS
         .find_set("minecraft:nether_complexes")
@@ -93,9 +88,8 @@ fn nether_filters_agree_with_a_direct_scan() {
     };
     let mut matches = 0;
     for seed in 0..40i64 {
-        let biomes = NetherBiomeSource::new(seed);
-        let terrain = NetherTerrain::new(seed);
-        let generator = StructureGenerator::nether(seed, &biomes, &terrain);
+        let world = World::new(seed, Dimension::Nether);
+        let generator = world.structures();
         let mut fortresses = 0;
         for rz in -3..=3 {
             for rx in -3..=3 {
@@ -130,9 +124,7 @@ fn nether_filters_agree_with_a_direct_scan() {
 /// End filters, measured from the End's (0, 0).
 #[test]
 fn end_filters_agree_with_a_direct_scan() {
-    use mc_core::biome::EndBiomeSource;
     use mc_core::finder::Dimension;
-    use mc_core::terrain::EndTerrain;
 
     let set = STRUCTURE_SETS.find_set("minecraft:end_cities").unwrap();
     let StructurePlacement::RandomSpread(p) = &set.placement else {
@@ -151,9 +143,8 @@ fn end_filters_agree_with_a_direct_scan() {
     };
     let mut matches = 0;
     for seed in 0..16i64 {
-        let biomes = EndBiomeSource::new(seed);
-        let terrain = EndTerrain::new(seed);
-        let generator = StructureGenerator::end(seed, &biomes, &terrain);
+        let world = World::new(seed, Dimension::End);
+        let generator = world.structures();
         let mut cities = 0;
         for rz in -6..=6 {
             for rx in -6..=6 {
