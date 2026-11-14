@@ -229,7 +229,7 @@ fn end_cities_match_the_game() {
             let (chunk, expected) = entry.split_once(':').unwrap();
             let (cx, cz) = chunk.split_once(',').unwrap();
             let (cx, cz): (i32, i32) = (cx.parse().unwrap(), cz.parse().unwrap());
-            let got = point(generator.try_structure(city, cx, cz).expect("ported"));
+            let got = point(generator.try_structure(city, cx, cz));
             points += 1;
             if got != expected {
                 mismatches.push(format!("point {cx},{cz}: expected {expected}, got {got}"));

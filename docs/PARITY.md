@@ -13,7 +13,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every overworld structure but mineshafts), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions, End biomes, terrain (simplex noise, islands) and end cities | In progress |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every structure, mineshafts included), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions, End biomes, terrain (simplex noise, islands) and end cities | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
 | 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
 
@@ -296,8 +296,25 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   fixture can catch: the `genDepth = -1` of the last `bridge_end` (always
   overwritten before it is read) and of the first `bridge_piece` (read only
   if a house hits the start of its own bridge).
-- Not ported yet: mineshafts (their height comes from their pieces). The
-  app shows them as possible.
+- **Mineshafts get their height from their pieces.**
+  `MineshaftStructure.findGenerationPoint` draws one `nextDouble`, then
+  grows the pieces from a room at the chunk's (2, 2) block, y 50:
+  corridors, crossings and stairs, depth first, up to depth 8 and 80 blocks
+  from the room (measured from its minimum corner, on x and z only). A
+  candidate box that hits any earlier piece is dropped, or for corridors
+  shortened. Corridors use random numbers in their constructor (rails, and
+  spider webs only without rails), so those must be drawn even though they
+  only matter for decoration. Then the whole mineshaft moves: normal ones
+  to a random height below sea level minus 10 (`moveBelowSeaLevel`, from
+  the pieces' y span), badlands ones so that the box's *center* (not its
+  top) lands between sea level and the surface height at that center. The
+  biome is checked at the chunk's middle x, minimum z, and y 50 plus that
+  move. Fixtures: 800 whole piece lists (101,148 pieces) with the next
+  random number after them, 2,160 generation points of both types, and the
+  117 mineshaft attempts of `structures.txt`. One equivalent mutation:
+  `h < seaLevel` instead of `h <= seaLevel` for badlands mineshafts, since
+  at `h == seaLevel` the random height is always sea level and the random
+  is not used again.
 - Two checks cannot be told apart by any vanilla data, so no fixture
   covers them: the bottom of the column pre-check (y = -65 instead of -64),
   and the trial chambers' dimension padding (they start at y = -40 or

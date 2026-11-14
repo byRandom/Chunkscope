@@ -130,7 +130,7 @@ fn hits_are_the_generating_candidates() {
     assert!(!want.is_empty());
     assert_eq!(hits.len(), want.len());
     for (hit, (c, name, start)) in hits.iter().zip(&want) {
-        let g = hit.generated.expect("villages are validated");
+        let g = hit.generated;
         assert_eq!(
             (hit.candidate, g.name, g.start, g.ship),
             (*c, *name, *start, None)

@@ -17,7 +17,7 @@ sampling and biome lookup are all verified against the real JDK and the
 real game classes. Structure positions match too: where each structure set
 attempts to generate, and the biome and terrain checks that decide whether
 a structure really generates there (every structure in the three
-dimensions except mineshafts).
+dimensions, mineshafts included).
 
 Target: Minecraft **26.3** (Java 25).
 
@@ -59,7 +59,7 @@ Bedrock Edition is out of scope for now.
 - [x] Overworld biomes (climate sampling, terrain offset spline, biome R-tree)
 - [x] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
 - [x] End: biomes, islands, end cities (0.5), and whether each end city has a ship (0.5.1)
-- [ ] Mineshafts, no "possible" markers left, saved settings (0.6)
+- [ ] Mineshafts and no "possible" markers left (done); saved settings (0.6)
 - [ ] Large-scale verification against the game (0.7)
 - [ ] Stable command line and formats, signed builds (0.8)
 - [ ] Large biomes and amplified presets
@@ -71,7 +71,7 @@ Bedrock Edition is out of scope for now.
   - [x] Overworld `final_density` (the game's compiled sampler tree)
   - [x] Aquifers
   - [x] Heightmaps (`getBaseHeight`: `WORLD_SURFACE_WG`, `OCEAN_FLOOR_WG`) and base block columns
-- [x] Structure validation (biome and terrain height), except mineshafts
+- [x] Structure validation (biome and terrain height), every structure
 - [x] World spawn: the climate origin (exact) and the spawn block (estimate)
 - [x] Seed finder with filters (structures near the spawn, biome at the spawn), in the app and on the command line
 - [ ] Map viewer GUI
@@ -101,8 +101,7 @@ cargo run --release -p chunkscope-app
 Drag to pan, scroll to zoom, click a marker to select it, right-click the map
 to copy a position or a `/tp` command. The **Finder** tab searches seeds for
 structures near the spawn; click a result to open it on the map. Structures are checked against biome
-and terrain like the game does; mineshafts are not checked yet and are marked
-as possible. In the End, the void between the islands is drawn darker (the
+and terrain like the game does. In the End, the void between the islands is drawn darker (the
 islands' shape comes from their density, so the edges are approximate). On
 Linux the app needs the usual X11 or Wayland libraries
 (for example `libxkbcommon-x11-0` on X11).

@@ -70,7 +70,6 @@ fn generated_end_cities_match_the_game() {
         let (biomes, terrain) = (EndBiomeSource::new(seed), EndTerrain::new(seed));
         let point = StructureGenerator::end(seed, &biomes, &terrain)
             .try_structure(city, cx, cz)
-            .expect("ported")
             .expect("the city generates");
         assert_eq!([point.0, point.1, point.2], start[..]);
         let got: Vec<String> = end_city_pieces(seed, cx, cz, [point.0, point.1, point.2])

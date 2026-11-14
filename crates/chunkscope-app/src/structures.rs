@@ -3,8 +3,7 @@
 //!
 //! Each set tries to place a structure at one chunk per region; whether it really
 //! generates there (and which structure of the set) is checked against
-//! biome and terrain like the game does, on background threads. Mineshafts
-//! are not validated yet: their attempts are shown as possible.
+//! biome and terrain like the game does, on background threads.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Condvar, Mutex, mpsc};
@@ -270,32 +269,11 @@ pub struct Marker {
     pub kind: usize,
     pub x: i32,
     pub z: i32,
-    /// `false` for attempts that are not validated yet (mineshafts): the
-    /// game may skip them.
-    pub exact: bool,
     /// The structure that generates (e.g. `minecraft:village_plains`) and
-    /// its start position, when validated.
+    /// its start position (`None` for strongholds).
     pub start: Option<(&'static str, i32, i32, i32)>,
     /// End cities: whether the city has a ship (an elytra).
     pub ship: Option<bool>,
-}
-
-/// Whether the structures of a layer are validated against biome and
-/// terrain (strongholds are exact too).
-pub fn validated(kind: usize) -> bool {
-    use mc_core::structure::validate::{Structure, StructureKind};
-    if KINDS[kind].set == SPAWN {
-        return false; // an estimate, see `Spawn`
-    }
-    let Some(set) = set(KINDS[kind].set) else {
-        return false;
-    };
-    match set.placement {
-        StructurePlacement::ConcentricRings { .. } => true,
-        StructurePlacement::RandomSpread(_) => set.structures.iter().all(|(name, _)| {
-            Structure::find(name).is_some_and(|s| s.kind != StructureKind::NotImplemented)
-        }),
-    }
 }
 
 pub fn set(name: &str) -> Option<&'static StructureSet> {
@@ -322,8 +300,8 @@ pub fn select(kind: usize, ship_only: bool) -> Option<SetFilter> {
     })
 }
 
-/// The markers of `kind` whose chunk lies in `rect`: structures that
-/// generate, plus candidates that cannot be validated yet.
+/// The markers of `kind` whose chunk lies in `rect`: the structures that
+/// generate.
 pub fn markers(kind: usize, rect: ChunkRect, generator: &StructureGenerator) -> Vec<Marker> {
     let Some(select) = select(kind, false) else {
         return Vec::new();
@@ -334,11 +312,13 @@ pub fn markers(kind: usize, rect: ChunkRect, generator: &StructureGenerator) -> 
             kind,
             x: hit.candidate.locate.0,
             z: hit.candidate.locate.1,
-            exact: hit.generated.is_some(),
-            start: hit
-                .generated
-                .map(|g| (g.name, g.start.0, g.start.1, g.start.2)),
-            ship: hit.generated.and_then(|g| g.ship),
+            start: Some((
+                hit.generated.name,
+                hit.generated.start.0,
+                hit.generated.start.1,
+                hit.generated.start.2,
+            )),
+            ship: hit.generated.ship,
         })
         .collect()
 }

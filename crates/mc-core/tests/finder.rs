@@ -55,7 +55,7 @@ fn finder_agrees_with_a_direct_scan() {
             if let Some(m) = got {
                 matches += 1;
                 assert_eq!(m.found.len(), min_count as usize);
-                assert!(m.found.iter().all(|f| f.exact && f.distance <= 400.0));
+                assert!(m.found.iter().all(|f| f.distance <= 400.0));
             }
         }
         assert!(matches > 0, "the test needs some matches");
