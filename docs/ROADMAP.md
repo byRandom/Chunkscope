@@ -86,7 +86,7 @@ the biomes and structures are exact.
 
 Done when: End biomes, the island terrain and end cities match the game.
 
-## 0.6: mineshafts, and no "possible" left
+## 0.6: mineshafts, and no "possible" left (done)
 
 1. **Mineshafts (done).** Their generation point is checked at the mineshaft's own
    height, which comes from generating its pieces (corridors, crossings,
@@ -98,7 +98,7 @@ Done when: End biomes, the island terrain and end cities match the game.
    map and in the finder is validated. Remove the "possible" state from the
    app, or keep it only for data the game itself does not decide from the
    seed.
-3. **Saved settings.** The app remembers the seed, view, open layers,
+3. **Saved settings (done).** The app remembers the seed, view, open layers,
    dimension and the finder's last query (eframe persistence, a versioned
    settings file).
 

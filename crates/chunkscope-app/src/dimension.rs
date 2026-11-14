@@ -15,6 +15,19 @@ pub enum Dimension {
 impl Dimension {
     pub const ALL: [Dimension; 3] = [Dimension::Overworld, Dimension::Nether, Dimension::End];
 
+    /// Stable name, kept in saved settings.
+    pub fn id(self) -> &'static str {
+        match self {
+            Dimension::Overworld => "overworld",
+            Dimension::Nether => "nether",
+            Dimension::End => "end",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Option<Dimension> {
+        Dimension::ALL.into_iter().find(|d| d.id() == id)
+    }
+
     pub fn label(self) -> &'static str {
         match self {
             Dimension::Overworld => "Overworld",

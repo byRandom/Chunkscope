@@ -17,7 +17,8 @@ use crate::app::{accent_button, fit_label, icon_button, panel_header, section};
 use crate::biome_colors;
 use crate::dimension::Dimension;
 use crate::icons::Icon;
-use crate::structures::{self, KINDS, SPAWN, STRONGHOLDS};
+use crate::settings::{FilterSettings, FinderSettings};
+use crate::structures::KINDS;
 use crate::theme::{self, TEXT, TEXT_WEAK};
 
 /// The finder stops collecting matches past this many.
@@ -58,8 +59,7 @@ pub struct FinderUi {
 
 /// Structure layers the finder can search (not the spawn, not strongholds).
 fn searchable(kind: usize) -> bool {
-    let k = &KINDS[kind];
-    k.set != SPAWN && k.set != STRONGHOLDS
+    KINDS[kind].searchable()
 }
 
 /// A layer's name in the finder, with its dimension when not the Overworld.
@@ -72,31 +72,64 @@ fn kind_label(kind: usize) -> String {
     }
 }
 
-impl Default for FinderUi {
-    fn default() -> Self {
-        let village = KINDS
+impl FinderUi {
+    /// The panel with a saved query. Filters on layers that no longer exist
+    /// are dropped.
+    pub fn from_settings(s: &FinderSettings) -> Self {
+        let mut filters: Vec<FilterRow> = s
+            .filters
             .iter()
-            .position(|k| k.set == "minecraft:villages")
-            .unwrap_or(0);
+            .filter_map(|f| {
+                Some(FilterRow {
+                    kind: f.kind()?,
+                    radius: f.radius.max(0),
+                    count: f.count.max(1),
+                    ship: f.ship,
+                })
+            })
+            .collect();
+        if filters.is_empty() {
+            let f = FilterSettings::default();
+            filters.push(FilterRow {
+                kind: f.kind().unwrap_or(0),
+                radius: f.radius,
+                count: f.count,
+                ship: f.ship,
+            });
+        }
         Self {
-            center_spawn: true,
-            filters: vec![FilterRow {
-                kind: village,
-                radius: 300,
-                count: 1,
-                ship: false,
-            }],
-            biome: None,
-            from: "0".to_owned(),
-            count: 100_000,
-            random: false,
+            center_spawn: s.center_spawn,
+            filters,
+            biome: s.biome.as_deref().and_then(Biome::from_name),
+            from: s.from.clone(),
+            count: s.count,
+            random: s.random,
             running: None,
             results: Arc::new(Mutex::new(Vec::new())),
         }
     }
-}
 
-impl FinderUi {
+    /// The query, to save.
+    pub fn settings(&self) -> FinderSettings {
+        FinderSettings {
+            center_spawn: self.center_spawn,
+            filters: self
+                .filters
+                .iter()
+                .map(|f| FilterSettings {
+                    layer: KINDS[f.kind].id.to_owned(),
+                    radius: f.radius,
+                    count: f.count,
+                    ship: f.ship,
+                })
+                .collect(),
+            biome: self.biome.map(|b| b.name().to_owned()),
+            from: self.from.clone(),
+            count: self.count,
+            random: self.random,
+        }
+    }
+
     pub fn is_running(&self) -> bool {
         self.running
             .as_ref()
@@ -108,7 +141,7 @@ impl FinderUi {
         for f in &self.filters {
             let kind = &KINDS[f.kind];
             structures_.push(StructureFilter {
-                select: structures::select(f.kind, f.ship)?,
+                select: KINDS[f.kind].select(f.ship)?,
                 radius: f.radius,
                 min_count: f.count,
                 dimension: match kind.dimension {
@@ -258,7 +291,7 @@ impl FinderUi {
                         ui.label(RichText::new("at least").color(TEXT_WEAK).small());
                         ui.add(egui::DragValue::new(&mut f.count).range(1..=20));
                     });
-                    if KINDS[f.kind].set == "minecraft:end_cities" {
+                    if KINDS[f.kind].has_ships() {
                         ui.checkbox(&mut f.ship, "With a ship (elytra)");
                     }
                 });

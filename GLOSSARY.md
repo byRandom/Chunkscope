@@ -38,7 +38,11 @@ Names in the code follow these.
 ## The app
 
 - **Layer**: one row of the map's structure list: a structure set (or part
-  of one), the strongholds, or the spawn.
+  of one), the strongholds, or the spawn. Each has a stable **layer id**
+  (`villages`, `bastions`, `end_cities`...) that saved settings and finder
+  filters refer to.
+- **Settings**: what the app remembers between runs (seed, view, layers,
+  the finder's query), saved by layer id so new layers do not break them.
 - **Marker**: a hit drawn on the map.
 - **Estimate**: the spawn block, which needs features Chunkscope does not
   generate.
