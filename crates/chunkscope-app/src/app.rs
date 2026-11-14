@@ -393,7 +393,7 @@ impl ChunkscopeApp {
                     {
                         Some(format!("zoom in ({:.0}%+)", (z * 100.0).ceil()))
                     } else {
-                        (!structures::validated(i)).then(|| "possible".to_owned())
+                        None
                     };
                     layer_row(
                         ui,
@@ -408,8 +408,7 @@ impl ChunkscopeApp {
                 ui.label(
                     RichText::new(
                         "Structures are checked against biome and terrain like the game \
-                         does. Layers marked possible are not checked yet: the game may \
-                         skip some of their positions.",
+                         does. The spawn is an estimate: trees and lakes can move it.",
                     )
                     .color(TEXT_WEAK)
                     .small(),
@@ -492,14 +491,7 @@ impl ChunkscopeApp {
                             field_box(ui, if ship { "Yes (elytra)" } else { "No" });
                         }
                         theme::field_label(ui, "Status");
-                        field_box(
-                            ui,
-                            if m.exact {
-                                "Generates (checked like the game)"
-                            } else {
-                                "Possible: not checked yet"
-                            },
-                        );
+                        field_box(ui, "Generates (checked like the game)");
                     }
                     ui.add_space(4.0);
                     ui.horizontal(|ui| {
@@ -844,7 +836,6 @@ impl ChunkscopeApp {
                 kind: i,
                 x,
                 z,
-                exact: false,
                 start: Some(("chunkscope:spawn", x, y, z)),
                 ship: None,
             });
@@ -857,7 +848,6 @@ impl ChunkscopeApp {
                 kind: i,
                 x,
                 z,
-                exact: true,
                 start: None,
                 ship: None,
             }));
@@ -907,17 +897,13 @@ impl ChunkscopeApp {
                 Some((structure, ..)) => biome_colors::display_name(structure),
                 None => singular(kind.label),
             };
-            let possible = match (m.exact, kind.set == SPAWN) {
-                (true, _) => "",
-                (false, true) => " (estimate)",
-                (false, false) => " (possible)",
-            };
+            let estimate = if kind.set == SPAWN { " (estimate)" } else { "" };
             let ship = if m.ship == Some(true) {
                 " with a ship"
             } else {
                 ""
             };
-            let label = format!("{name}{ship}{possible}  {}, {}", m.x, m.z);
+            let label = format!("{name}{ship}{estimate}  {}, {}", m.x, m.z);
             let galley = painter.layout_no_wrap(label, FontId::proportional(12.0), TEXT);
             let pos = p + vec2(r + 8.0, -galley.size().y / 2.0);
             let bg = Rect::from_min_size(pos, galley.size()).expand2(vec2(8.0, 5.0));

@@ -88,13 +88,13 @@ Done when: End biomes, the island terrain and end cities match the game.
 
 ## 0.6: mineshafts, and no "possible" left
 
-1. **Mineshafts.** Their generation point is checked at the mineshaft's own
+1. **Mineshafts (done).** Their generation point is checked at the mineshaft's own
    height, which comes from generating its pieces (corridors, crossings,
    rooms, stairs) and then moving the whole structure (below sea level for
    normal mineshafts, inside a height range for badlands ones). Port
    `MineshaftPieces` far enough to get the final bounding box, with fixtures
    of whole piece lists from the game. This is the largest single port left.
-2. **No "possible" markers.** With mineshafts done, every structure on the
+2. **No "possible" markers (done).** With mineshafts done, every structure on the
    map and in the finder is validated. Remove the "possible" state from the
    app, or keep it only for data the game itself does not decide from the
    seed.

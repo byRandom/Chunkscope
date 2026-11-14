@@ -104,6 +104,7 @@ public class GameOracle {
         endTerrain(lookup, Path.of(args[5]));
         endCities(lookup);
         endCityPieces(lookup);
+        mineshafts(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -938,8 +939,11 @@ public class GameOracle {
                 kind = "StructureKind::WoodlandMansion";
             } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.OceanMonumentStructure) {
                 kind = "StructureKind::OceanMonument";
+            } else if (structure instanceof net.minecraft.world.level.levelgen.structure.structures.MineshaftStructure ms) {
+                kind = "StructureKind::Mineshaft(MineshaftType::" + (get(ms, "type") == net.minecraft.world.level.levelgen.structure.structures.MineshaftStructure.Type.MESA
+                        ? "Mesa" : "Normal") + ")";
             } else {
-                kind = "StructureKind::NotImplemented";
+                throw new IllegalStateException("structure type not ported: " + name);
             }
             out.append(kind).append(",\n    },\n");
         }
@@ -2381,6 +2385,88 @@ public class GameOracle {
                 StringBuilder sb = new StringBuilder(seed + " " + cx + " " + cz + " " + p.getX() + "," + p.getY() + "," + p.getZ());
                 for (var piece : stub.get().getPiecesBuilder().build().pieces()) sb.append(' ').append(cityPiece(piece));
                 w.println(sb);
+            }
+        }
+    }
+
+    /** One mineshaft piece: kind, bounding box and gen depth. */
+    static String minePiece(net.minecraft.world.level.levelgen.structure.StructurePiece piece) {
+        String kind = piece.getClass().getSimpleName().substring("MineShaft".length());
+        if (kind.equals("Crossing") && (boolean) get(piece, "isTwoFloored")) kind = "Crossing2";
+        var b = piece.getBoundingBox();
+        return kind + ":" + b.minX() + "," + b.minY() + "," + b.minZ() + "," + b.maxX() + "," + b.maxY() + "," + b.maxZ() + ":" + piece.getGenDepth();
+    }
+
+    static void mineshafts(HolderLookup.Provider lookup) throws Exception {
+        // The pieces, from MineshaftStructure.generatePiecesAndAdjust up to the vertical move, and
+        // the structure's next random number after them (the pieces must use exactly the game's).
+        try (PrintWriter w = writer("mineshaft_pieces.txt")) {
+            for (int i = 0; i < 800; i++) {
+                long seed = i < 200 ? i : INPUTS.nextLong();
+                int cx = INPUTS.nextInt(-1_800_000, 1_800_000), cz = INPUTS.nextInt(-1_800_000, 1_800_000);
+                WorldgenRandom random = new WorldgenRandom(new LegacyRandomSource(0L));
+                random.setLargeFeatureSeed(seed, cx, cz);
+                random.nextDouble();
+                var builder = new net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder();
+                var room = new net.minecraft.world.level.levelgen.structure.structures.MineshaftPieces.MineShaftRoom(0, random, cx * 16 + 2, cz * 16 + 2,
+                        net.minecraft.world.level.levelgen.structure.structures.MineshaftStructure.Type.NORMAL);
+                builder.addPiece(room);
+                room.addChildren(room, builder, random);
+                StringBuilder sb = new StringBuilder(seed + " " + cx + " " + cz + " " + random.nextInt());
+                for (var piece : builder.build().pieces()) sb.append(' ').append(minePiece(piece));
+                w.println(sb);
+            }
+        }
+        // Generation points (findValidGenerationPoint) of both mineshafts on clusters of chunks
+        // centered on their biomes: badlands for the mesa ones, which rise towards the surface.
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.OVERWORLD);
+        NoiseGeneratorSettings settings = settingsHolder.value();
+        var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
+                lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                        .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.OVERWORLD));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(settings.noiseSettings().minY(), settings.noiseSettings().height());
+        List<net.minecraft.core.Registry<?>> registries = new ArrayList<>();
+        for (var key : List.of(Registries.TEMPLATE_POOL, Registries.PROCESSOR_LIST)) registries.add(copyRegistry(lookup, key));
+        net.minecraft.core.registries.BuiltInRegistries.REGISTRY.forEach(registries::add);
+        var registryAccess = new net.minecraft.core.RegistryAccess.ImmutableRegistryAccess(registries);
+        var templates = templateManager(lookup);
+        var registry = lookup.lookupOrThrow(Registries.STRUCTURE);
+        try (PrintWriter w = writer("mineshaft_points.txt")) {
+            for (int s = 0; s < 3; s++) {
+                long seed = s == 0 ? 0L : INPUTS.nextLong();
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                var finder = biomeSource.createResolver(rs.createClimateSampler(SamplerContext.builder().build()));
+                for (String name : List.of("minecraft:mineshaft", "minecraft:mineshaft_mesa")) {
+                    var holder = registry.getOrThrow(ResourceKey.create(Registries.STRUCTURE, Identifier.parse(name)));
+                    String tag = ((net.minecraft.core.HolderSet.Named<Biome>) holder.value().biomes()).key().location().toString();
+                    var biomes = new java.util.HashSet<>(biomeTag(tag));
+                    java.util.function.Predicate<Holder<Biome>> valid = h -> biomes.contains(h.unwrapKey().orElseThrow().identifier().toString());
+                    StringBuilder sb = new StringBuilder(seed + " " + name.substring("minecraft:".length()));
+                    for (int cluster = 0; cluster < 10; cluster++) {
+                        int ccx = 0, ccz = 0;
+                        for (int tries = 0; tries < 20_000; tries++) {
+                            ccx = INPUTS.nextInt(-20_000, 20_000);
+                            ccz = INPUTS.nextInt(-20_000, 20_000);
+                            if (valid.test(finder.getNoiseBiome(ccx * 4 + 2, 12, ccz * 4 + 2))) break;
+                        }
+                        for (int dz = -3; dz < 3; dz++) for (int dx = -3; dx < 3; dx++) {
+                            var pos = new net.minecraft.world.level.ChunkPos(ccx + dx, ccz + dz);
+                            var context = new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(
+                                    registryAccess, generator, biomeSource, rs.createClimateSampler(SamplerContext.builder().enableCaches().build()),
+                                    rs, templates, seed, pos, height, valid);
+                            var point = holder.value().findValidGenerationPoint(context);
+                            sb.append(' ').append(pos.x()).append(',').append(pos.z()).append(':');
+                            if (point.isPresent()) {
+                                var p = point.get().position();
+                                sb.append(p.getX()).append(',').append(p.getY()).append(',').append(p.getZ());
+                            } else {
+                                sb.append("no");
+                            }
+                        }
+                    }
+                    w.println(sb);
+                }
             }
         }
     }

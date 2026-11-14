@@ -11,6 +11,8 @@
 
 use std::sync::OnceLock;
 
+pub use super::mineshaft::MineshaftType;
+use super::mineshaft::{encapsulating, mineshaft_pieces};
 use super::placement::{StructurePlacement, StructureSet};
 use crate::biome::{Biome, EndBiomeSource, NetherBiomeSource, OverworldBiomeSource};
 use crate::random::{LegacyRandomSource, RandomSource, WorldgenRandom};
@@ -74,8 +76,8 @@ pub enum StructureKind {
     EndCity,
     /// `OceanMonumentStructure`
     OceanMonument,
-    /// Not ported yet (mineshafts).
-    NotImplemented,
+    /// `MineshaftStructure`
+    Mineshaft(MineshaftType),
 }
 
 /// `RuinedPortalPiece.VerticalPlacement`
@@ -186,15 +188,12 @@ pub enum Outcome {
     Generates(Vec<Attempt>),
     /// Every structure was tried and none generates.
     Nothing(Vec<Attempt>),
-    /// A structure that is not ported yet came up, so the result is unknown.
-    /// Holds the attempts before it.
-    Unknown(Vec<Attempt>),
 }
 
 impl Outcome {
     pub fn attempts(&self) -> &[Attempt] {
         match self {
-            Outcome::Generates(a) | Outcome::Nothing(a) | Outcome::Unknown(a) => a,
+            Outcome::Generates(a) | Outcome::Nothing(a) => a,
         }
     }
 
@@ -296,9 +295,8 @@ impl TerrainRef<'_> {
 pub struct StructureGenerator<'a> {
     seed: i64,
     biomes: &'a dyn BiomeLookup,
-    /// The dimension's terrain, for the structures that need heights; `None`
-    /// while it is not ported (they are then reported as unknown).
-    terrain: Option<TerrainRef<'a>>,
+    /// The dimension's terrain, for the structures that need heights.
+    terrain: TerrainRef<'a>,
     /// The level's lowest block and height (`LevelHeightAccessor`, from the
     /// dimension type).
     min_y: i32,
@@ -320,7 +318,7 @@ impl<'a> StructureGenerator<'a> {
         Self {
             seed,
             biomes,
-            terrain: Some(TerrainRef::Overworld(terrain)),
+            terrain: TerrainRef::Overworld(terrain),
             min_y: crate::terrain::MIN_Y,
             height: crate::terrain::HEIGHT,
             sea_level: crate::terrain::SEA_LEVEL,
@@ -335,7 +333,7 @@ impl<'a> StructureGenerator<'a> {
         Self {
             seed,
             biomes,
-            terrain: Some(TerrainRef::Nether(terrain)),
+            terrain: TerrainRef::Nether(terrain),
             min_y: 0,
             height: 256,
             sea_level: crate::terrain::NETHER_SEA_LEVEL,
@@ -350,7 +348,7 @@ impl<'a> StructureGenerator<'a> {
         Self {
             seed,
             biomes,
-            terrain: Some(TerrainRef::End(terrain)),
+            terrain: TerrainRef::End(terrain),
             min_y: 0,
             height: 256,
             sea_level: 0,
@@ -370,10 +368,12 @@ impl<'a> StructureGenerator<'a> {
 
     /// `ChunkGenerator.createStructures` for one set at a chunk where the set
     /// attempts a structure (see [`StructureSet::is_structure_chunk`]).
+    /// Strongholds are not attempted this way (see `stronghold`): their set
+    /// gives nothing.
     pub fn attempt(&self, set: &StructureSet, chunk_x: i32, chunk_z: i32) -> Outcome {
         let mut attempts = Vec::new();
         let StructurePlacement::RandomSpread(_) = set.placement else {
-            return Outcome::Unknown(attempts);
+            return Outcome::Nothing(attempts);
         };
         let mut entries: Vec<(&'static Structure, i32)> = set
             .structures
@@ -382,9 +382,7 @@ impl<'a> StructureGenerator<'a> {
             .collect();
         if entries.len() == 1 {
             let structure = entries[0].0;
-            let Some(point) = self.try_structure(structure, chunk_x, chunk_z) else {
-                return Outcome::Unknown(attempts);
-            };
+            let point = self.try_structure(structure, chunk_x, chunk_z);
             attempts.push(Attempt { structure, point });
             return if point.is_some() {
                 Outcome::Generates(attempts)
@@ -406,16 +404,10 @@ impl<'a> StructureGenerator<'a> {
                 i += 1;
             }
             let (structure, weight) = entries[i];
-            match self.try_structure(structure, chunk_x, chunk_z) {
-                None => {
-                    return Outcome::Unknown(attempts);
-                }
-                Some(point) => {
-                    attempts.push(Attempt { structure, point });
-                    if point.is_some() {
-                        return Outcome::Generates(attempts);
-                    }
-                }
+            let point = self.try_structure(structure, chunk_x, chunk_z);
+            attempts.push(Attempt { structure, point });
+            if point.is_some() {
+                return Outcome::Generates(attempts);
             }
             entries.remove(i);
             total -= weight;
@@ -423,14 +415,14 @@ impl<'a> StructureGenerator<'a> {
         Outcome::Nothing(attempts)
     }
 
-    /// `Structure.findValidGenerationPoint`: `Some(None)` when the structure
-    /// does not generate, `None` when its type is not ported yet.
+    /// `Structure.findValidGenerationPoint`: the generation point, or `None`
+    /// when the structure does not generate.
     pub fn try_structure(
         &self,
         structure: &'static Structure,
         chunk_x: i32,
         chunk_z: i32,
-    ) -> Option<Option<(i32, i32, i32)>> {
+    ) -> Option<(i32, i32, i32)> {
         self.generation_point(structure, chunk_x, chunk_z, true)
     }
 
@@ -441,7 +433,7 @@ impl<'a> StructureGenerator<'a> {
         structure: &'static Structure,
         chunk_x: i32,
         chunk_z: i32,
-    ) -> Option<Option<(i32, i32, i32)>> {
+    ) -> Option<(i32, i32, i32)> {
         self.generation_point(structure, chunk_x, chunk_z, false)
     }
 
@@ -451,7 +443,7 @@ impl<'a> StructureGenerator<'a> {
         chunk_x: i32,
         chunk_z: i32,
         check_biome: bool,
-    ) -> Option<Option<(i32, i32, i32)>> {
+    ) -> Option<(i32, i32, i32)> {
         let valid = &tables().structures[structure.index()];
         let mut ctx = Context {
             generator: self,
@@ -464,17 +456,6 @@ impl<'a> StructureGenerator<'a> {
                 r
             },
         };
-        let needs_terrain = match structure.kind {
-            StructureKind::NetherFortress | StructureKind::NotImplemented => false,
-            StructureKind::Jigsaw {
-                project_start_to_heightmap,
-                ..
-            } => project_start_to_heightmap.is_some(),
-            _ => true,
-        };
-        if needs_terrain && self.terrain.is_none() {
-            return None;
-        }
         let point = match structure.kind {
             StructureKind::NetherFortress => Some((chunk_x << 4, 64, chunk_z << 4)),
             StructureKind::NetherFossil {
@@ -486,6 +467,7 @@ impl<'a> StructureGenerator<'a> {
             StructureKind::RuinedPortal(setups) => ctx.ruined_portal(setups),
             StructureKind::WoodlandMansion | StructureKind::EndCity => ctx.lowest_5x5_point(),
             StructureKind::OceanMonument => ctx.ocean_monument(),
+            StructureKind::Mineshaft(kind) => Some(ctx.mineshaft(kind)),
             StructureKind::Jigsaw {
                 start_pool,
                 start_jigsaw_name: _,
@@ -498,9 +480,8 @@ impl<'a> StructureGenerator<'a> {
                 project_start_to_heightmap,
                 dimension_padding,
             ),
-            StructureKind::NotImplemented => return None,
         };
-        Some(point.filter(|&p| !check_biome || ctx.is_valid_biome(p)))
+        point.filter(|&p| !check_biome || ctx.is_valid_biome(p))
     }
 }
 
@@ -544,10 +525,8 @@ impl Context<'_, '_> {
         (self.chunk_z << 4) + 8
     }
 
-    /// The terrain; only called for structures that need it, which
-    /// `try_structure` checks first.
     fn terrain(&self) -> TerrainRef<'_> {
-        self.generator.terrain.expect("checked by try_structure")
+        self.generator.terrain
     }
 
     /// `UniformHeight.sample`: `Mth.randomBetweenInclusive`, or the minimum
@@ -744,6 +723,40 @@ impl Context<'_, '_> {
     }
 
     /// `Structure.onTopOfChunkCenter`
+    /// `MineshaftStructure.findGenerationPoint`: the room's chunk, moved
+    /// down below sea level, or (badlands) up towards the surface.
+    fn mineshaft(&mut self, kind: MineshaftType) -> (i32, i32, i32) {
+        self.random.next_double();
+        let pieces = mineshaft_pieces(&mut self.random, self.chunk_x, self.chunk_z);
+        let [_, min_y, _, _, max_y, _] = encapsulating(&pieces);
+        let g = self.generator;
+        let dy = match kind {
+            MineshaftType::Mesa => {
+                let b = encapsulating(&pieces);
+                // `BoundingBox.getCenter`
+                let center = |lo: i32, hi: i32| lo + (hi - lo + 1) / 2;
+                let (x, y, z) = (center(b[0], b[3]), center(b[1], b[4]), center(b[2], b[5]));
+                let h = self.terrain().base_height(x, z, Heightmap::WorldSurface);
+                let top = if h <= g.sea_level {
+                    g.sea_level
+                } else {
+                    self.random.next_int_bounded(h - g.sea_level + 1) + g.sea_level
+                };
+                top - y
+            }
+            // `StructurePiecesBuilder.moveBelowSeaLevel(seaLevel, minY, random, 10)`
+            MineshaftType::Normal => {
+                let limit = g.sea_level - 10;
+                let mut top = (max_y - min_y + 1) + g.gen_min_y + 1;
+                if top < limit {
+                    top += self.random.next_int_bounded(limit - top);
+                }
+                top - max_y
+            }
+        };
+        (self.middle_x(), 50 + dy, self.chunk_z << 4)
+    }
+
     fn on_top_of_chunk_center(&self, heightmap: Heightmap) -> Option<(i32, i32, i32)> {
         if !self.could_valid_biome_exist_in_terrain_column(self.middle_x(), self.middle_z()) {
             return None;

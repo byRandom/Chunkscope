@@ -37,8 +37,8 @@ fn trace(outcome: &Outcome) -> Vec<String> {
 fn structure_attempts_match_the_game() {
     let text = fixture();
     let mut current: Option<(i64, OverworldBiomeSource, OverworldTerrain)> = None;
-    // set -> (checked, unknown, mismatches)
-    let mut stats: BTreeMap<String, (u32, u32, Vec<String>)> = BTreeMap::new();
+    // set -> (checked, mismatches)
+    let mut stats: BTreeMap<String, (u32, Vec<String>)> = BTreeMap::new();
     for line in text.lines() {
         let mut parts = line.split(' ');
         let seed: i64 = parts.next().unwrap().parse().unwrap();
@@ -64,27 +64,14 @@ fn structure_attempts_match_the_game() {
         let outcome = generator.attempt(set, cx, cz);
         let entry = stats.entry(set_name.to_owned()).or_default();
         let got = trace(&outcome);
-        if let Outcome::Unknown(_) = outcome {
-            // Not ported yet; what was tried before must still match.
-            entry.1 += 1;
-            if expected.len() < got.len() || expected[..got.len()] != got[..] {
-                entry
-                    .2
-                    .push(format!("{line}\n    got (partial) {}", got.join(" ")));
-            }
-            continue;
-        }
         entry.0 += 1;
         if got != expected {
-            entry.2.push(format!("{line}\n    got {}", got.join(" ")));
+            entry.1.push(format!("{line}\n    got {}", got.join(" ")));
         }
     }
     let mut failed = false;
-    for (set, (checked, unknown, mismatches)) in &stats {
-        println!(
-            "{set}: {checked} checked, {unknown} not ported, {} mismatches",
-            mismatches.len()
-        );
+    for (set, (checked, mismatches)) in &stats {
+        println!("{set}: {checked} checked, {} mismatches", mismatches.len());
         for m in mismatches.iter().take(5) {
             println!("  {m}");
         }
@@ -124,9 +111,7 @@ fn generation_points_match_the_game() {
             let (chunk, expected) = entry.split_once(':').unwrap();
             let (cx, cz) = chunk.split_once(',').unwrap();
             let (cx, cz): (i32, i32) = (cx.parse().unwrap(), cz.parse().unwrap());
-            let Some(point) = generator.try_structure(structure, cx, cz) else {
-                break; // not ported yet
-            };
+            let point = generator.try_structure(structure, cx, cz);
             checked += 1;
             let got = match point {
                 Some((x, y, z)) => format!("{x},{y},{z}"),
@@ -147,8 +132,7 @@ fn generation_points_match_the_game() {
 
 /// The Nether's structure attempts (`nether_structures.txt`) and generation
 /// points (`nether_structure_points.txt`): fortresses and bastions need only
-/// Nether biomes; fossils need the Nether terrain (not ported yet, reported
-/// as unknown).
+/// Nether biomes; fossils need the Nether terrain.
 #[test]
 fn nether_structures_match_the_game() {
     use mc_core::biome::NetherBiomeSource;
@@ -162,7 +146,7 @@ fn nether_structures_match_the_game() {
     };
     let mut failed = false;
     let mut source: Option<(i64, NetherBiomeSource, NetherTerrain)> = None;
-    let mut stats: BTreeMap<String, (u32, u32, Vec<String>)> = BTreeMap::new();
+    let mut stats: BTreeMap<String, (u32, Vec<String>)> = BTreeMap::new();
     for line in read("nether_structures.txt").lines() {
         let mut parts = line.split(' ');
         let seed: i64 = parts.next().unwrap().parse().unwrap();
@@ -183,25 +167,13 @@ fn nether_structures_match_the_game() {
         let outcome = generator.attempt(set, cx, cz);
         let got = trace(&outcome);
         let entry = stats.entry(set_name.to_owned()).or_default();
-        if let Outcome::Unknown(_) = outcome {
-            entry.1 += 1;
-            if expected.len() < got.len() || expected[..got.len()] != got[..] {
-                entry
-                    .2
-                    .push(format!("{line}\n    got (partial) {}", got.join(" ")));
-            }
-            continue;
-        }
         entry.0 += 1;
         if got != expected {
-            entry.2.push(format!("{line}\n    got {}", got.join(" ")));
+            entry.1.push(format!("{line}\n    got {}", got.join(" ")));
         }
     }
-    for (set, (checked, unknown, mismatches)) in &stats {
-        println!(
-            "{set}: {checked} checked, {unknown} not ported, {} mismatches",
-            mismatches.len()
-        );
+    for (set, (checked, mismatches)) in &stats {
+        println!("{set}: {checked} checked, {} mismatches", mismatches.len());
         for m in mismatches.iter().take(5) {
             println!("  {m}");
         }
@@ -220,9 +192,7 @@ fn nether_structures_match_the_game() {
             let (chunk, expected) = entry.split_once(':').unwrap();
             let (cx, cz) = chunk.split_once(',').unwrap();
             let (cx, cz): (i32, i32) = (cx.parse().unwrap(), cz.parse().unwrap());
-            let Some(point) = generator.try_structure(structure, cx, cz) else {
-                break; // not ported yet
-            };
+            let point = generator.try_structure(structure, cx, cz);
             checked += 1;
             let got = match point {
                 Some((x, y, z)) => format!("{x},{y},{z}"),

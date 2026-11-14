@@ -73,15 +73,12 @@ pub struct Query {
 /// A structure that satisfies a filter.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Found {
-    /// The structure that generates, or the set's name when its structures
-    /// are not validated yet (mineshafts).
+    /// The structure that generates (e.g. `minecraft:village_plains`).
     pub name: &'static str,
     pub dimension: Dimension,
     pub x: i32,
     pub z: i32,
     pub distance: f64,
-    /// `false` when the structure is not validated yet.
-    pub exact: bool,
 }
 
 /// A seed that matches a query.
@@ -172,12 +169,11 @@ pub fn check(seed: i64, query: &Query) -> Option<Match> {
             };
             let (x, z) = candidate.locate;
             let entry = Found {
-                name: hit.generated.map_or(f.select.set.name, |g| g.name),
+                name: hit.generated.name,
                 dimension: f.dimension,
                 x,
                 z,
                 distance,
-                exact: hit.generated.is_some(),
             };
             found.push(entry);
             count += 1;

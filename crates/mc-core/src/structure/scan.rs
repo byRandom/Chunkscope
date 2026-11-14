@@ -11,7 +11,7 @@
 //! [`StructureGenerator::hits`] does both for every candidate in an area.
 
 use super::end_city::end_city_has_ship;
-use super::validate::{Outcome, StructureGenerator};
+use super::validate::StructureGenerator;
 use super::{STRUCTURE_SETS, StructurePlacement, StructureSet};
 
 /// A rectangle of chunks, both ends inclusive.
@@ -132,13 +132,11 @@ pub struct Generated {
     pub ship: Option<bool>,
 }
 
-/// A candidate that passes a [`SetFilter`].
+/// A candidate whose structure generates and passes a [`SetFilter`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Hit {
     pub candidate: Candidate,
-    /// `None` when the set's structures are not validated yet (mineshafts):
-    /// the game may skip the candidate.
-    pub generated: Option<Generated>,
+    pub generated: Generated,
 }
 
 impl StructureGenerator<'_> {
@@ -146,32 +144,24 @@ impl StructureGenerator<'_> {
     /// `filter`.
     pub fn hit(&self, filter: &SetFilter, candidate: Candidate) -> Option<Hit> {
         let (cx, cz) = candidate.chunk;
-        let generated = match self.attempt(filter.set, cx, cz) {
-            outcome @ Outcome::Generates(_) => {
-                let (s, start) = outcome.generated()?;
-                if filter
-                    .only
-                    .is_some_and(|prefix| !s.name.starts_with(prefix))
-                {
-                    return None;
-                }
-                let ship = (s.name == "minecraft:end_city")
-                    .then(|| end_city_has_ship(self.seed(), cx, cz));
-                if filter.ship_only && ship == Some(false) {
-                    return None;
-                }
-                Some(Generated {
-                    name: s.name,
-                    start,
-                    ship,
-                })
-            }
-            Outcome::Nothing(_) => return None,
-            Outcome::Unknown(_) => None,
-        };
+        let (s, start) = self.attempt(filter.set, cx, cz).generated()?;
+        if filter
+            .only
+            .is_some_and(|prefix| !s.name.starts_with(prefix))
+        {
+            return None;
+        }
+        let ship = (s.name == "minecraft:end_city").then(|| end_city_has_ship(self.seed(), cx, cz));
+        if filter.ship_only && ship == Some(false) {
+            return None;
+        }
         Some(Hit {
             candidate,
-            generated,
+            generated: Generated {
+                name: s.name,
+                start,
+                ship,
+            },
         })
     }
 

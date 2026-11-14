@@ -12,6 +12,7 @@
 #[rustfmt::skip]
 pub mod generated;
 pub mod end_city;
+pub mod mineshaft;
 mod placement;
 pub mod scan;
 pub mod stronghold;

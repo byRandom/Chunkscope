@@ -1,6 +1,6 @@
 //! List the structures near a position: where each overworld structure set
 //! tries to place a structure, checked against biome and terrain like the game
-//! does. Mineshafts are not validated yet; they are listed as possible.
+//! does.
 //!
 //! ```text
 //! cargo run -p mc-core --example structures -- <seed text> <x> <z> [radius in blocks]
@@ -32,7 +32,7 @@ fn main() {
     let generator = StructureGenerator::new(seed, &biomes, &terrain);
     let mut found = Vec::new();
     for set in &STRUCTURE_SETS {
-        let StructurePlacement::RandomSpread(p) = &set.placement else {
+        let StructurePlacement::RandomSpread(_) = &set.placement else {
             continue; // strongholds are listed below
         };
         // Sets don't record their dimension (their structures' biomes do), so
@@ -46,21 +46,14 @@ fn main() {
         {
             continue;
         }
-        if p.spacing == 1 {
-            continue; // mineshafts and buried treasure: almost every chunk is a candidate
-        }
         let rect = ChunkRect::around_block(x, z, radius);
         for hit in generator.hits(&SetFilter::all(set), rect) {
             let d = hit.candidate.distance((x, z));
             if d > radius as f64 {
                 continue;
             }
-            let name = match hit.generated {
-                Some(g) => g.name.to_owned(),
-                None => format!("{} (possible)", set.name),
-            };
             let (bx, bz) = hit.candidate.locate;
-            found.push((d, name, bx, bz));
+            found.push((d, hit.generated.name.to_owned(), bx, bz));
         }
     }
     // Strongholds: exact positions (they need the biome search, ~1 s).

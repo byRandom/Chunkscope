@@ -27,8 +27,8 @@ Names in the code follow these.
   yet biome and terrain. Its **locate position** is the block `/locate`
   reports.
 - **Attempt**: one structure of a set tried at a candidate, in the game's
-  order. The set's outcome is that the last attempt generates, that none
-  does, or (for structures not ported yet) that it is unknown.
+  order. The set's outcome is that the last attempt generates, or that none
+  does.
 - **Generation point**: the validated start of a structure that generates.
 - **Hit**: a candidate whose structure generates and passes a set filter
   (for example only bastions, or only end cities with a ship).
@@ -40,8 +40,6 @@ Names in the code follow these.
 - **Layer**: one row of the map's structure list: a structure set (or part
   of one), the strongholds, or the spawn.
 - **Marker**: a hit drawn on the map.
-- **Possible**: a candidate whose structure is not validated yet, so the
-  game may skip it.
 - **Estimate**: the spawn block, which needs features Chunkscope does not
   generate.
 

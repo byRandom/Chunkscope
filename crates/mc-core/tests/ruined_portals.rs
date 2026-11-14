@@ -5,7 +5,7 @@
 //! (`parity/fixtures/game/ruined_portal_points.txt`).
 
 use mc_core::biome::{NetherBiomeSource, OverworldBiomeSource};
-use mc_core::structure::validate::{Outcome, Structure, StructureGenerator};
+use mc_core::structure::validate::{Structure, StructureGenerator};
 use mc_core::structure::{STRUCTURE_SETS, StructureSets};
 use mc_core::terrain::{NetherTerrain, OverworldTerrain};
 
@@ -41,7 +41,6 @@ fn nether_ruined_portal_attempts_match_the_game() {
         }
         let (_, biomes, terrain) = world.as_ref().unwrap();
         let outcome = StructureGenerator::nether(seed, biomes, terrain).attempt(set, cx, cz);
-        assert!(!matches!(outcome, Outcome::Unknown(_)), "{line}");
         let got: Vec<String> = outcome
             .attempts()
             .iter()
@@ -94,9 +93,7 @@ fn ruined_portal_points_match_the_game() {
             let (chunk, expected) = entry.split_once(':').unwrap();
             let (cx, cz) = chunk.split_once(',').unwrap();
             let (cx, cz): (i32, i32) = (cx.parse().unwrap(), cz.parse().unwrap());
-            let got = generator
-                .generation_point_any_biome(structure, cx, cz)
-                .expect("ported");
+            let got = generator.generation_point_any_biome(structure, cx, cz);
             total += 1;
             if point(got) != expected {
                 bad.push(format!(

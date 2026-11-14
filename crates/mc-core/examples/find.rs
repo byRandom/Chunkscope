@@ -89,9 +89,8 @@ fn main() {
             .iter()
             .map(|f| {
                 format!(
-                    "{}{} {}, {} ({:.0})",
+                    "{} {}, {} ({:.0})",
                     f.name.trim_start_matches("minecraft:"),
-                    if f.exact { "" } else { " (possible)" },
                     f.x,
                     f.z,
                     f.distance
