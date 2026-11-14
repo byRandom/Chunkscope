@@ -11,6 +11,7 @@ pub mod slime;
 pub mod spawn;
 pub mod structure;
 pub mod terrain;
+pub mod world;
 
 pub use seed::parse_seed;
 pub use slime::is_slime_chunk;

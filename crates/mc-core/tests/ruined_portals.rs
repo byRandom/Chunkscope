@@ -4,10 +4,9 @@
 //! on clusters of chunks, without the biome check
 //! (`parity/fixtures/game/ruined_portal_points.txt`).
 
-use mc_core::biome::{NetherBiomeSource, OverworldBiomeSource};
-use mc_core::structure::validate::{Structure, StructureGenerator};
+use mc_core::structure::validate::Structure;
 use mc_core::structure::{STRUCTURE_SETS, StructureSets};
-use mc_core::terrain::{NetherTerrain, OverworldTerrain};
+use mc_core::world::{Dimension, World};
 
 fn fixture(name: &str) -> String {
     std::fs::read_to_string(format!(
@@ -27,7 +26,7 @@ fn point(p: Option<(i32, i32, i32)>) -> String {
 #[test]
 fn nether_ruined_portal_attempts_match_the_game() {
     let text = fixture("ruined_portals.txt");
-    let mut world: Option<(i64, NetherBiomeSource, NetherTerrain)> = None;
+    let mut world: Option<World> = None;
     let (mut checked, mut generates, mut mismatches) = (0, 0, Vec::new());
     for line in text.lines() {
         let mut parts = line.split(' ');
@@ -36,11 +35,10 @@ fn nether_ruined_portal_attempts_match_the_game() {
         let cx: i32 = parts.next().unwrap().parse().unwrap();
         let cz: i32 = parts.next().unwrap().parse().unwrap();
         let expected: Vec<&str> = parts.collect();
-        if world.as_ref().is_none_or(|w| w.0 != seed) {
-            world = Some((seed, NetherBiomeSource::new(seed), NetherTerrain::new(seed)));
+        if world.as_ref().is_none_or(|w| w.seed() != seed) {
+            world = Some(World::new(seed, Dimension::Nether));
         }
-        let (_, biomes, terrain) = world.as_ref().unwrap();
-        let outcome = StructureGenerator::nether(seed, biomes, terrain).attempt(set, cx, cz);
+        let outcome = world.as_ref().unwrap().structures().attempt(set, cx, cz);
         let got: Vec<String> = outcome
             .attempts()
             .iter()
@@ -79,15 +77,8 @@ fn ruined_portal_points_match_the_game() {
         let seed: i64 = parts.next().unwrap().parse().unwrap();
         let name = format!("minecraft:{}", parts.next().unwrap());
         let structure = Structure::find(&name).expect("known structure");
-        let overworld;
-        let nether;
-        let generator = if dimension == "nether" {
-            nether = (NetherBiomeSource::new(seed), NetherTerrain::new(seed));
-            StructureGenerator::nether(seed, &nether.0, &nether.1)
-        } else {
-            overworld = (OverworldBiomeSource::new(seed), OverworldTerrain::new(seed));
-            StructureGenerator::new(seed, &overworld.0, &overworld.1)
-        };
+        let world = World::new(seed, Dimension::from_id(dimension).expect("a dimension"));
+        let generator = world.structures();
         let (mut total, mut bad) = (0, Vec::new());
         for entry in parts {
             let (chunk, expected) = entry.split_once(':').unwrap();

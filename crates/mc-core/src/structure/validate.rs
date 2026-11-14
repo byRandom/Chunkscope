@@ -14,9 +14,10 @@ use std::sync::OnceLock;
 pub use super::mineshaft::MineshaftType;
 use super::mineshaft::{encapsulating, mineshaft_pieces};
 use super::placement::{StructurePlacement, StructureSet};
-use crate::biome::{Biome, EndBiomeSource, NetherBiomeSource, OverworldBiomeSource};
+use crate::biome::Biome;
 use crate::random::{LegacyRandomSource, RandomSource, WorldgenRandom};
-use crate::terrain::{EndTerrain, Heightmap, NetherTerrain, OverworldTerrain, Substance};
+use crate::terrain::{Heightmap, Substance};
+use crate::world::World;
 
 /// `HeightProvider` of a jigsaw structure's start, with absolute anchors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -240,63 +241,25 @@ fn quart(block: i32) -> i32 {
     block >> 2
 }
 
-/// A dimension's biome source, as structure validation reads it.
-pub trait BiomeLookup {
-    /// `getNoiseBiome(quartX, quartY, quartZ)`.
-    fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome;
-}
-
-impl BiomeLookup for OverworldBiomeSource {
-    fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome {
-        OverworldBiomeSource::biome(self, quart_x, quart_y, quart_z)
-    }
-}
-
-impl BiomeLookup for EndBiomeSource {
-    fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome {
-        EndBiomeSource::biome(self, quart_x, quart_y, quart_z)
-    }
-}
-
-impl BiomeLookup for NetherBiomeSource {
-    fn biome(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> Biome {
-        NetherBiomeSource::biome(self, quart_x, quart_y, quart_z)
-    }
-}
-
 /// A dimension's terrain, as structure validation reads it.
 #[derive(Clone, Copy)]
-enum TerrainRef<'a> {
-    Overworld(&'a OverworldTerrain),
-    Nether(&'a NetherTerrain),
-    End(&'a EndTerrain),
-}
+struct Terrain<'a>(&'a World);
 
-impl TerrainRef<'_> {
+impl Terrain<'_> {
     fn base_height(self, x: i32, z: i32, heightmap: Heightmap) -> i32 {
-        match self {
-            TerrainRef::Overworld(t) => t.base_height(x, z, heightmap),
-            TerrainRef::Nether(t) => t.base_height(x, z, heightmap),
-            TerrainRef::End(t) => t.base_height(x, z, heightmap),
-        }
+        self.0.base_height(x, z, heightmap)
     }
 
     /// The base column and its lowest y.
     fn base_column(self, x: i32, z: i32) -> (Vec<Substance>, i32) {
-        match self {
-            TerrainRef::Overworld(t) => (t.base_column(x, z), crate::terrain::MIN_Y),
-            TerrainRef::Nether(t) => (t.base_column(x, z), crate::terrain::NETHER_MIN_Y),
-            TerrainRef::End(t) => (t.base_column(x, z), crate::terrain::END_MIN_Y),
-        }
+        (self.0.base_column(x, z), self.0.level().gen_min_y)
     }
 }
 
 /// Validates structure attempts for one world seed and dimension.
 pub struct StructureGenerator<'a> {
     seed: i64,
-    biomes: &'a dyn BiomeLookup,
-    /// The dimension's terrain, for the structures that need heights.
-    terrain: TerrainRef<'a>,
+    world: &'a World,
     /// The level's lowest block and height (`LevelHeightAccessor`, from the
     /// dimension type).
     min_y: i32,
@@ -313,47 +276,17 @@ impl<'a> StructureGenerator<'a> {
         self.seed
     }
 
-    /// The overworld.
-    pub fn new(seed: i64, biomes: &'a OverworldBiomeSource, terrain: &'a OverworldTerrain) -> Self {
+    /// Structure validation in `world` (see [`World::structures`]).
+    pub fn new(world: &'a World) -> Self {
+        let level = world.level();
         Self {
-            seed,
-            biomes,
-            terrain: TerrainRef::Overworld(terrain),
-            min_y: crate::terrain::MIN_Y,
-            height: crate::terrain::HEIGHT,
-            sea_level: crate::terrain::SEA_LEVEL,
-            gen_min_y: crate::terrain::MIN_Y,
-            gen_depth: crate::terrain::HEIGHT,
-        }
-    }
-
-    /// The Nether: a level from y 0 to 255 (`dimension_type/the_nether.json`)
-    /// whose terrain is generated from y 0 to 127, with the lava sea at 32.
-    pub fn nether(seed: i64, biomes: &'a NetherBiomeSource, terrain: &'a NetherTerrain) -> Self {
-        Self {
-            seed,
-            biomes,
-            terrain: TerrainRef::Nether(terrain),
-            min_y: 0,
-            height: 256,
-            sea_level: crate::terrain::NETHER_SEA_LEVEL,
-            gen_min_y: crate::terrain::NETHER_MIN_Y,
-            gen_depth: crate::terrain::NETHER_HEIGHT,
-        }
-    }
-
-    /// The End: a level from y 0 to 255 (`dimension_type/the_end.json`)
-    /// whose terrain is generated from y 0 to 127, with sea level 0.
-    pub fn end(seed: i64, biomes: &'a EndBiomeSource, terrain: &'a EndTerrain) -> Self {
-        Self {
-            seed,
-            biomes,
-            terrain: TerrainRef::End(terrain),
-            min_y: 0,
-            height: 256,
-            sea_level: 0,
-            gen_min_y: crate::terrain::END_MIN_Y,
-            gen_depth: crate::terrain::END_HEIGHT,
+            seed: world.seed(),
+            world,
+            min_y: level.min_y,
+            height: level.height,
+            sea_level: level.sea_level,
+            gen_min_y: level.gen_min_y,
+            gen_depth: level.gen_height,
         }
     }
 
@@ -496,7 +429,7 @@ struct Context<'g, 'a> {
 
 impl Context<'_, '_> {
     fn biome_ok(&self, quart_x: i32, quart_y: i32, quart_z: i32) -> bool {
-        let b = self.generator.biomes.biome(quart_x, quart_y, quart_z);
+        let b = self.generator.world.biome(quart_x, quart_y, quart_z);
         self.valid[b.0 as usize]
     }
 
@@ -525,8 +458,8 @@ impl Context<'_, '_> {
         (self.chunk_z << 4) + 8
     }
 
-    fn terrain(&self) -> TerrainRef<'_> {
-        self.generator.terrain
+    fn terrain(&self) -> Terrain<'_> {
+        Terrain(self.generator.world)
     }
 
     /// `UniformHeight.sample`: `Mth.randomBetweenInclusive`, or the minimum
@@ -874,7 +807,7 @@ impl Context<'_, '_> {
             for qx in quart(x - r)..=quart(x + r) {
                 let sea = self.generator.sea_level;
                 for qy in quart(sea - r)..=quart(sea + r) {
-                    let b = self.generator.biomes.biome(qx, qy, qz);
+                    let b = self.generator.world.biome(qx, qy, qz);
                     all_surrounding &= surrounding[b.0 as usize];
                 }
             }

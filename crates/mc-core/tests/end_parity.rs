@@ -3,6 +3,7 @@
 use mc_core::noise::SimplexNoise;
 use mc_core::random::{LegacyRandomSource, RandomSource};
 use mc_core::terrain::EndIslands;
+use mc_core::world::{Dimension, World};
 
 fn fixture(name: &str) -> String {
     std::fs::read_to_string(format!(
@@ -180,12 +181,10 @@ fn point(p: Option<(i32, i32, i32)>) -> String {
 /// of chunks on the outer islands (`end_city_points.txt`).
 #[test]
 fn end_cities_match_the_game() {
-    use mc_core::biome::EndBiomeSource;
-    use mc_core::structure::validate::{Structure, StructureGenerator};
+    use mc_core::structure::validate::Structure;
     use mc_core::structure::{STRUCTURE_SETS, StructureSets};
-    use mc_core::terrain::EndTerrain;
 
-    let mut world: Option<(i64, EndBiomeSource, EndTerrain)> = None;
+    let mut world: Option<World> = None;
     let (mut checked, mut generates, mut mismatches) = (0, 0, Vec::new());
     for line in fixture("end_cities.txt").lines() {
         let mut parts = line.split(' ');
@@ -194,15 +193,15 @@ fn end_cities_match_the_game() {
         let cx: i32 = parts.next().unwrap().parse().unwrap();
         let cz: i32 = parts.next().unwrap().parse().unwrap();
         let expected: Vec<&str> = parts.collect();
-        if world.as_ref().is_none_or(|w| w.0 != seed) {
-            world = Some((seed, EndBiomeSource::new(seed), EndTerrain::new(seed)));
+        if world.as_ref().is_none_or(|w| w.seed() != seed) {
+            world = Some(World::new(seed, Dimension::End));
         }
-        let (_, biomes, terrain) = world.as_ref().unwrap();
+        let generator = world.as_ref().unwrap().structures();
         assert_eq!(
             set.is_structure_chunk(&STRUCTURE_SETS[..], seed, cx, cz),
             Some(true)
         );
-        let outcome = StructureGenerator::end(seed, biomes, terrain).attempt(set, cx, cz);
+        let outcome = generator.attempt(set, cx, cz);
         let got: Vec<String> = outcome
             .attempts()
             .iter()
@@ -223,8 +222,8 @@ fn end_cities_match_the_game() {
         let mut parts = line.split(' ');
         let seed: i64 = parts.next().unwrap().parse().unwrap();
         parts.next();
-        let (biomes, terrain) = (EndBiomeSource::new(seed), EndTerrain::new(seed));
-        let generator = StructureGenerator::end(seed, &biomes, &terrain);
+        let world = World::new(seed, Dimension::End);
+        let generator = world.structures();
         for entry in parts {
             let (chunk, expected) = entry.split_once(':').unwrap();
             let (cx, cz) = chunk.split_once(',').unwrap();

@@ -5,46 +5,7 @@ use std::collections::HashMap;
 
 use mc_core::biome::{Biome, EndBiomeSource, NetherBiomeSource, OverworldBiomeSource};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Dimension {
-    Overworld,
-    Nether,
-    End,
-}
-
-impl Dimension {
-    pub const ALL: [Dimension; 3] = [Dimension::Overworld, Dimension::Nether, Dimension::End];
-
-    /// Stable name, kept in saved settings.
-    pub fn id(self) -> &'static str {
-        match self {
-            Dimension::Overworld => "overworld",
-            Dimension::Nether => "nether",
-            Dimension::End => "end",
-        }
-    }
-
-    pub fn from_id(id: &str) -> Option<Dimension> {
-        Dimension::ALL.into_iter().find(|d| d.id() == id)
-    }
-
-    pub fn label(self) -> &'static str {
-        match self {
-            Dimension::Overworld => "Overworld",
-            Dimension::Nether => "Nether",
-            Dimension::End => "End",
-        }
-    }
-
-    /// The biomes this dimension's biome source can return.
-    pub fn biomes(self) -> Vec<Biome> {
-        match self {
-            Dimension::Overworld => mc_core::biome::overworld_biomes().collect(),
-            Dimension::Nether => mc_core::biome::nether_biomes().collect(),
-            Dimension::End => mc_core::biome::end_biomes().collect(),
-        }
-    }
-}
+pub use mc_core::world::Dimension;
 
 /// The biome source of one dimension and seed.
 pub enum BiomeSource {

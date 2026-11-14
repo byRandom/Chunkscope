@@ -6,13 +6,10 @@
 //! cargo run -p mc-core --example structures -- <seed text> <x> <z> [radius in blocks]
 //! ```
 
-use mc_core::biome::OverworldBiomeSource;
 use mc_core::parse_seed;
 use mc_core::structure::scan::{ChunkRect, SetFilter};
-use mc_core::structure::stronghold::ring_positions;
-use mc_core::structure::validate::StructureGenerator;
-use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSets};
-use mc_core::terrain::OverworldTerrain;
+use mc_core::structure::{STRUCTURE_SETS, StructurePlacement};
+use mc_core::world::{Dimension, World};
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -27,23 +24,14 @@ fn main() {
         .get(3)
         .map_or(1000, |r| r.parse().expect("radius must be an integer"));
 
-    let biomes = OverworldBiomeSource::new(seed);
-    let terrain = OverworldTerrain::new(seed);
-    let generator = StructureGenerator::new(seed, &biomes, &terrain);
+    let world = World::new(seed, Dimension::Overworld);
+    let generator = world.structures();
     let mut found = Vec::new();
     for set in &STRUCTURE_SETS {
         let StructurePlacement::RandomSpread(_) = &set.placement else {
             continue; // strongholds are listed below
         };
-        // Sets don't record their dimension (their structures' biomes do), so
-        // skip the Nether and End ones by name.
-        if [
-            "minecraft:nether_complexes",
-            "minecraft:nether_fossils",
-            "minecraft:end_cities",
-        ]
-        .contains(&set.name)
-        {
+        if !Dimension::Overworld.has_set(set) {
             continue;
         }
         let rect = ChunkRect::around_block(x, z, radius);
@@ -57,17 +45,12 @@ fn main() {
         }
     }
     // Strongholds: exact positions (they need the biome search, ~1 s).
-    if let Some(rings) = STRUCTURE_SETS
-        .find_set("minecraft:strongholds")
-        .and_then(|s| s.concentric_rings())
-    {
-        for (cx, cz) in ring_positions(seed, &rings, &OverworldBiomeSource::new(seed)) {
-            // what /locate reports: the chunk's minimum corner (no locate offset)
-            let (bx, bz) = (cx << 4, cz << 4);
-            let d = (((bx - x) as f64).powi(2) + ((bz - z) as f64).powi(2)).sqrt();
-            if d <= radius as f64 {
-                found.push((d, "minecraft:stronghold".to_owned(), bx, bz));
-            }
+    for (cx, cz) in world.strongholds() {
+        // what /locate reports: the chunk's minimum corner (no locate offset)
+        let (bx, bz) = (cx << 4, cz << 4);
+        let d = (((bx - x) as f64).powi(2) + ((bz - z) as f64).powi(2)).sqrt();
+        if d <= radius as f64 {
+            found.push((d, "minecraft:stronghold".to_owned(), bx, bz));
         }
     }
     found.sort_by(|a, b| a.0.total_cmp(&b.0));
