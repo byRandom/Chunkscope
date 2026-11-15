@@ -2,14 +2,15 @@
 //!
 //! A tile at level `L` samples one biome every `2^L` quarts (4 blocks at
 //! level 0), [`TILE_PX`] samples per side. The UI asks for the tiles it
-//! needs each frame, nearest first; workers take the most urgent request,
-//! so panning away drops stale work.
+//! needs each frame, nearest first; workers (a [`WorkPool`]) take the most
+//! urgent request, so panning away drops stale work.
 
-use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, Condvar, Mutex, mpsc};
+use std::collections::HashMap;
+use std::sync::Arc;
 use std::thread;
 
 use crate::dimension::{BiomeSource, Dimension};
+use crate::work::WorkPool;
 use eframe::egui::{self, Color32, ColorImage, TextureHandle, TextureOptions};
 
 /// Samples per tile side.
@@ -40,36 +41,17 @@ impl TileKey {
     }
 }
 
-struct Queue {
-    /// Requests, most urgent last.
-    pending: Vec<TileKey>,
-    /// Requests a worker has taken and not finished yet.
-    working: HashSet<TileKey>,
-}
-
-struct Shared {
-    queue: Mutex<Queue>,
-    wake: Condvar,
-}
-
-struct Done {
-    key: TileKey,
-    image: ColorImage,
-    millis: f32,
-}
-
 struct Tile {
     texture: TextureHandle,
     last_used: u64,
 }
 
 pub struct TileCache {
-    shared: Arc<Shared>,
-    results: mpsc::Receiver<Done>,
+    /// Computes tiles: their pixels and how long they took (ms).
+    pool: WorkPool<TileKey, (ColorImage, f32)>,
     tiles: HashMap<TileKey, Tile>,
     in_flight: usize,
     frame: u64,
-    workers: usize,
     /// Moving average of the time to compute one tile.
     tile_ms: f32,
 }
@@ -77,44 +59,43 @@ pub struct TileCache {
 /// How many tiles stay in memory (64 KiB of texture each).
 const CACHE_LIMIT: usize = 1200;
 
+/// A worker's biome source, kept while the seed and dimension stay.
+type WorkerSource = Option<((i64, Dimension), BiomeSource)>;
+
 impl TileCache {
     pub fn new(ctx: &egui::Context) -> Self {
-        let shared = Arc::new(Shared {
-            queue: Mutex::new(Queue {
-                pending: Vec::new(),
-                working: HashSet::new(),
-            }),
-            wake: Condvar::new(),
-        });
-        let (tx, rx) = mpsc::channel();
         let workers = thread::available_parallelism()
             .map_or(2, |n| n.get())
             .saturating_sub(1)
             .max(1);
-        let palette = Arc::new(crate::biome_colors::palette());
-        for i in 0..workers {
-            let shared = shared.clone();
-            let tx = tx.clone();
-            let ctx = ctx.clone();
-            let palette = palette.clone();
-            thread::Builder::new()
-                .name(format!("tile-worker-{i}"))
-                .spawn(move || worker(&shared, &tx, &ctx, &palette))
-                .expect("spawn tile worker");
-        }
+        let palette = crate::biome_colors::palette();
+        let ctx = ctx.clone();
+        let pool = WorkPool::new(
+            "tile-worker",
+            workers,
+            Arc::new(move || ctx.request_repaint()),
+            move |source: &mut WorkerSource, key: TileKey| {
+                let world = (key.seed, key.dimension);
+                if source.as_ref().is_none_or(|(w, _)| *w != world) {
+                    *source = Some((world, BiomeSource::new(key.dimension, key.seed)));
+                }
+                let (_, src) = source.as_ref().expect("source just set");
+                let start = std::time::Instant::now();
+                let image = compute(src, key, &palette);
+                (image, start.elapsed().as_secs_f32() * 1000.0)
+            },
+        );
         Self {
-            shared,
-            results: rx,
+            pool,
             tiles: HashMap::new(),
             in_flight: 0,
             frame: 0,
-            workers,
             tile_ms: 0.0,
         }
     }
 
     pub fn workers(&self) -> usize {
-        self.workers
+        self.pool.workers()
     }
 
     pub fn loaded(&self) -> usize {
@@ -134,16 +115,16 @@ impl TileCache {
     /// Upload finished tiles. Call once per frame, before drawing.
     pub fn receive(&mut self, ctx: &egui::Context) {
         self.frame += 1;
-        while let Ok(done) = self.results.try_recv() {
+        for (key, (image, millis)) in self.pool.receive() {
             self.tile_ms = if self.tile_ms == 0.0 {
-                done.millis
+                millis
             } else {
-                self.tile_ms * 0.9 + done.millis * 0.1
+                self.tile_ms * 0.9 + millis * 0.1
             };
-            let name = format!("tile {:?}", done.key);
-            let texture = ctx.load_texture(name, done.image, TextureOptions::NEAREST);
+            let name = format!("tile {key:?}");
+            let texture = ctx.load_texture(name, image, TextureOptions::NEAREST);
             self.tiles.insert(
-                done.key,
+                key,
                 Tile {
                     texture,
                     last_used: self.frame,
@@ -169,62 +150,14 @@ impl TileCache {
         })
     }
 
-    /// Replace the work queue with the tiles still missing from `wanted`
-    /// (most urgent first).
+    /// Ask for the tiles still missing from `wanted` (most urgent first),
+    /// dropping earlier requests.
     pub fn request(&mut self, wanted: &[TileKey]) {
-        let mut q = self.shared.queue.lock().expect("tile queue");
-        let mut pending: Vec<TileKey> = wanted
-            .iter()
-            .filter(|k| !self.tiles.contains_key(k) && !q.working.contains(k))
-            .copied()
-            .collect();
-        self.in_flight = pending.len() + q.working.len();
-        pending.reverse();
-        if q.pending != pending {
-            q.pending = pending;
-            self.shared.wake.notify_all();
-        }
+        self.in_flight = self.pool.request(wanted, |k| self.tiles.contains_key(k));
     }
 }
 
-fn worker(shared: &Shared, tx: &mpsc::Sender<Done>, ctx: &egui::Context, palette: &[Color32]) {
-    let mut source: Option<((i64, Dimension), BiomeSource)> = None;
-    loop {
-        let key = {
-            let mut q = shared.queue.lock().expect("tile queue");
-            loop {
-                if let Some(key) = q.pending.pop() {
-                    q.working.insert(key);
-                    break key;
-                }
-                q = shared.wake.wait(q).expect("tile queue");
-            }
-        };
-        let world = (key.seed, key.dimension);
-        if source.as_ref().is_none_or(|(w, _)| *w != world) {
-            source = Some((world, BiomeSource::new(key.dimension, key.seed)));
-        }
-        let (_, src) = source.as_ref().expect("source just set");
-        let start = std::time::Instant::now();
-        let mut done = compute(src, key, palette);
-        done.millis = start.elapsed().as_secs_f32() * 1000.0;
-        // Send before leaving `working`, so the UI never sees the tile as
-        // neither loaded nor in progress.
-        let closed = tx.send(done).is_err();
-        shared
-            .queue
-            .lock()
-            .expect("tile queue")
-            .working
-            .remove(&key);
-        if closed {
-            return; // the app is closing
-        }
-        ctx.request_repaint();
-    }
-}
-
-fn compute(source: &BiomeSource, key: TileKey, palette: &[Color32]) -> Done {
+fn compute(source: &BiomeSource, key: TileKey, palette: &[Color32]) -> ColorImage {
     // Start every tile from a fresh search state, so a tile looks the same
     // whichever thread computed it (see docs/PARITY.md on query order).
     source.reset_search();
@@ -249,11 +182,7 @@ fn compute(source: &BiomeSource, key: TileKey, palette: &[Color32]) -> Done {
             pixels[pz * n + px] = color;
         }
     }
-    Done {
-        key,
-        image: ColorImage::new([n, n], pixels),
-        millis: 0.0,
-    }
+    ColorImage::new([n, n], pixels)
 }
 
 /// A biome color darkened for the End's void.

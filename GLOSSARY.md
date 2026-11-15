@@ -47,6 +47,9 @@ Names in the code follow these.
 - **Settings**: what the app remembers between runs (seed, view, layers,
   the finder's query), saved by layer id so new layers do not break them.
 - **Marker**: a hit drawn on the map.
+- **Work pool**: the app's background threads for keyed results (map tiles,
+  marker squares). Each request replaces the last, workers take the most
+  urgent key first; a **job** is a one-off computation (spawn, strongholds).
 - **Estimate**: the spawn block, which needs features Chunkscope does not
   generate.
 
