@@ -12,6 +12,8 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use crate::dimension::Dimension;
+use mc_core::structure::target::Target;
+
 use crate::structures::{KINDS, kind_index};
 
 /// The key under which the settings are stored.
@@ -87,7 +89,9 @@ pub struct FinderSettings {
     /// Measure from the world spawn (else from 0, 0).
     pub center_spawn: bool,
     pub filters: Vec<FilterSettings>,
-    /// The biome at the center, e.g. `minecraft:plains`.
+    /// The biomes allowed at the center, e.g. `minecraft:plains`.
+    pub biomes: Vec<String>,
+    /// The one biome versions before 0.7 saved (still written, for them).
     pub biome: Option<String>,
     /// First seed, or the salt of random seeds.
     pub from: String,
@@ -100,11 +104,20 @@ impl Default for FinderSettings {
         Self {
             center_spawn: true,
             filters: vec![FilterSettings::default()],
+            biomes: Vec::new(),
             biome: None,
             from: "0".to_owned(),
             count: 100_000,
             random: false,
         }
+    }
+}
+
+impl FinderSettings {
+    /// The biomes allowed at the center (from `biome` in older files).
+    pub fn biomes(&self) -> impl Iterator<Item = &str> {
+        let old = self.biome.as_deref().filter(|_| self.biomes.is_empty());
+        self.biomes.iter().map(String::as_str).chain(old)
     }
 }
 
@@ -132,9 +145,10 @@ impl Default for FilterSettings {
 }
 
 impl FilterSettings {
-    /// The layer this filter searches, if it still exists and is searchable.
-    pub fn kind(&self) -> Option<usize> {
-        kind_index(&self.layer).filter(|&i| KINDS[i].searchable())
+    /// The target this filter searches, if its layer still exists and is
+    /// searchable.
+    pub fn target(&self) -> Option<&'static Target> {
+        kind_index(&self.layer).and_then(|i| KINDS[i].target())
     }
 }
 
@@ -166,7 +180,7 @@ mod tests {
             count: 2,
             ship: true,
         });
-        s.finder.biome = Some("minecraft:plains".to_owned());
+        s.finder.biomes = vec!["minecraft:plains".to_owned(), "minecraft:meadow".to_owned()];
         assert_eq!(round_trip(&s), s);
         assert_eq!(round_trip(&s).layers_on(), on);
         assert_eq!(s.dimension(), Dimension::Nether);
@@ -204,10 +218,35 @@ mod tests {
     }
 
     #[test]
+    fn biomes_from_older_files() {
+        let old: FinderSettings = ron::from_str(r#"(biome: Some("minecraft:plains"))"#).unwrap();
+        assert_eq!(old.biomes().collect::<Vec<_>>(), ["minecraft:plains"]);
+        let new = FinderSettings {
+            biomes: vec!["minecraft:forest".to_owned()],
+            biome: Some("minecraft:forest".to_owned()),
+            ..FinderSettings::default()
+        };
+        assert_eq!(new.biomes().collect::<Vec<_>>(), ["minecraft:forest"]);
+        assert_eq!(FinderSettings::default().biomes().count(), 0);
+    }
+
+    #[test]
     fn layer_ids_are_unique() {
         for (i, k) in KINDS.iter().enumerate() {
             assert_eq!(kind_index(k.id), Some(i), "{}", k.id);
         }
+    }
+
+    /// The finder offers every target, under its layer's id.
+    #[test]
+    fn every_target_has_a_layer() {
+        use mc_core::structure::target::TARGETS;
+        for t in TARGETS {
+            let kind = kind_index(t.id).unwrap_or_else(|| panic!("no layer for {}", t.id));
+            assert_eq!(KINDS[kind].target(), Some(t));
+        }
+        let targets = KINDS.iter().filter(|k| k.searchable()).count();
+        assert_eq!(targets, TARGETS.len());
     }
 
     #[test]
@@ -216,9 +255,9 @@ mod tests {
             layer: layer.to_owned(),
             ..FilterSettings::default()
         };
-        assert!(filter("villages").kind().is_some());
-        assert!(filter("spawn").kind().is_none());
-        assert!(filter("strongholds").kind().is_none());
-        assert!(filter("no_such_layer").kind().is_none());
+        assert!(filter("villages").target().is_some());
+        assert!(filter("spawn").target().is_none());
+        assert!(filter("strongholds").target().is_none());
+        assert!(filter("no_such_layer").target().is_none());
     }
 }

@@ -8,7 +8,9 @@ use std::time::Instant;
 
 use eframe::egui::{self, RichText};
 use mc_core::biome::Biome;
-use mc_core::finder::{Center, Match, Query, SearchState, Seeds, StructureFilter, search};
+use mc_core::finder::{
+    Center, Match, Query, SearchState, Seeds, StructureFilter, TARGETS, Target, search,
+};
 use mc_core::parse_seed;
 
 use crate::app::{accent_button, fit_label, icon_button, panel_header, section};
@@ -16,20 +18,11 @@ use crate::biome_colors;
 use crate::dimension::Dimension;
 use crate::icons::Icon;
 use crate::settings::{FilterSettings, FinderSettings};
-use crate::structures::KINDS;
+use crate::structures::{KINDS, kind_index};
 use crate::theme::{self, TEXT, TEXT_WEAK};
 
 /// The finder stops collecting matches past this many.
 const MAX_RESULTS: usize = 500;
-
-struct FilterRow {
-    /// Index into `KINDS`.
-    kind: usize,
-    radius: i32,
-    count: u32,
-    /// End cities: only those with a ship.
-    ship: bool,
-}
 
 struct Running {
     state: Arc<SearchState>,
@@ -44,10 +37,18 @@ pub enum Action {
     Open { seed: i64, center: (i32, i32) },
 }
 
+/// The query's text field.
+const QUERY_ID: &str = "finder-query";
+
 pub struct FinderUi {
-    center_spawn: bool,
-    filters: Vec<FilterRow>,
-    biome: Option<Biome>,
+    /// What the form shows.
+    query: Query,
+    /// The query's text form, as the user edits or pastes it.
+    query_text: String,
+    /// The form's query when `query_text` was last written from it.
+    synced: String,
+    /// Why `query_text` does not parse.
+    query_error: Option<String>,
     from: String,
     count: u64,
     random: bool,
@@ -55,18 +56,24 @@ pub struct FinderUi {
     results: Arc<Mutex<Vec<Match>>>,
 }
 
-/// Structure layers the finder can search (not the spawn, not strongholds).
-fn searchable(kind: usize) -> bool {
-    KINDS[kind].searchable()
+/// A target's name in the finder (its layer's label), with its dimension
+/// when not the Overworld.
+fn target_label(t: &Target) -> String {
+    let label = kind_index(t.id).map_or(t.id, |i| KINDS[i].label);
+    match t.dimension {
+        Dimension::Overworld => label.to_owned(),
+        Dimension::Nether => format!("{label} (Nether)"),
+        Dimension::End => format!("{label} (End)"),
+    }
 }
 
-/// A layer's name in the finder, with its dimension when not the Overworld.
-fn kind_label(kind: usize) -> String {
-    let k = &KINDS[kind];
-    match k.dimension {
-        Dimension::Overworld => k.label.to_owned(),
-        Dimension::Nether => format!("{} (Nether)", k.label),
-        Dimension::End => format!("{} (End)", k.label),
+/// The filter the form starts with, and adds.
+fn default_filter() -> StructureFilter {
+    let f = FilterSettings::default();
+    let target = f.target().unwrap_or(&TARGETS[0]);
+    StructureFilter {
+        min_count: f.count.max(1),
+        ..StructureFilter::new(target, f.radius.max(0))
     }
 }
 
@@ -74,31 +81,37 @@ impl FinderUi {
     /// The panel with a saved query. Filters on layers that no longer exist
     /// are dropped.
     pub fn from_settings(s: &FinderSettings) -> Self {
-        let mut filters: Vec<FilterRow> = s
+        let mut structures: Vec<StructureFilter> = s
             .filters
             .iter()
             .filter_map(|f| {
-                Some(FilterRow {
-                    kind: f.kind()?,
+                Some(StructureFilter {
+                    target: f.target()?,
                     radius: f.radius.max(0),
-                    count: f.count.max(1),
-                    ship: f.ship,
+                    min_count: f.count.max(1),
+                    ship_only: f.ship,
                 })
             })
             .collect();
-        if filters.is_empty() {
-            let f = FilterSettings::default();
-            filters.push(FilterRow {
-                kind: f.kind().unwrap_or(0),
-                radius: f.radius,
-                count: f.count,
-                ship: f.ship,
-            });
+        if structures.is_empty() {
+            structures.push(default_filter());
         }
+        let biomes: Vec<Biome> = s.biomes().filter_map(Biome::from_name).collect();
+        let query = Query {
+            center: if s.center_spawn {
+                Center::Spawn
+            } else {
+                Center::Zero
+            },
+            structures,
+            center_biomes: (!biomes.is_empty()).then_some(biomes),
+        };
+        let text = query.to_string();
         Self {
-            center_spawn: s.center_spawn,
-            filters,
-            biome: s.biome.as_deref().and_then(Biome::from_name),
+            query,
+            query_text: text.clone(),
+            synced: text,
+            query_error: None,
             from: s.from.clone(),
             count: s.count,
             random: s.random,
@@ -109,19 +122,29 @@ impl FinderUi {
 
     /// The query, to save.
     pub fn settings(&self) -> FinderSettings {
+        let biomes: Vec<String> = self
+            .query
+            .center_biomes
+            .iter()
+            .flatten()
+            .map(|b| b.name().to_owned())
+            .collect();
         FinderSettings {
-            center_spawn: self.center_spawn,
+            center_spawn: self.query.center == Center::Spawn,
             filters: self
-                .filters
+                .query
+                .structures
                 .iter()
                 .map(|f| FilterSettings {
-                    layer: KINDS[f.kind].id.to_owned(),
+                    layer: f.target.id.to_owned(),
                     radius: f.radius,
-                    count: f.count,
-                    ship: f.ship,
+                    count: f.min_count,
+                    ship: f.ship_only,
                 })
                 .collect(),
-            biome: self.biome.map(|b| b.name().to_owned()),
+            // Versions before 0.7 read one biome.
+            biome: biomes.first().cloned(),
+            biomes,
             from: self.from.clone(),
             count: self.count,
             random: self.random,
@@ -134,32 +157,8 @@ impl FinderUi {
             .is_some_and(|r| r.thread.as_ref().is_some_and(|t| !t.is_finished()))
     }
 
-    fn query(&self) -> Option<Query> {
-        let mut structures_ = Vec::new();
-        for f in &self.filters {
-            let kind = &KINDS[f.kind];
-            structures_.push(StructureFilter {
-                select: KINDS[f.kind].select(f.ship)?,
-                radius: f.radius,
-                min_count: f.count,
-                dimension: kind.dimension,
-            });
-        }
-        Some(Query {
-            center: if self.center_spawn {
-                Center::Spawn
-            } else {
-                Center::Zero
-            },
-            structures: structures_,
-            center_biomes: self.biome.map(|b| vec![b]),
-        })
-    }
-
     fn start(&mut self, ctx: &egui::Context) {
-        let Some(query) = self.query() else {
-            return;
-        };
+        let query = self.query.clone();
         let from = parse_seed(&self.from).unwrap_or(0);
         let seeds = if self.random {
             Seeds::Random {
@@ -219,6 +218,9 @@ impl FinderUi {
         panel_header(ui, "Seed finder", Some("Structures near the spawn"));
         egui::ScrollArea::vertical().show(ui, |ui| {
             section(ui, |ui| {
+                // Copyable while a search runs.
+                self.query_text_ui(ui, running);
+                ui.add_space(6.0);
                 ui.add_enabled_ui(!running, |ui| self.filters_ui(ui));
             });
             theme::divider(ui);
@@ -242,16 +244,61 @@ impl FinderUi {
         action
     }
 
+    /// The query as text: copy it, paste one, or edit it. It follows the
+    /// form, and the form follows it while it parses; text that does not
+    /// parse shows why, and goes back to the form's query once the field
+    /// loses focus.
+    fn query_text_ui(&mut self, ui: &mut egui::Ui, running: bool) {
+        let id = egui::Id::unique(QUERY_ID);
+        let current = self.query.to_string();
+        if current != self.synced && !ui.memory(|m| m.has_focus(id)) {
+            self.query_text = current.clone();
+            self.synced = current;
+            self.query_error = None;
+        }
+        theme::section_title(ui, "Query");
+        ui.horizontal_top(|ui| {
+            let edit = ui.add(
+                // Wraps, so the whole query shows in the narrow panel.
+                egui::TextEdit::multiline(&mut self.query_text)
+                    .id(id)
+                    .desired_rows(2)
+                    .interactive(!running)
+                    .font(egui::TextStyle::Monospace)
+                    .desired_width(ui.available_width() - 32.0)
+                    .hint_text("villages:300 biome=plains"),
+            );
+            if edit.changed() {
+                match self.query_text.parse::<Query>() {
+                    Ok(q) => {
+                        self.query = q;
+                        self.query_error = None;
+                    }
+                    Err(e) => self.query_error = Some(e.to_string()),
+                }
+            }
+            if icon_button(ui, Icon::Copy, false)
+                .on_hover_text("Copy query")
+                .clicked()
+            {
+                ui.ctx().copy_text(self.query_text.clone());
+            }
+        });
+        if let Some(e) = &self.query_error {
+            ui.label(RichText::new(e).color(theme::ERROR).small());
+        }
+    }
+
     fn filters_ui(&mut self, ui: &mut egui::Ui) {
         theme::section_title(ui, "Center");
         ui.horizontal(|ui| {
-            ui.radio_value(&mut self.center_spawn, true, "World spawn");
-            ui.radio_value(&mut self.center_spawn, false, "0, 0");
+            ui.radio_value(&mut self.query.center, Center::Spawn, "World spawn");
+            ui.radio_value(&mut self.query.center, Center::Zero, "0, 0");
         });
         ui.add_space(6.0);
         theme::section_title(ui, "Structures");
         let mut remove = None;
-        for (i, f) in self.filters.iter_mut().enumerate() {
+        for (i, f) in self.query.structures.iter_mut().enumerate() {
             egui::Frame::new()
                 .fill(theme::FIELD)
                 .corner_radius(egui::CornerRadius::same(theme::RADIUS))
@@ -261,10 +308,10 @@ impl FinderUi {
                     ui.horizontal(|ui| {
                         egui::ComboBox::from_id_salt(("finder-kind", i))
                             .width(ui.available_width() - 40.0)
-                            .selected_text(kind_label(f.kind))
+                            .selected_text(target_label(f.target))
                             .show_ui(ui, |ui| {
-                                for k in (0..KINDS.len()).filter(|&k| searchable(k)) {
-                                    ui.selectable_value(&mut f.kind, k, kind_label(k));
+                                for t in KINDS.iter().filter_map(|k| k.target()) {
+                                    ui.selectable_value(&mut f.target, t, target_label(t));
                                 }
                             });
                         if icon_button(ui, Icon::Minus, false)
@@ -283,21 +330,22 @@ impl FinderUi {
                                 .suffix(" blocks"),
                         );
                         ui.label(RichText::new("at least").color(TEXT_WEAK).small());
-                        ui.add(egui::DragValue::new(&mut f.count).range(1..=20));
+                        ui.add(egui::DragValue::new(&mut f.min_count).range(1..=20));
                     });
-                    if KINDS[f.kind].has_ships() {
-                        ui.checkbox(&mut f.ship, "With a ship (elytra)");
+                    if f.target.has_ships() {
+                        ui.checkbox(&mut f.ship_only, "With a ship (elytra)");
                     }
                 });
             ui.add_space(4.0);
         }
         if let Some(i) = remove {
-            self.filters.remove(i);
+            self.query.structures.remove(i);
         }
         if self
-            .filters
+            .query
+            .structures
             .iter()
-            .any(|f| KINDS[f.kind].dimension != Dimension::Overworld)
+            .any(|f| f.dimension() != Dimension::Overworld)
         {
             ui.label(
                 RichText::new(
@@ -308,32 +356,48 @@ impl FinderUi {
             );
         }
         if ui.button("+ Add structure").clicked() {
-            let kind = (0..KINDS.len()).find(|&k| searchable(k)).unwrap_or(0);
-            self.filters.push(FilterRow {
-                kind,
+            self.query.structures.push(StructureFilter {
                 radius: 500,
-                count: 1,
-                ship: false,
+                ..default_filter()
             });
         }
         ui.add_space(6.0);
         theme::section_title(ui, "Biome at the center");
-        let label = self
-            .biome
-            .map_or("Any".to_owned(), |b| biome_colors::display_name(b.name()));
+        let biomes = self.query.center_biomes.get_or_insert_with(Vec::new);
+        let label = match biomes.as_slice() {
+            [] => "Any".to_owned(),
+            [b] => biome_colors::display_name(b.name()),
+            [b, rest @ ..] => format!(
+                "{} + {} more",
+                biome_colors::display_name(b.name()),
+                rest.len()
+            ),
+        };
         egui::ComboBox::from_id_salt("finder-biome")
             .width(ui.available_width())
             .selected_text(label)
+            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
             .show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.biome, None, "Any");
+                if ui.selectable_label(biomes.is_empty(), "Any").clicked() {
+                    biomes.clear();
+                }
                 for b in Dimension::Overworld.biomes() {
-                    ui.selectable_value(
-                        &mut self.biome,
-                        Some(b),
-                        biome_colors::display_name(b.name()),
-                    );
+                    let mut on = biomes.contains(&b);
+                    if ui
+                        .checkbox(&mut on, biome_colors::display_name(b.name()))
+                        .changed()
+                    {
+                        if on {
+                            biomes.push(b);
+                        } else {
+                            biomes.retain(|&x| x != b);
+                        }
+                    }
                 }
             });
+        if biomes.is_empty() {
+            self.query.center_biomes = None;
+        }
     }
 
     fn seeds_ui(&mut self, ui: &mut egui::Ui) {
@@ -390,7 +454,20 @@ impl FinderUi {
         // Matches arrive in whatever order the threads finish: keep the list
         // stable, in seed order.
         results.sort_by_key(|m| m.seed);
-        theme::section_title(ui, &format!("Results ({})", results.len()));
+        ui.horizontal(|ui| {
+            theme::section_title(ui, &format!("Results ({})", results.len()));
+            if !results.is_empty() {
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if icon_button(ui, Icon::Copy, false)
+                        .on_hover_text("Copy all results, one line per seed")
+                        .clicked()
+                    {
+                        let lines: Vec<String> = results.iter().map(Match::to_string).collect();
+                        ui.ctx().copy_text(lines.join("\n"));
+                    }
+                });
+            }
+        });
         if results.is_empty() {
             ui.label(
                 RichText::new("Matching seeds appear here. Click one to open it.")

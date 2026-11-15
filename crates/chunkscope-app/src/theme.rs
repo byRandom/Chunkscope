@@ -26,6 +26,8 @@ pub const ACCENT_DIM: Color32 = Color32::from_rgb(0x0a, 0x3d, 0x2e);
 /// Text on accent-filled buttons.
 pub const ON_ACCENT: Color32 = Color32::from_rgb(0x06, 0x1a, 0x13);
 
+/// Error text.
+pub const ERROR: Color32 = Color32::from_rgb(0xf2, 0x6d, 0x6d);
 pub const RADIUS: u8 = 6;
 
 pub fn apply(ctx: &egui::Context) {
