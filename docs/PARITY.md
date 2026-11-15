@@ -15,7 +15,7 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
 | 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every structure, mineshafts included), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions, End biomes, terrain (simplex noise, islands) and end cities | In progress |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
-| 3    | The game at scale (wide oracle runs)     | Thousands of seeds in every dimension, run before releases; cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Planned (0.7) |
+| 3    | The game at scale (`parity/game-oracle/wide.sh`) | Random seeds in every dimension: biomes, heights, every structure attempt in an area, end city ships, spawn, strongholds; weekly and before each release. cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Running (0.7) |
 
 In every tier, the Rust tests recompute the same values and must match **bit
 for bit**. Floats are compared by their raw bits, never with a tolerance. CI
@@ -58,6 +58,34 @@ offset spline and the overworld biome parameter list. It also generates
 `crates/mc-core/src/structure/generated.rs`, every vanilla structure set. Since 26.1 the game is
 shipped without obfuscation, so the oracle can use the real class and method
 names.
+
+### Tier 3: the game at scale
+
+The fixtures hold many samples on a few seeds. `parity/game-oracle/wide.sh`
+checks many random seeds instead, with the same game classes:
+
+```bash
+parity/game-oracle/wide.sh [seeds] [salt] [strongholds every n-th seed]
+```
+
+`WideOracle.java` (compiled with `GameOracle.java`, whose helpers it reuses)
+writes, for every seed and dimension: biomes at random quart positions near
+and far, `getBaseHeight` (`WORLD_SURFACE_WG` and `OCEAN_FLOOR_WG`) at random
+columns, and every structure attempt of every random-spread set around
+(0, 0) and around a random far block (including the candidates a set rejects,
+so Chunkscope cannot add attempts either), with whether each end city has a
+ship. For the Overworld it adds the spawn origin and, every few seeds, all
+128 strongholds. Its output goes to the git-ignored `parity/.cache/wide/`;
+`crates/mc-core/tests/wide.rs` compares Chunkscope with it, prints every
+difference with its seed and position, and writes them all to
+`report-*.txt`. Without `CHUNKSCOPE_WIDE` those tests do nothing, so
+`cargo test` stays fast.
+
+The seeds come from the salt (the date by default), so each run checks new
+seeds and a reported difference can be rerun with the same salt. The `Wide
+parity` workflow runs it weekly, by hand, and before each release (the
+release waits for it). A difference it finds is fixed and its case added to
+the regular fixtures.
 
 ## Pitfalls already caught
 

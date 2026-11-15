@@ -40,7 +40,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: parity/.cache
-          key: minecraft-server-${{ hashFiles('parity/game-oracle/run.sh') }}
+          key: minecraft-server-${{ hashFiles('parity/game-oracle/run.sh', 'parity/game-oracle/fetch.sh') }}
       - name: Regenerate fixtures with the real game
         run: parity/game-oracle/run.sh
       - name: Fixtures must be up to date

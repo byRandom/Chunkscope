@@ -108,9 +108,19 @@ jobs:
           name: ${{ matrix.name }}
           path: ${{ env.ASSET }}
 
+  # The large-scale check against the real game, on fresh random seeds: a
+  # release waits for it (and is not published if it finds a difference).
+  wide:
+    name: Wide parity
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    uses: ./.github/workflows/wide.yml
+    with:
+      seeds: "100"
+
   release:
     name: Publish release
-    needs: [prepare, build]
+    needs: [prepare, build, wide]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
     steps:
