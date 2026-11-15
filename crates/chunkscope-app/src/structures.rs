@@ -5,8 +5,8 @@
 //! generates there (and which structure of the set) is checked against
 //! biome and terrain like the game does, on background threads.
 
-use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, Condvar, Mutex, mpsc};
+use std::collections::HashMap;
+use std::sync::Arc;
 use std::thread;
 
 use eframe::egui::{self, Color32};
@@ -18,6 +18,7 @@ use mc_core::terrain::OverworldTerrain;
 use mc_core::world::World;
 
 use crate::dimension::Dimension;
+use crate::work::{Job, Wake, WorkPool};
 
 /// What a layer shows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -441,21 +442,9 @@ pub struct BlockKey {
     pub bz: i32,
 }
 
-struct Queue {
-    /// Requests, most urgent last.
-    pending: Vec<BlockKey>,
-    working: HashSet<BlockKey>,
-}
-
-struct Shared {
-    queue: Mutex<Queue>,
-    wake: Condvar,
-}
-
 /// Validated structure markers, computed on background threads.
 pub struct StructureCache {
-    shared: Arc<Shared>,
-    results: mpsc::Receiver<(BlockKey, Vec<Marker>)>,
+    pool: WorkPool<BlockKey, Vec<Marker>>,
     blocks: HashMap<BlockKey, Vec<Marker>>,
     in_flight: usize,
 }
@@ -465,30 +454,11 @@ const CACHE_LIMIT: usize = 20_000;
 
 impl StructureCache {
     pub fn new(ctx: &egui::Context) -> Self {
-        let shared = Arc::new(Shared {
-            queue: Mutex::new(Queue {
-                pending: Vec::new(),
-                working: HashSet::new(),
-            }),
-            wake: Condvar::new(),
-        });
-        let (tx, rx) = mpsc::channel();
         let workers = thread::available_parallelism()
             .map_or(2, |n| n.get())
-            .div_ceil(2)
-            .max(1);
-        for i in 0..workers {
-            let shared = shared.clone();
-            let tx = tx.clone();
-            let ctx = ctx.clone();
-            thread::Builder::new()
-                .name(format!("structure-worker-{i}"))
-                .spawn(move || worker(&shared, &tx, &ctx))
-                .expect("spawn structure worker");
-        }
+            .div_ceil(2);
         Self {
-            shared,
-            results: rx,
+            pool: WorkPool::new("structure-worker", workers, repaint(ctx), block_markers),
             blocks: HashMap::new(),
             in_flight: 0,
         }
@@ -501,9 +471,7 @@ impl StructureCache {
 
     /// Collect finished squares. Call once per frame.
     pub fn receive(&mut self) {
-        while let Ok((key, markers)) = self.results.try_recv() {
-            self.blocks.insert(key, markers);
-        }
+        self.blocks.extend(self.pool.receive());
         if self.blocks.len() > CACHE_LIMIT {
             self.blocks.clear();
         }
@@ -513,67 +481,39 @@ impl StructureCache {
         self.blocks.get(key).map(Vec::as_slice)
     }
 
-    /// Replace the work queue with the squares still missing from `wanted`
-    /// (most urgent first).
+    /// Ask for the squares still missing from `wanted` (most urgent first),
+    /// dropping earlier requests.
     pub fn request(&mut self, wanted: &[BlockKey]) {
-        let mut q = self.shared.queue.lock().expect("structure queue");
-        let mut pending: Vec<BlockKey> = wanted
-            .iter()
-            .filter(|k| !self.blocks.contains_key(k) && !q.working.contains(k))
-            .copied()
-            .collect();
-        self.in_flight = pending.len() + q.working.len();
-        pending.reverse();
-        if q.pending != pending {
-            q.pending = pending;
-            self.shared.wake.notify_all();
-        }
+        self.in_flight = self.pool.request(wanted, |k| self.blocks.contains_key(k));
     }
 }
 
-fn worker(shared: &Shared, tx: &mpsc::Sender<(BlockKey, Vec<Marker>)>, ctx: &egui::Context) {
-    // One world per dimension of the current seed, built when first needed.
-    let mut worlds: Vec<World> = Vec::new();
-    loop {
-        let key = {
-            let mut q = shared.queue.lock().expect("structure queue");
-            loop {
-                if let Some(key) = q.pending.pop() {
-                    q.working.insert(key);
-                    break key;
-                }
-                q = shared.wake.wait(q).expect("structure queue");
-            }
-        };
-        let dimension = KINDS[key.kind].dimension;
-        worlds.retain(|w| w.seed() == key.seed);
-        if !worlds.iter().any(|w| w.dimension() == dimension) {
-            worlds.push(World::new(key.seed, dimension));
-        }
-        let world = worlds
-            .iter()
-            .find(|w| w.dimension() == dimension)
-            .expect("world just built");
-        let c = (key.bx * BLOCK_CHUNKS, key.bz * BLOCK_CHUNKS);
-        let rect = ChunkRect {
-            x0: c.0,
-            z0: c.1,
-            x1: c.0 + BLOCK_CHUNKS - 1,
-            z1: c.1 + BLOCK_CHUNKS - 1,
-        };
-        let found = markers(key.kind, rect, &world.structures());
-        let closed = tx.send((key, found)).is_err();
-        shared
-            .queue
-            .lock()
-            .expect("structure queue")
-            .working
-            .remove(&key);
-        if closed {
-            return;
-        }
-        ctx.request_repaint();
+/// `egui::Context::request_repaint`, as a pool's wake.
+fn repaint(ctx: &egui::Context) -> Wake {
+    let ctx = ctx.clone();
+    Arc::new(move || ctx.request_repaint())
+}
+
+/// The markers of one square. `worlds` holds one world per dimension of the
+/// current seed, built when first needed.
+fn block_markers(worlds: &mut Vec<World>, key: BlockKey) -> Vec<Marker> {
+    let dimension = KINDS[key.kind].dimension;
+    worlds.retain(|w| w.seed() == key.seed);
+    if !worlds.iter().any(|w| w.dimension() == dimension) {
+        worlds.push(World::new(key.seed, dimension));
     }
+    let world = worlds
+        .iter()
+        .find(|w| w.dimension() == dimension)
+        .expect("world just built");
+    let c = (key.bx * BLOCK_CHUNKS, key.bz * BLOCK_CHUNKS);
+    let rect = ChunkRect {
+        x0: c.0,
+        z0: c.1,
+        x1: c.0 + BLOCK_CHUNKS - 1,
+        z1: c.1 + BLOCK_CHUNKS - 1,
+    };
+    markers(key.kind, rect, &world.structures())
 }
 
 /// The climate origin `(x, z)` the game searches the spawn around (exact),
@@ -582,84 +522,49 @@ pub type SpawnPoints = ((i32, i32), (i32, i32, i32));
 
 /// The world spawn: its origin (exact) and the spawn block (an estimate),
 /// computed on a background thread.
-pub struct Spawn {
-    rx: Option<mpsc::Receiver<SpawnPoints>>,
-    value: Option<SpawnPoints>,
-}
+pub struct Spawn(Job<SpawnPoints>);
 
 impl Spawn {
     pub fn new(seed: i64, ctx: &egui::Context) -> Self {
-        let (tx, rx) = mpsc::channel();
-        let ctx = ctx.clone();
-        thread::Builder::new()
-            .name("spawn".into())
-            .spawn(move || {
-                let biomes = OverworldBiomeSource::new(seed);
-                let terrain = OverworldTerrain::new(seed);
-                let origin = mc_core::spawn::spawn_origin(biomes.climate());
-                let block = mc_core::spawn::spawn_estimate(biomes.climate(), &terrain);
-                let _ = tx.send((origin, block));
-                ctx.request_repaint();
-            })
-            .expect("spawn spawn thread");
-        Self {
-            rx: Some(rx),
-            value: None,
-        }
+        Self(Job::spawn("spawn", repaint(ctx), move || {
+            let biomes = OverworldBiomeSource::new(seed);
+            let terrain = OverworldTerrain::new(seed);
+            let origin = mc_core::spawn::spawn_origin(biomes.climate());
+            let block = mc_core::spawn::spawn_estimate(biomes.climate(), &terrain);
+            (origin, block)
+        }))
     }
 
     pub fn is_loading(&mut self) -> bool {
-        if let Some(rx) = &self.rx
-            && let Ok(v) = rx.try_recv()
-        {
-            self.value = Some(v);
-            self.rx = None;
-        }
-        self.rx.is_some()
+        self.0.is_loading()
     }
 
     pub fn get(&self) -> Option<SpawnPoints> {
-        self.value
+        self.0.get().copied()
     }
 }
 
 /// Stronghold positions, computed on a background thread (they need a
 /// biome search around each of the 128 ring positions).
-pub struct Strongholds {
-    rx: Option<mpsc::Receiver<Vec<(i32, i32)>>>,
-    positions: Vec<(i32, i32)>,
-}
+pub struct Strongholds(Job<Vec<(i32, i32)>>);
 
 impl Strongholds {
     pub fn new(seed: i64, ctx: &egui::Context) -> Self {
-        let (tx, rx) = mpsc::channel();
-        let ctx = ctx.clone();
-        thread::Builder::new()
-            .name("strongholds".into())
-            .spawn(move || {
-                let positions = World::new(seed, Dimension::Overworld).strongholds();
-                let _ = tx.send(positions);
-                ctx.request_repaint();
-            })
-            .expect("spawn stronghold thread");
-        Self {
-            rx: Some(rx),
-            positions: Vec::new(),
-        }
+        Self(Job::spawn("strongholds", repaint(ctx), move || {
+            World::new(seed, Dimension::Overworld).strongholds()
+        }))
     }
 
     pub fn is_loading(&mut self) -> bool {
-        if let Some(rx) = &self.rx
-            && let Ok(p) = rx.try_recv()
-        {
-            self.positions = p;
-            self.rx = None;
-        }
-        self.rx.is_some()
+        self.0.is_loading()
     }
 
     /// Block positions, as `/locate` reports them (the chunk's corner).
     pub fn positions(&self) -> impl Iterator<Item = (i32, i32)> + '_ {
-        self.positions.iter().map(|&(cx, cz)| (cx << 4, cz << 4))
+        self.0
+            .get()
+            .into_iter()
+            .flatten()
+            .map(|&(cx, cz)| (cx << 4, cz << 4))
     }
 }

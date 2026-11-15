@@ -11,6 +11,7 @@ mod settings;
 mod structures;
 mod theme;
 mod tiles;
+mod work;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
