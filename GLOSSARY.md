@@ -66,5 +66,8 @@ Names in the code follow these.
 - **Oracle**: a Java program that runs the game's (or the JDK's) own code
   and writes fixtures the Rust tests compare against, bit for bit.
 - **Fixture**: the oracle's output, committed under `parity/fixtures/`.
+- **Wide check**: the oracle run on many random seeds at once
+  (`parity/game-oracle/wide.sh`), compared without committing its output.
+  Weekly and before each release.
 - **Equivalent mutation**: a change to a port that no input can tell apart
   from the original, recorded in `docs/PARITY.md`.

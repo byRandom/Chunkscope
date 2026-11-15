@@ -167,6 +167,15 @@ java parity/oracle/Oracle.java
 parity/game-oracle/run.sh
 ```
 
+The large-scale check runs the real game on many random seeds and compares
+everything (biomes, heights, structures, end city ships, spawn,
+strongholds) in every dimension; it is too slow for every pull request and
+runs weekly and before each release:
+
+```bash
+parity/game-oracle/wide.sh 200
+```
+
 ## Versioning
 
 Chunkscope uses [semantic versioning](https://semver.org), independent of

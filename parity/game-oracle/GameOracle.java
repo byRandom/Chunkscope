@@ -1189,10 +1189,21 @@ public class GameOracle {
     static void strongholds(HolderLookup.Provider lookup) throws Exception {
         NoiseGeneratorSettings settings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
                 .getOrThrow(NoiseGeneratorSettings.OVERWORLD).value();
-        var biomeLookup = lookup.lookupOrThrow(Registries.BIOME);
         var biomeSource = net.minecraft.world.level.biome.MultiNoiseBiomeSource.createFromPreset(
                 lookup.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
                         .getOrThrow(net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists.OVERWORLD));
+        try (PrintWriter w = writer("strongholds.txt")) {
+            for (long seed : List.of(0L, 1L, -4172144997902289642L, INPUTS.nextLong())) {
+                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
+                w.println(strongholdLine(lookup, biomeSource, rs, seed));
+            }
+        }
+    }
+
+    /** `seed x,z ...`: the stronghold chunks (ChunkGeneratorStructureState.generateRingPositions). */
+    static String strongholdLine(HolderLookup.Provider lookup, net.minecraft.world.level.biome.BiomeSource biomeSource,
+            RandomState rs, long seed) throws Exception {
+        var biomeLookup = lookup.lookupOrThrow(Registries.BIOME);
         var set = lookup.lookupOrThrow(Registries.STRUCTURE_SET).getOrThrow(
                 ResourceKey.create(Registries.STRUCTURE_SET, Identifier.parse("minecraft:strongholds")));
         var vanilla = (net.minecraft.world.level.levelgen.structure.placement.ConcentricRingsStructurePlacement) set.value().placement();
@@ -1209,18 +1220,13 @@ public class GameOracle {
         Method generate = net.minecraft.world.level.chunk.ChunkGeneratorStructureState.class.getDeclaredMethod(
                 "generateRingPositions", Holder.class, placement.getClass());
         generate.setAccessible(true);
-        try (PrintWriter w = writer("strongholds.txt")) {
-            for (long seed : List.of(0L, 1L, -4172144997902289642L, INPUTS.nextLong())) {
-                RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settings);
-                Object state = ctor.newInstance(rs, biomeSource, seed, new net.minecraft.world.level.ChunkPos(0, 0), seed, List.of());
-                @SuppressWarnings("unchecked")
-                var positions = ((java.util.concurrent.CompletableFuture<List<net.minecraft.world.level.ChunkPos>>)
-                        generate.invoke(state, set, placement)).join();
-                StringBuilder sb = new StringBuilder(String.valueOf(seed));
-                for (var p : positions) sb.append(' ').append(p.x()).append(',').append(p.z());
-                w.println(sb);
-            }
-        }
+        Object state = ctor.newInstance(rs, biomeSource, seed, new net.minecraft.world.level.ChunkPos(0, 0), seed, List.of());
+        @SuppressWarnings("unchecked")
+        var positions = ((java.util.concurrent.CompletableFuture<List<net.minecraft.world.level.ChunkPos>>)
+                generate.invoke(state, set, placement)).join();
+        StringBuilder sb = new StringBuilder(String.valueOf(seed));
+        for (var p : positions) sb.append(' ').append(p.x()).append(',').append(p.z());
+        return sb.toString();
     }
     // ---- volume-mode noise (terrain path) ----------------------------------------
     static long fnv(net.minecraft.world.level.levelgen.densityfunction.DensityBuffer b, int n) {
