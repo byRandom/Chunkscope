@@ -111,12 +111,13 @@ port should be checked at a much larger scale.
    cubiomes as the large-scale cross-check, but cubiomes targets older
    versions with `double` noise: it cannot match 26.x worlds (see
    PARITY.md). The large-scale check therefore runs the game oracle itself
-   in a "wide" mode: thousands of random seeds, sampled biomes in every
-   dimension, every structure attempt in a large area, strongholds and
-   spawn origins.
-2. **Where it runs.** Too big for every pull request: a manual or weekly
-   workflow (and before each release) that regenerates the wide fixtures,
-   compares, and reports any difference with the seed and position.
+   in a "wide" mode (done: `WideOracle.java`): random seeds, sampled
+   biomes and heights in every dimension, every structure attempt in an
+   area, end city ships, strongholds and spawn origins.
+2. **Where it runs (done).** Too big for every pull request: the `Wide
+   parity` workflow runs `parity/game-oracle/wide.sh` weekly, by hand and
+   before each release, and reports any difference with the seed and
+   position. The first run, 200 seeds, found none.
 3. **Fix what it finds**, add each case to the regular fixtures, and
    document any new pitfall in PARITY.md.
 

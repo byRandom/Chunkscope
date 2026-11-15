@@ -7,23 +7,22 @@
 # Usage: parity/game-oracle/wide.sh [seeds] [salt] [stronghold every n-th seed]
 #   defaults: 200 seeds, a salt from the date, strongholds on every 10th seed.
 # The same salt gives the same seeds, so a reported difference can be rerun.
-# Needs what run.sh needs (Java 25), and runs run.sh's download first.
+# Needs what run.sh needs (Java 25, with javac), and downloads the server jar
+# the same way (fetch.sh).
 set -euo pipefail
 
 SEEDS="${1:-200}"
 SALT="${2:-$(date -u +%Y%m%d)}"
 STRONGHOLD_EVERY="${3:-10}"
-VERSION=26.3
 JAVA="${JAVA:-java}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# The version run.sh pins.
+VERSION=$(sed -n 's/^VERSION="${1:-\(.*\)}"$/\1/p' "$ROOT/parity/game-oracle/run.sh")
 CACHE="$ROOT/parity/.cache/$VERSION"
 OUT="$ROOT/parity/.cache/wide"
 
-if [[ ! -d "$CACHE/bundle" ]]; then
-  echo "parity/.cache/$VERSION/bundle is missing: run parity/game-oracle/run.sh first" >&2
-  exit 1
-fi
-CP=$(find "$CACHE/bundle/META-INF" -name '*.jar' | sort | paste -sd: -)
+# Downloads the server jar (once) and unpacks it; sets CP.
+source "$ROOT/parity/game-oracle/fetch.sh"
 
 rm -rf "$OUT"
 mkdir -p "$OUT/classes"

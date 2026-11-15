@@ -87,6 +87,12 @@ parity` workflow runs it weekly, by hand, and before each release (the
 release waits for it). A difference it finds is fixed and its case added to
 the regular fixtures.
 
+The first run (200 seeds, salt 20261115, about 27 minutes for the game and 8
+for the comparison on 4 cores) found no difference: 38,400 biomes, 3,600
+heights (two heightmaps each), 363,728 structure attempts and rejected
+candidates in all three dimensions, 2,592 end city ships, 200 spawn origins
+and 20 × 128 strongholds.
+
 ## Pitfalls already caught
 
 Each of these breaks parity in a naive port. Each is covered by the fixtures:
