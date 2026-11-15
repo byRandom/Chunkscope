@@ -35,15 +35,23 @@ Names in the code follow these.
 - **Generation point**: the validated start of a structure that generates.
 - **Hit**: a candidate whose structure generates and passes a set filter
   (for example only bastions, or only end cities with a ship).
+- **Target**: a named group of structures that can be searched and shown: a
+  structure set in one dimension, optionally narrowed to some of its
+  structures (`fortresses` and `bastions` share a set). Its id is stable
+  (`mc_core::structure::target`).
 - **Chunk rectangle**: an area of chunks, both ends inclusive, that a scan
   covers.
 
 ## The app
 
-- **Layer**: one row of the map's structure list: a structure set (or part
-  of one), the strongholds, or the spawn. Each has a stable **layer id**
-  (`villages`, `bastions`, `end_cities`...) that saved settings and finder
-  filters refer to.
+- **Layer**: one row of the map's structure list: a target, the
+  strongholds, or the spawn. Each has a stable **layer id** (`villages`,
+  `bastions`, `end_cities`...; a target's layer has the target's id) that
+  saved settings and finder filters refer to.
+- **Query**: what the seed finder searches for: a center, structure filters
+  and biomes at the center. Its text form
+  (`center=spawn villages:300:2 biome=plains`) is shared by the app and the
+  command line.
 - **Settings**: what the app remembers between runs (seed, view, layers,
   the finder's query), saved by layer id so new layers do not break them.
 - **Marker**: a hit drawn on the map.

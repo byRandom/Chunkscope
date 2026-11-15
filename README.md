@@ -101,7 +101,9 @@ cargo run --release -p chunkscope-app
 
 Drag to pan, scroll to zoom, click a marker to select it, right-click the map
 to copy a position or a `/tp` command. The **Finder** tab searches seeds for
-structures near the spawn; click a result to open it on the map. Structures are checked against biome
+structures near the spawn; click a result to open it on the map. Its query
+has a text form you can copy, paste or edit (the same the command line
+takes). Structures are checked against biome
 and terrain like the game does. The app remembers the seed, the view, the
 layers and the finder's query between runs. In the End, the void between the islands is drawn darker (the
 islands' shape comes from their density, so the edges are approximate). On
@@ -132,6 +134,22 @@ pillager outpost within 500, among the first 100,000 seeds:
 ```bash
 cargo run --release -p mc-core --example find -- --count 100000 villages:300 pillager_outposts:500
 ```
+
+The query is the same text the app's finder shows:
+
+- `<structure>:<radius>[:<count>]`: at least `count` (default 1) structures
+  within `radius` blocks. Structures are named by layer id: `villages`,
+  `pillager_outposts`, `fortresses`, `bastions`, `end_cities`... (an unknown
+  name lists them all). Nether and End structures are measured from 0, 0 in
+  their dimension.
+- `end_cities+ship:<radius>`: only end cities with a ship (an elytra).
+- `center=spawn` (default) or `center=zero`: where distances are measured
+  from.
+- `biome=<biome>,...`: the biome at the center, for example
+  `biome=plains,meadow`.
+
+Each match prints on one line, the same line the app's "copy all results"
+button copies.
 
 ## Development
 

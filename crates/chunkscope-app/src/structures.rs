@@ -11,9 +11,10 @@ use std::thread;
 
 use eframe::egui::{self, Color32};
 use mc_core::biome::OverworldBiomeSource;
-use mc_core::structure::scan::{ChunkRect, SetFilter};
+use mc_core::structure::StructurePlacement;
+use mc_core::structure::scan::ChunkRect;
+use mc_core::structure::target::Target;
 use mc_core::structure::validate::StructureGenerator;
-use mc_core::structure::{STRUCTURE_SETS, StructurePlacement, StructureSet, StructureSets};
 use mc_core::terrain::OverworldTerrain;
 use mc_core::world::World;
 
@@ -27,21 +28,15 @@ pub enum Source {
     Spawn,
     /// Stronghold positions (see [`Strongholds`]).
     Strongholds,
-    /// The structures of a structure set that generate.
-    Set {
-        /// Structure set registry name.
-        set: &'static str,
-        /// Only the structures of the set whose name starts with this (the
-        /// Nether's fortresses and bastions share one set).
-        only: Option<&'static str>,
-    },
+    /// The structures of the [`Target`] with the layer's id that generate.
+    Target,
 }
 
 /// One structure layer of the map.
 pub struct Kind {
-    /// Stable name, kept in saved settings: never rename one.
+    /// Stable name, kept in saved settings: never rename one. For a target
+    /// layer, the target's id.
     pub id: &'static str,
-    pub dimension: Dimension,
     pub source: Source,
     pub label: &'static str,
     /// Up to two letters drawn on the marker.
@@ -60,33 +55,21 @@ impl Kind {
         self.source == Source::Spawn
     }
 
-    /// Whether the seed finder can search this layer (structure sets only).
+    /// The structures this layer shows, for a target layer.
+    pub fn target(&self) -> Option<&'static Target> {
+        match self.source {
+            Source::Target => Target::find(self.id),
+            Source::Spawn | Source::Strongholds => None,
+        }
+    }
+
+    pub fn dimension(&self) -> Dimension {
+        self.target().map_or(Dimension::Overworld, |t| t.dimension)
+    }
+
+    /// Whether the seed finder can search this layer (targets only).
     pub fn searchable(&self) -> bool {
-        matches!(self.source, Source::Set { .. })
-    }
-
-    /// End cities, whose markers and filters know about ships.
-    pub fn has_ships(&self) -> bool {
-        matches!(
-            self.source,
-            Source::Set {
-                set: "minecraft:end_cities",
-                ..
-            }
-        )
-    }
-
-    /// The structures of this layer that count, for a structure set layer.
-    /// `ship_only` keeps end cities with a ship.
-    pub fn select(&self, ship_only: bool) -> Option<SetFilter> {
-        let Source::Set { set: name, only } = self.source else {
-            return None;
-        };
-        Some(SetFilter {
-            set: set(name)?,
-            only,
-            ship_only,
-        })
+        self.target().is_some()
     }
 }
 
@@ -99,7 +82,6 @@ pub fn kind_index(id: &str) -> Option<usize> {
 pub static KINDS: &[Kind] = &[
     Kind {
         id: "spawn",
-        dimension: Dimension::Overworld,
         source: Source::Spawn,
         label: "World spawn",
         glyph: "W",
@@ -108,11 +90,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "villages",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:villages",
-            only: None,
-        },
+        source: Source::Target,
         label: "Villages",
         glyph: "V",
         color: rgb(0xe0a458),
@@ -120,7 +98,6 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "strongholds",
-        dimension: Dimension::Overworld,
         source: Source::Strongholds,
         label: "Strongholds",
         glyph: "S",
@@ -129,11 +106,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "woodland_mansions",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:woodland_mansions",
-            only: None,
-        },
+        source: Source::Target,
         label: "Woodland mansions",
         glyph: "WM",
         color: rgb(0x9a6b3f),
@@ -141,11 +114,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "ocean_monuments",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:ocean_monuments",
-            only: None,
-        },
+        source: Source::Target,
         label: "Ocean monuments",
         glyph: "OM",
         color: rgb(0x4fd1c5),
@@ -153,11 +122,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "pillager_outposts",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:pillager_outposts",
-            only: None,
-        },
+        source: Source::Target,
         label: "Pillager outposts",
         glyph: "PO",
         color: rgb(0x9aa0a6),
@@ -165,11 +130,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "desert_pyramids",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:desert_pyramids",
-            only: None,
-        },
+        source: Source::Target,
         label: "Desert pyramids",
         glyph: "DP",
         color: rgb(0xf2d16b),
@@ -177,11 +138,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "jungle_temples",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:jungle_temples",
-            only: None,
-        },
+        source: Source::Target,
         label: "Jungle temples",
         glyph: "JT",
         color: rgb(0x7bc96f),
@@ -189,11 +146,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "swamp_huts",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:swamp_huts",
-            only: None,
-        },
+        source: Source::Target,
         label: "Swamp huts",
         glyph: "SH",
         color: rgb(0x6f8f5f),
@@ -201,11 +154,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "igloos",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:igloos",
-            only: None,
-        },
+        source: Source::Target,
         label: "Igloos",
         glyph: "IG",
         color: rgb(0xcfe8ff),
@@ -213,11 +162,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "ancient_cities",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:ancient_cities",
-            only: None,
-        },
+        source: Source::Target,
         label: "Ancient cities",
         glyph: "AC",
         color: rgb(0x3aa7a0),
@@ -225,11 +170,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "trial_chambers",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:trial_chambers",
-            only: None,
-        },
+        source: Source::Target,
         label: "Trial chambers",
         glyph: "TC",
         color: rgb(0xd9824a),
@@ -237,11 +178,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "trail_ruins",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:trail_ruins",
-            only: None,
-        },
+        source: Source::Target,
         label: "Trail ruins",
         glyph: "TR",
         color: rgb(0xc98b6b),
@@ -249,11 +186,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "abandoned_camps",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:abandoned_camp",
-            only: None,
-        },
+        source: Source::Target,
         label: "Abandoned camps",
         glyph: "AB",
         color: rgb(0xb5a36a),
@@ -261,11 +194,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "ruined_portals",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:ruined_portals",
-            only: None,
-        },
+        source: Source::Target,
         label: "Ruined portals",
         glyph: "RP",
         color: rgb(0xa77bd9),
@@ -273,11 +202,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "shipwrecks",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:shipwrecks",
-            only: None,
-        },
+        source: Source::Target,
         label: "Shipwrecks",
         glyph: "SW",
         color: rgb(0x8c6d4f),
@@ -285,11 +210,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "ocean_ruins",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:ocean_ruins",
-            only: None,
-        },
+        source: Source::Target,
         label: "Ocean ruins",
         glyph: "OR",
         color: rgb(0x5d8fb3),
@@ -297,11 +218,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "buried_treasures",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:buried_treasures",
-            only: None,
-        },
+        source: Source::Target,
         label: "Buried treasure",
         glyph: "BT",
         color: rgb(0xf5c542),
@@ -309,11 +226,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "mineshafts",
-        dimension: Dimension::Overworld,
-        source: Source::Set {
-            set: "minecraft:mineshafts",
-            only: None,
-        },
+        source: Source::Target,
         label: "Mineshafts",
         glyph: "M",
         color: rgb(0x8f7a66),
@@ -321,11 +234,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "fortresses",
-        dimension: Dimension::Nether,
-        source: Source::Set {
-            set: "minecraft:nether_complexes",
-            only: Some("minecraft:fortress"),
-        },
+        source: Source::Target,
         label: "Fortresses",
         glyph: "F",
         color: rgb(0xd9534f),
@@ -333,11 +242,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "bastions",
-        dimension: Dimension::Nether,
-        source: Source::Set {
-            set: "minecraft:nether_complexes",
-            only: Some("minecraft:bastion"),
-        },
+        source: Source::Target,
         label: "Bastions",
         glyph: "B",
         color: rgb(0x8c8c96),
@@ -345,11 +250,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "nether_fossils",
-        dimension: Dimension::Nether,
-        source: Source::Set {
-            set: "minecraft:nether_fossils",
-            only: None,
-        },
+        source: Source::Target,
         label: "Nether fossils",
         glyph: "NF",
         color: rgb(0xe8e0c8),
@@ -357,11 +258,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "nether_ruined_portals",
-        dimension: Dimension::Nether,
-        source: Source::Set {
-            set: "minecraft:ruined_portals",
-            only: None,
-        },
+        source: Source::Target,
         label: "Ruined portals",
         glyph: "RP",
         color: rgb(0xa77bd9),
@@ -369,11 +266,7 @@ pub static KINDS: &[Kind] = &[
     },
     Kind {
         id: "end_cities",
-        dimension: Dimension::End,
-        source: Source::Set {
-            set: "minecraft:end_cities",
-            only: None,
-        },
+        source: Source::Target,
         label: "End cities",
         glyph: "EC",
         color: rgb(0xd8c6f0),
@@ -394,14 +287,10 @@ pub struct Marker {
     pub ship: Option<bool>,
 }
 
-pub fn set(name: &str) -> Option<&'static StructureSet> {
-    STRUCTURE_SETS.find_set(name)
-}
-
 /// Expected distance between two attempts of a random-spread set, in
 /// blocks (`None` for strongholds).
 pub fn spacing_blocks(kind: usize) -> Option<f64> {
-    let StructurePlacement::RandomSpread(p) = &KINDS[kind].select(false)?.set.placement else {
+    let StructurePlacement::RandomSpread(p) = &KINDS[kind].target()?.set().placement else {
         return None;
     };
     Some(p.spacing as f64 * 16.0 / f64::from(p.frequency).sqrt())
@@ -410,11 +299,11 @@ pub fn spacing_blocks(kind: usize) -> Option<f64> {
 /// The markers of `kind` whose chunk lies in `rect`: the structures that
 /// generate.
 pub fn markers(kind: usize, rect: ChunkRect, generator: &StructureGenerator) -> Vec<Marker> {
-    let Some(select) = KINDS[kind].select(false) else {
+    let Some(target) = KINDS[kind].target() else {
         return Vec::new();
     };
     generator
-        .hits(&select, rect)
+        .hits(&target.select(false), rect)
         .map(|hit| Marker {
             kind,
             x: hit.candidate.locate.0,
@@ -497,7 +386,7 @@ fn repaint(ctx: &egui::Context) -> Wake {
 /// The markers of one square. `worlds` holds one world per dimension of the
 /// current seed, built when first needed.
 fn block_markers(worlds: &mut Vec<World>, key: BlockKey) -> Vec<Marker> {
-    let dimension = KINDS[key.kind].dimension;
+    let dimension = KINDS[key.kind].dimension();
     worlds.retain(|w| w.seed() == key.seed);
     if !worlds.iter().any(|w| w.dimension() == dimension) {
         worlds.push(World::new(key.seed, dimension));

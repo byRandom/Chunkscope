@@ -127,8 +127,10 @@ port should be checked at a much larger scale.
    `structures`, `spawn`, `find`, with documented options and JSON output
    for scripts. Ship it in the release archives next to the app.
 2. **Stable formats.** Freeze and document the settings file and the
-   finder's query and result formats (import and export from the app), with
-   a version number so later versions can read them.
+   finder's query and result formats, with a version number so later
+   versions can read them. The query's text form and the one-line results
+   already exist, shared by the app (copy and paste) and the `find`
+   example; what is left is freezing them and a JSON form.
 3. **Signed builds.** Windows (Authenticode) and macOS (Developer ID and
    notarization) signing in the release workflow, so SmartScreen and
    Gatekeeper stop warning. **This needs the owner's decision and

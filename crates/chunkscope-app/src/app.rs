@@ -406,7 +406,7 @@ impl ChunkscopeApp {
                     theme::section_title(ui, "Structures");
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                         let dimension = self.dimension;
-                        let here = |i: &usize| KINDS[*i].dimension == dimension;
+                        let here = |i: &usize| KINDS[*i].dimension() == dimension;
                         let all = (0..KINDS.len()).filter(here).all(|i| self.kinds_on[i]);
                         let text = if all { "Hide all" } else { "Show all" };
                         if ui.small_button(text).clicked() {
@@ -418,7 +418,7 @@ impl ChunkscopeApp {
                 });
                 ui.add_space(2.0);
                 for (i, kind) in KINDS.iter().enumerate() {
-                    if kind.dimension != self.dimension {
+                    if kind.dimension() != self.dimension {
                         continue;
                     }
                     // A layer too dense for this zoom is not drawn: say so, and
@@ -834,7 +834,7 @@ impl ChunkscopeApp {
         let mut visible: Vec<Marker> = Vec::new();
         let mut wanted: Vec<BlockKey> = Vec::new();
         for (kind, info) in KINDS.iter().enumerate() {
-            if !self.kinds_on[kind] || info.dimension != self.dimension || !info.searchable() {
+            if !self.kinds_on[kind] || info.dimension() != self.dimension || !info.searchable() {
                 continue;
             }
             if structures::spacing_blocks(kind).is_none_or(|s| s < min_spacing) {
