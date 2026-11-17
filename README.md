@@ -35,7 +35,8 @@ Target: Minecraft **26.3** (Java 25).
 - **Local and fast.** No server, no uploads. Multi-threaded seed search.
 - **Pure Rust.** No C dependencies.
 
-Bedrock Edition is out of scope for now.
+Bedrock Edition is out of scope until after 1.0 (see
+[docs/ROADMAP.md](docs/ROADMAP.md)).
 
 ## Workspace
 

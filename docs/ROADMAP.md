@@ -165,3 +165,18 @@ once is a post-1.0 decision.
 Large biomes and amplified world presets, terrain shading on the map,
 structure piece outlines, and more seed-finder filters (biome areas,
 structure combinations, strongholds near the spawn).
+
+### Data packs and add-ons
+
+Worlds whose generation is changed by Java data packs (custom biomes,
+noise settings, structure sets and structures), and later by Bedrock
+add-ons. The game's own data would load from the pack instead of the
+generated tables, with the same oracle checks run against the game with the
+pack installed.
+
+### Bedrock Edition
+
+Bedrock generates worlds differently from Java (its own random number
+generators, biome layout and structure placement), so it would be a second
+port with its own oracles, not an option on the Java one. Not before Java
+parity is finished and stable.
