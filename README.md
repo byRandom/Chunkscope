@@ -63,7 +63,7 @@ Bedrock Edition is out of scope until after 1.0 (see
 - [x] End: biomes, islands, end cities (0.5), and whether each end city has a ship (0.5.1)
 - [x] Mineshafts, no "possible" markers left, saved settings (0.6)
 - [ ] Large-scale verification against the game (0.7)
-- [ ] Stable command line and formats, signed builds (0.8)
+- [ ] Stable command line and formats (0.8)
 - [ ] Large biomes and amplified presets
 - [x] Structure placement: candidate chunks, frequency rolls, exclusion zones (all vanilla structure sets)
 - [x] Strongholds (concentric rings with their biome search)
@@ -81,7 +81,6 @@ Bedrock Edition is out of scope until after 1.0 (see
   - [x] Structure markers validated by biome and terrain (0.2)
   - [x] Release builds for Windows, macOS and Linux
   - [x] Saved settings (0.6)
-  - [ ] Signed builds
 
 ## Download
 
@@ -89,7 +88,8 @@ Prebuilt binaries for Windows, macOS and Linux are on the
 [releases page](https://github.com/byRandom/Chunkscope/releases). Unpack the
 archive and run `chunkscope` (`chunkscope.exe` on Windows).
 
-The binaries are not signed yet. On Windows, SmartScreen may ask for
+The binaries are not signed, and will not be: code signing costs money and
+the app is free to use. On Windows, SmartScreen may ask for
 confirmation ("More info", then "Run anyway"). On macOS, remove the quarantine
 flag first: `xattr -d com.apple.quarantine chunkscope`.
 
@@ -113,7 +113,8 @@ Linux the app needs the usual X11 or Wayland libraries
 (for example `libxkbcommon-x11-0` on X11).
 
 The command line, `chunkscope-cli` (every command also takes `--json`;
-see [docs/CLI.md](docs/CLI.md)):
+see [docs/CLI.md](docs/CLI.md); what is saved and printed is in
+[docs/FORMATS.md](docs/FORMATS.md)):
 
 ```bash
 cargo run --release -p chunkscope-cli -- biome <seed> <x> <z> [y]
@@ -189,14 +190,14 @@ the app and in the release notes.
   milestone: 0.1 the map viewer, 0.2 structures validated by biome and
   terrain, 0.3 world spawn and the seed finder, 0.4 the Nether and ruined
   portals, 0.5 the End, 0.6 mineshafts and saved settings, 0.7 large-scale
-  verification, 0.8 a stable command line and formats, and signed builds.
+  verification, 0.8 a stable command line and formats.
   The full plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
 - **1.0** comes when everything Chunkscope shows for the Overworld, the
   Nether and the End matches the game bit for bit and is verified by oracle
   tests: biomes, every structure (mineshafts and ruined portals included,
   with no "possible" markers left), strongholds, slime chunks, and the world
   spawn as far as the game itself is deterministic. The large-scale
-  cross-check must be clean, settings are saved, the builds are signed, and
+  cross-check must be clean, settings are saved, and
   the command line and saved formats are stable.
 - After 1.0: patch versions fix bugs, minor versions add features or support
   for a new Minecraft version, and major versions break the command line or

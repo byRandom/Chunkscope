@@ -18,7 +18,8 @@ use crate::structures::{KINDS, kind_index};
 
 /// The key under which the settings are stored.
 pub const KEY: &str = "chunkscope-settings";
-/// Bumped when a field changes meaning (new fields need no bump).
+/// Bumped when a field changes meaning (new fields need no bump). See
+/// docs/FORMATS.md for what a version promises.
 pub const VERSION: u32 = 1;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -60,6 +61,13 @@ impl Default for Settings {
 }
 
 impl Settings {
+    /// The settings a run starts with, from what was saved (if anything).
+    /// A file written by a newer version, whose fields may mean something
+    /// else, is not read: the defaults are used.
+    pub fn from_saved(saved: Option<Settings>) -> Settings {
+        saved.filter(|s| s.version <= VERSION).unwrap_or_default()
+    }
+
     /// Whether each layer of [`KINDS`] is shown.
     pub fn layers_on(&self) -> Vec<bool> {
         KINDS
@@ -184,6 +192,45 @@ mod tests {
         assert_eq!(round_trip(&s), s);
         assert_eq!(round_trip(&s).layers_on(), on);
         assert_eq!(s.dimension(), Dimension::Nether);
+    }
+
+    /// A complete file as 0.6 wrote it. Later versions must keep reading it.
+    const V1_FILE: &str = r#"(version:1,seed_text:"Chunkscope",dimension:"nether",center:(-1234.5,99.25),zoom:2.0,y:-20,show_biomes:true,show_slime:true,show_grid:false,layers:{"mineshafts":true,"villages":false},finder:(center_spawn:false,filters:[(layer:"villages",radius:300,count:2,ship:false),(layer:"end_cities",radius:1000,count:1,ship:true)],biomes:["minecraft:plains","minecraft:meadow"],biome:Some("minecraft:plains"),from:"7",count:5000,random:true))"#;
+
+    #[test]
+    fn version_1_files_keep_loading() {
+        let s: Settings = ron::from_str(V1_FILE).unwrap();
+        assert_eq!(s.version, 1);
+        assert_eq!(s.dimension(), Dimension::Nether);
+        assert_eq!(s.center, (-1234.5, 99.25));
+        assert_eq!(
+            (s.zoom, s.y, s.show_slime, s.show_grid),
+            (2.0, -20, true, false)
+        );
+        assert!(!s.layers["villages"]);
+        assert!(!s.finder.center_spawn && s.finder.random);
+        assert_eq!((s.finder.from.as_str(), s.finder.count), ("7", 5000));
+        assert_eq!(s.finder.filters.len(), 2);
+        assert_eq!(s.finder.filters[1].layer, "end_cities");
+        assert!(s.finder.filters[1].ship && s.finder.filters[1].target().is_some());
+        assert_eq!(s.finder.biomes().count(), 2);
+    }
+
+    /// The saved form is the format: a renamed or reshaped field fails here
+    /// (and needs a version bump and a note in docs/FORMATS.md).
+    #[test]
+    fn saved_form_is_frozen() {
+        let s: Settings = ron::from_str(V1_FILE).unwrap();
+        assert_eq!(ron::to_string(&s).unwrap(), V1_FILE);
+    }
+
+    #[test]
+    fn newer_files_are_not_read() {
+        let newer: Settings = ron::from_str(r#"(version: 2, seed_text: "future")"#).unwrap();
+        assert_eq!(Settings::from_saved(Some(newer)), Settings::default());
+        let current: Settings = ron::from_str(r#"(seed_text: "now")"#).unwrap();
+        assert_eq!(Settings::from_saved(Some(current)).seed_text, "now");
+        assert_eq!(Settings::from_saved(None), Settings::default());
     }
 
     #[test]

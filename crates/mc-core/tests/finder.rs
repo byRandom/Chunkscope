@@ -305,3 +305,38 @@ fn ship_only_needs_ships() {
     assert!(!f.select().ship_only);
     assert!(f.to_string().parse::<StructureFilter>().is_ok());
 }
+
+/// Target ids are saved in settings and typed in queries: they are a format.
+/// Renaming or removing one breaks both (see docs/FORMATS.md); adding is fine.
+#[test]
+fn target_ids_are_frozen() {
+    use mc_core::finder::TARGETS;
+    let ids: Vec<&str> = TARGETS.iter().map(|t| t.id).collect();
+    assert_eq!(
+        ids,
+        [
+            "villages",
+            "woodland_mansions",
+            "ocean_monuments",
+            "pillager_outposts",
+            "desert_pyramids",
+            "jungle_temples",
+            "swamp_huts",
+            "igloos",
+            "ancient_cities",
+            "trial_chambers",
+            "trail_ruins",
+            "abandoned_camps",
+            "ruined_portals",
+            "shipwrecks",
+            "ocean_ruins",
+            "buried_treasures",
+            "mineshafts",
+            "fortresses",
+            "bastions",
+            "nether_fossils",
+            "nether_ruined_portals",
+            "end_cities",
+        ]
+    );
+}
