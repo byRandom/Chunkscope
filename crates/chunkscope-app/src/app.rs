@@ -74,10 +74,8 @@ pub struct ChunkscopeApp {
 impl ChunkscopeApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         theme::apply(&cc.egui_ctx);
-        let saved: Settings = cc
-            .storage
-            .and_then(|s| eframe::get_value(s, settings::KEY))
-            .unwrap_or_default();
+        let saved =
+            Settings::from_saved(cc.storage.and_then(|s| eframe::get_value(s, settings::KEY)));
         let seed_text = saved.seed_text.clone();
         let seed = parse_seed(&seed_text).unwrap_or(0);
         let dimension = saved.dimension();

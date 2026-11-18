@@ -26,7 +26,7 @@ Done and verified against the game, for the Overworld:
 - the desktop app (map, layers, inspector, seed finder) and release builds.
 
 Not done: the Nether, the End, mineshafts, ruined portals, large-scale
-verification, saved settings, signed builds, a stable command line.
+verification, saved settings, a stable command line.
 
 ## 0.4: the Nether, and ruined portals (done)
 
@@ -127,17 +127,14 @@ port should be checked at a much larger scale.
    examples: `biome`, `height`, `spawn`, `structures`, `find` and `targets`,
    with documented options (docs/CLI.md) and JSON output for scripts. It
    ships in the release archives next to the app.
-2. **Stable formats.** Freeze and document the settings file and the
+2. **Stable formats (done).** Freeze and document the settings file and the
    finder's query and result formats, with a version number so later
-   versions can read them. The query's text form and the one-line results
-   already exist, shared by the app (copy and paste) and the `find`
-   example; what is left is freezing them and a JSON form.
-3. **Signed builds.** Windows (Authenticode) and macOS (Developer ID and
-   notarization) signing in the release workflow, so SmartScreen and
-   Gatekeeper stop warning. **This needs the owner's decision and
-   accounts:** an Apple Developer membership (yearly fee) for macOS, and a
-   code-signing certificate or a free open-source signing service (for
-   example SignPath) for Windows. Linux stays unsigned, with checksums.
+   versions can read them (done: docs/FORMATS.md; the JSON form of results
+   is in docs/CLI.md).
+3. **No signed builds (decided).** Signing costs money (an Apple Developer
+   membership, a Windows certificate) and Chunkscope is free software
+   for anyone to use, so releases stay unsigned, with checksums. The README
+   explains how to run unsigned binaries on Windows and macOS.
 
 ## 1.0
 
@@ -148,7 +145,7 @@ Release candidates (`1.0.0-rc.N`) first, then 1.0 when:
   markers left, and the world spawn as far as the game itself is
   deterministic;
 - the large-scale verification is clean;
-- settings are saved; builds are signed;
+- settings are saved;
 - the command line and the saved formats are stable and documented;
 - the README and a short user guide describe every feature.
 
