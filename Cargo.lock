@@ -572,6 +572,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "chunkscope-cli"
+version = "0.6.1"
+dependencies = [
+ "mc-core",
+]
+
+[[package]]
 name = "clipboard-win"
 version = "5.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

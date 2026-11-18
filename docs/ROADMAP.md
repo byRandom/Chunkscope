@@ -123,10 +123,10 @@ port should be checked at a much larger scale.
 
 ## 0.8: stable command line and formats
 
-1. **A real command-line tool.** Turn the examples into one binary,
-   `chunkscope-cli` (or `chunkscope` subcommands): `biome`, `height`,
-   `structures`, `spawn`, `find`, with documented options and JSON output
-   for scripts. Ship it in the release archives next to the app.
+1. **A real command-line tool (done).** `chunkscope-cli` replaces the
+   examples: `biome`, `height`, `spawn`, `structures`, `find` and `targets`,
+   with documented options (docs/CLI.md) and JSON output for scripts. It
+   ships in the release archives next to the app.
 2. **Stable formats.** Freeze and document the settings file and the
    finder's query and result formats, with a version number so later
    versions can read them. The query's text form and the one-line results

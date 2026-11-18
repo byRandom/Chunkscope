@@ -2,7 +2,7 @@
 //! level heights the game uses there, behind one interface.
 //!
 //! Everything that depends on the dimension lives here, so callers (the
-//! seed finder, the map, the examples) do not switch on it themselves.
+//! seed finder, the map, the command line) do not switch on it themselves.
 
 use crate::biome::{
     Biome, EndBiomeSource, NetherBiomeSource, OverworldBiomeSource, end_biomes, nether_biomes,

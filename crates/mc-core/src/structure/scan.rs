@@ -1,5 +1,5 @@
 //! The structures of one set in an area: the one place that walks a
-//! random-spread set's regions, so the map, the finder and the examples
+//! random-spread set's regions, so the map, the finder and the command line
 //! cannot disagree on which chunks they look at.
 //!
 //! Two steps, because the second is expensive:

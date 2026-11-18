@@ -44,6 +44,7 @@ Bedrock Edition is out of scope until after 1.0 (see
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | `crates/java-compat`   | Bit-exact ports of the JDK behaviour Minecraft relies on: `java.util.Random`, `StrictMath.log`, `Math.round`, `DoubleStream.sum`, `String.hashCode`, `String.trim`, `Long.parseLong` |
 | `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), noise (Perlin, normal noise, all vanilla noise parameters), overworld climate and biomes, overworld terrain (`final_density`, aquifers, heightmaps), structure placement, seed text → world seed, slime chunks |
+| `crates/chunkscope-cli` | The command line (`chunkscope-cli`): biome, height, spawn, structures and seed search, with JSON output |
 | `crates/chunkscope-app` | The desktop app (`chunkscope`): an interactive biome and structure map, native Rust with egui |
 | `parity/oracle`        | JDK oracle: reference fixtures from a real JDK                                          |
 | `parity/game-oracle`   | Game oracle: reference fixtures from the real game classes (downloads the official server jar) |
@@ -111,29 +112,30 @@ islands' shape comes from their density, so the edges are approximate). On
 Linux the app needs the usual X11 or Wayland libraries
 (for example `libxkbcommon-x11-0` on X11).
 
-Command-line examples:
+The command line, `chunkscope-cli` (every command also takes `--json`;
+see [docs/CLI.md](docs/CLI.md)):
 
 ```bash
-cargo run --release -p mc-core --example biome -- <seed> <x> <z> [y]
+cargo run --release -p chunkscope-cli -- biome <seed> <x> <z> [y]
 ```
 
 ```bash
-cargo run --release -p mc-core --example structures -- <seed> <x> <z> [radius]
+cargo run --release -p chunkscope-cli -- structures <seed> <x> <z> [radius]
 ```
 
 ```bash
-cargo run --release -p mc-core --example height -- <seed> <x> <z>
+cargo run --release -p chunkscope-cli -- height <seed> <x> <z>
 ```
 
 ```bash
-cargo run --release -p mc-core --example spawn -- <seed>
+cargo run --release -p chunkscope-cli -- spawn <seed>
 ```
 
 Search seeds: for example, a village within 300 blocks of the spawn and a
 pillager outpost within 500, among the first 100,000 seeds:
 
 ```bash
-cargo run --release -p mc-core --example find -- --count 100000 villages:300 pillager_outposts:500
+cargo run --release -p chunkscope-cli -- find --count 100000 villages:300 pillager_outposts:500
 ```
 
 The query is the same text the app's finder shows:
