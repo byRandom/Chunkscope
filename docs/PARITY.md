@@ -378,7 +378,7 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   accepted (`MINECRAFT_EULA=true`) and about 15 seconds per seed; it is
   run by hand when the target version changes, not in CI.
 - **One scan finds the candidates of an area.** The map, the finder and the
-  examples all get a set's candidate chunks from `structure::scan`, which
+  command line all get a set's candidate chunks from `structure::scan`, which
   walks the regions overlapping a chunk rectangle and keeps each region's
   candidate if it falls inside. `tests/structure_scan.rs` compares it with
   a check of every chunk on its own, for every random-spread set, on
@@ -445,3 +445,15 @@ Stronghold positions are computed by the game on background threads, each
 with its own search state. Chunkscope uses a fresh search per position. In
 the fixtures (4 seeds × 128 strongholds), sharing one search state across all
 positions gives the same result, so no tie affected them.
+
+## The command line
+
+`crates/chunkscope-cli/tests/cli.rs` runs the real binary and compares its
+output with the library (which the oracle tests check against the game), so
+it tests the command line's own work: argument handling, sorting, the radius
+cut, JSON fields, seeds from a salt. Mutation-tested; one equivalent
+mutation: `structures` skips the sets a dimension does not have
+(`Dimension::has_set`), but the structure validation of a set in the wrong
+dimension finds no hit anyway, so removing the skip prints the same.
+Neighbouring salts of `--random` share all but one seed, so that test runs
+single seeds.

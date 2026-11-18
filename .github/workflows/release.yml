@@ -86,7 +86,7 @@ jobs:
         with:
           key: ${{ matrix.target }}
       - name: Build
-        run: cargo build --release --locked -p chunkscope-app --target ${{ matrix.target }}
+        run: cargo build --release --locked -p chunkscope-app -p chunkscope-cli --target ${{ matrix.target }}
       - name: Package
         shell: bash
         run: |
@@ -95,11 +95,11 @@ jobs:
           mkdir "$name"
           cp README.md LICENSE-MIT LICENSE-APACHE "$name/"
           if [ "${{ runner.os }}" = "Windows" ]; then
-            cp "target/${{ matrix.target }}/release/chunkscope.exe" "$name/"
+            cp "target/${{ matrix.target }}/release/chunkscope.exe" "target/${{ matrix.target }}/release/chunkscope-cli.exe" "$name/"
             7z a "$name.zip" "$name" > /dev/null
             echo "ASSET=$name.zip" >> "$GITHUB_ENV"
           else
-            cp "target/${{ matrix.target }}/release/chunkscope" "$name/"
+            cp "target/${{ matrix.target }}/release/chunkscope" "target/${{ matrix.target }}/release/chunkscope-cli" "$name/"
             tar czf "$name.tar.gz" "$name"
             echo "ASSET=$name.tar.gz" >> "$GITHUB_ENV"
           fi

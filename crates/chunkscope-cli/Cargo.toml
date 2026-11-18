@@ -1,0 +1,14 @@
+[package]
+name = "chunkscope-cli"
+description = "Chunkscope command line: biomes, heights, structures, spawn and seed search for Minecraft: Java Edition"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "chunkscope-cli"
+path = "src/main.rs"
+
+[dependencies]
+mc-core = { path = "../mc-core" }
