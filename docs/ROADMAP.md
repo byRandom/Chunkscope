@@ -156,8 +156,8 @@ Everything the 1.0 criteria ask for is built; what is left is saying so.
 | Command line and formats stable and documented | CLI.md and FORMATS.md (0.8) |
 | README and a user guide describe every feature | README and GUIDE.md (0.9) |
 
-End gateways, the one optional item left from 0.5, are not needed for 1.0
-and are planned for 1.1.
+End gateways, the one optional item left from 0.5, turned out to be small
+and are planned before 1.0 (below); where they lead is 1.1.
 
 ## 1.0
 
@@ -172,16 +172,27 @@ Release candidates (`1.0.0-rc.N`) first, then 1.0 when:
 - the command line and the saved formats are stable and documented;
 - the README and a short user guide describe every feature.
 
-## 1.1: End gateways
+## Before 1.0: End gateways
 
-The 20 gateways the game places around the main island, one after each
-dragon defeat, in an order that comes from the seed. Whether the whole order
-follows from the seed alone is to be confirmed by reading the game's dragon
-fight code with `javap`; if it does, the plan is the usual one: port it, add
-an oracle fixture from the game, match it bit for bit, mutate it, and show
-the gateways as a layer on the End map (and the outer island each one leads
-to, if that is also fixed by the seed). If part of it depends on the fight
-rather than the seed, Chunkscope shows only what is fixed and says so.
+Read from the game's `EnderDragonFight` with `javap`: the 20 gateways sit at
+fixed points on a circle of radius 96 around the main island (height 75),
+the same for every seed, and the seed decides only the **order** in which
+they appear, one per dragon defeat: a shuffle of 0 to 19 with the game's
+single-threaded random source seeded with the world seed. So this is small
+and fully determined by the seed: port the shuffle and the positions, add an
+oracle fixture from the game, match it bit for bit, mutate it, and show the
+gateways on the End map with their order ("the 1st, 2nd... gateway").
+
+Done when the positions and the order match the game on the wide check's
+seeds as well as the fixtures. It ships as 0.9.x or in the first release
+candidate, before 1.0.
+
+## 1.1: where the gateways lead
+
+Each gateway teleports to a spot on the outer islands, found by the game
+from the terrain around a point 1,024 blocks out. If that follows from the
+seed alone (it needs the End terrain, which Chunkscope has), the map can
+show each gateway's destination; otherwise it stays unshown.
 
 ## Following Minecraft
 
