@@ -1,7 +1,7 @@
 //! Large-scale check against the real game: compares Chunkscope with what
 //! `parity/game-oracle/WideOracle.java` wrote for many random seeds (biomes,
 //! terrain heights, every structure attempt in an area, end city ships, the
-//! spawn and strongholds, in every dimension).
+//! spawn, strongholds and the order of the End gateways).
 //!
 //! Its output is not committed: run `parity/game-oracle/wide.sh`, which sets
 //! `CHUNKSCOPE_WIDE` to it. Without that variable these tests do nothing.
@@ -14,6 +14,7 @@ use std::path::PathBuf;
 use mc_core::biome::OverworldClimate;
 use mc_core::spawn::{spawn_chunk, spawn_origin};
 use mc_core::structure::end_city::end_city_has_ship;
+use mc_core::structure::end_gateway::gateway_order;
 use mc_core::structure::validate::Outcome;
 use mc_core::structure::{STRUCTURE_SETS, StructureSets};
 use mc_core::terrain::Heightmap;
@@ -271,4 +272,22 @@ fn wide_strongholds() {
         });
     }
     report.finish("strongholds");
+}
+
+#[test]
+fn wide_gateways() {
+    let Some(lines) = lines("gateways.txt") else {
+        return;
+    };
+    let mut report = Report::default();
+    for line in &lines {
+        let mut t = line.split(' ');
+        let seed: i64 = t.next().unwrap().parse().unwrap();
+        let want: Vec<u8> = t.map(|n| n.parse().unwrap()).collect();
+        let got = gateway_order(seed).to_vec();
+        report.check("end gateways", got == want, || {
+            format!("seed {seed}: game order {want:?}, got {got:?}")
+        });
+    }
+    report.finish("gateways");
 }

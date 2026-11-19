@@ -224,3 +224,36 @@ fn random_seeds_come_from_the_salt() {
     }
     assert!(matched > 3, "the query should match some of these seeds");
 }
+
+#[test]
+fn the_end_lists_its_gateways_in_the_seeds_order() {
+    use mc_core::structure::end_gateway::{gateway_order, gateway_position};
+    let order = gateway_order(7);
+    let text = ok(&["structures", "7", "0", "0", "200", "--dimension", "end"]);
+    let lines: Vec<&str> = text.lines().filter(|l| l.contains("end_gateway")).collect();
+    assert_eq!(lines.len(), 20, "{text}");
+    for (n, &index) in order.iter().enumerate() {
+        let (x, z) = gateway_position(index as usize);
+        let want = format!("end_gateway #{} ", n + 1);
+        let line = lines.iter().find(|l| l.contains(&want)).unwrap();
+        assert!(line.ends_with(&format!("{x}, {z}")), "{line}");
+    }
+    let json = ok(&[
+        "structures",
+        "7",
+        "0",
+        "0",
+        "200",
+        "--dimension",
+        "end",
+        "--json",
+    ]);
+    assert_eq!(
+        json.matches(r#""structure":"minecraft:end_gateway""#)
+            .count(),
+        20
+    );
+    assert!(json.contains(r#""order":20}"#));
+    // Not in the other dimensions.
+    assert!(!ok(&["structures", "7", "0", "0", "200"]).contains("end_gateway"));
+}

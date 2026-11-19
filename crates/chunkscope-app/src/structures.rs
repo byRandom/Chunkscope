@@ -30,6 +30,8 @@ pub enum Source {
     Strongholds,
     /// The structures of the [`Target`] with the layer's id that generate.
     Target,
+    /// The 20 End gateways of the main island and the order they open in.
+    Gateways,
 }
 
 /// One structure layer of the map.
@@ -59,12 +61,15 @@ impl Kind {
     pub fn target(&self) -> Option<&'static Target> {
         match self.source {
             Source::Target => Target::find(self.id),
-            Source::Spawn | Source::Strongholds => None,
+            Source::Spawn | Source::Strongholds | Source::Gateways => None,
         }
     }
 
     pub fn dimension(&self) -> Dimension {
-        self.target().map_or(Dimension::Overworld, |t| t.dimension)
+        match self.source {
+            Source::Gateways => Dimension::End,
+            _ => self.target().map_or(Dimension::Overworld, |t| t.dimension),
+        }
     }
 
     /// Whether the seed finder can search this layer (targets only).
@@ -272,6 +277,14 @@ pub static KINDS: &[Kind] = &[
         color: rgb(0xd8c6f0),
         default_on: true,
     },
+    Kind {
+        id: "end_gateways",
+        source: Source::Gateways,
+        label: "End gateways",
+        glyph: "G",
+        color: rgb(0x58d6c8),
+        default_on: true,
+    },
 ];
 
 /// A structure marker on the map, at the position `/locate` reports.
@@ -285,6 +298,8 @@ pub struct Marker {
     pub start: Option<(&'static str, i32, i32, i32)>,
     /// End cities: whether the city has a ship (an elytra).
     pub ship: Option<bool>,
+    /// End gateways: which dragon defeat opens it (1 to 20).
+    pub gateway: Option<u8>,
 }
 
 /// Expected distance between two attempts of a random-spread set, in
@@ -315,6 +330,7 @@ pub fn markers(kind: usize, rect: ChunkRect, generator: &StructureGenerator) -> 
                 hit.generated.start.2,
             )),
             ship: hit.generated.ship,
+            gateway: None,
         })
         .collect()
 }

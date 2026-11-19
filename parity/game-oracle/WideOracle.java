@@ -16,6 +16,8 @@
 // and for the Overworld:
 //   spawn.txt        seed spawnX spawnZ originChunkX originChunkZ
 //   strongholds.txt  seed x,z ...                     (every `strongholdEvery`-th seed)
+// and for every seed:
+//   gateways.txt     seed i0 i1 ... i19               (the order the End gateways open in)
 
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -127,7 +129,8 @@ public class WideOracle {
         long started = System.nanoTime();
         try (PrintWriter biomes = GameOracle.writer("biomes.txt"); PrintWriter heights = GameOracle.writer("heights.txt");
                 PrintWriter structures = GameOracle.writer("structures.txt"); PrintWriter ships = GameOracle.writer("ships.txt");
-                PrintWriter spawn = GameOracle.writer("spawn.txt"); PrintWriter strongholds = GameOracle.writer("strongholds.txt")) {
+                PrintWriter spawn = GameOracle.writer("spawn.txt"); PrintWriter strongholds = GameOracle.writer("strongholds.txt");
+                PrintWriter gateways = GameOracle.writer("gateways.txt")) {
             for (int i = 0; i < count; i++) {
                 long seed = rnd.nextLong();
                 for (Dim d : dims) {
@@ -201,6 +204,11 @@ public class WideOracle {
                         if (strongholdEvery > 0 && i % strongholdEvery == 0) strongholds.println(GameOracle.strongholdLine(lookup, d.biomes(), rs, seed));
                     }
                 }
+                // The End gateways' order: what EnderDragonFight.init does with the world seed.
+                List<Integer> order = new java.util.ArrayList<>();
+                for (int g = 0; g < 20; g++) order.add(g);
+                net.minecraft.util.Util.shuffle(order, net.minecraft.util.RandomSource.createThreadLocalInstance(seed));
+                gateways.println(seed + " " + order.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(" ")));
                 if ((i + 1) % 10 == 0 || i + 1 == count) {
                     System.out.printf("%d/%d seeds (%.0f s)%n", i + 1, count, (System.nanoTime() - started) / 1e9);
                 }

@@ -9,6 +9,7 @@ use eframe::egui::{
     Sense, Stroke, StrokeKind, UiBuilder, Vec2, pos2, vec2,
 };
 use mc_core::biome::Biome;
+use mc_core::structure::end_gateway::{GATEWAY_Y, gateways};
 use mc_core::{is_slime_chunk, parse_seed};
 
 use crate::biome_colors;
@@ -516,6 +517,13 @@ impl ChunkscopeApp {
                         }
                         theme::field_label(ui, "Status");
                         field_box(ui, "Estimate: trees and lakes can move it");
+                    } else if let Some(n) = m.gateway {
+                        theme::field_label(ui, "Opens");
+                        field_box(ui, &format!("After dragon defeat {n} of 20"));
+                        theme::field_label(ui, "Block");
+                        field_box(ui, &format!("{}, {GATEWAY_Y}, {}", m.x, m.z));
+                        theme::field_label(ui, "Status");
+                        field_box(ui, "Exact (position and order from the seed)");
                     } else {
                         if let Some((name, sx, sy, sz)) = m.start {
                             theme::field_label(ui, "Structure");
@@ -871,6 +879,7 @@ impl ChunkscopeApp {
                 z,
                 start: Some(("chunkscope:spawn", x, y, z)),
                 ship: None,
+                gateway: None,
             });
         }
         if let Some(i) = KINDS.iter().position(|k| k.source == Source::Strongholds)
@@ -883,6 +892,20 @@ impl ChunkscopeApp {
                 z,
                 start: None,
                 ship: None,
+                gateway: None,
+            }));
+        }
+        if let Some(i) = KINDS.iter().position(|k| k.source == Source::Gateways)
+            && self.dimension == Dimension::End
+            && self.kinds_on[i]
+        {
+            visible.extend(gateways(self.seed).into_iter().map(|g| Marker {
+                kind: i,
+                x: g.x,
+                z: g.z,
+                start: Some(("chunkscope:end_gateway", g.x, GATEWAY_Y, g.z)),
+                ship: None,
+                gateway: Some(g.number),
             }));
         }
 
@@ -927,6 +950,7 @@ impl ChunkscopeApp {
             let kind = &KINDS[m.kind];
             let name = match m.start {
                 _ if kind.is_spawn() => kind.label.to_owned(),
+                _ if m.gateway.is_some() => format!("End gateway {}", m.gateway.unwrap_or(0)),
                 Some((structure, ..)) => biome_colors::display_name(structure),
                 None => singular(kind.label),
             };
