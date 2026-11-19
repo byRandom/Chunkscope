@@ -172,7 +172,7 @@ Release candidates (`1.0.0-rc.N`) first, then 1.0 when:
 - the command line and the saved formats are stable and documented;
 - the README and a short user guide describe every feature.
 
-## Before 1.0: End gateways (done in 0.9.1)
+## Before 1.0: End gateways (done in 0.9.0)
 
 Read from the game's `EnderDragonFight` with `javap`: the 20 gateways sit at
 fixed points on a circle of radius 96 around the main island (height 75),
@@ -193,8 +193,8 @@ Chunkscope did not have (done: PARITY.md, "Return gateways"). Checked against
 the game's own placement classes and against a real server.
 
 Done when the positions and the order of the 20, and the return gateways,
-match the game on the wide check's seeds as well as the fixtures. It ships as
-0.9.x or in the first release candidate, before 1.0.
+match the game on the wide check's seeds as well as the fixtures. Shipped in
+0.9.0.
 
 ## 1.1: where the gateways lead
 
