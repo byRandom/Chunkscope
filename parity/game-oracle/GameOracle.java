@@ -105,6 +105,7 @@ public class GameOracle {
         endCities(lookup);
         endCityPieces(lookup);
         mineshafts(lookup);
+        endGateways();
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -2390,6 +2391,31 @@ public class GameOracle {
                 var p = stub.get().position();
                 StringBuilder sb = new StringBuilder(seed + " " + cx + " " + cz + " " + p.getX() + "," + p.getY() + "," + p.getZ());
                 for (var piece : stub.get().getPiecesBuilder().build().pieces()) sb.append(' ').append(cityPiece(piece));
+                w.println(sb);
+            }
+        }
+    }
+
+    /**
+     * End gateways (EnderDragonFight): the order the 20 gateways open in, which is Util.shuffle of 0..19 with
+     * RandomSource.createThreadLocalInstance(world seed) (the calls EnderDragonFight.init makes), and the
+     * block of each, from spawnNewGateway's expression.
+     */
+    static void endGateways() throws Exception {
+        try (PrintWriter w = writer("end_gateways.txt")) {
+            for (int i = 0; i < 20; i++) {
+                double a = 2.0 * (-Math.PI + 0.15707963267948966 * (double) i);
+                w.println("position " + i + " " + net.minecraft.util.Mth.floor(96.0 * Math.cos(a)) + " "
+                        + net.minecraft.util.Mth.floor(96.0 * Math.sin(a)));
+            }
+            long[] special = {0L, 1L, -1L, 42L, Long.MIN_VALUE, Long.MAX_VALUE, 123456789L};
+            for (int n = 0; n < 400; n++) {
+                long seed = n < special.length ? special[n] : INPUTS.nextLong();
+                List<Integer> order = new ArrayList<>();
+                for (int i = 0; i < 20; i++) order.add(i);
+                net.minecraft.util.Util.shuffle(order, net.minecraft.util.RandomSource.createThreadLocalInstance(seed));
+                StringBuilder sb = new StringBuilder("order " + seed);
+                for (int g : order) sb.append(' ').append(g);
                 w.println(sb);
             }
         }

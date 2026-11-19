@@ -7,6 +7,7 @@ use mc_core::biome::OverworldClimate;
 use mc_core::finder::{Match, Query, SearchState, Seeds, TARGETS, search};
 use mc_core::parse_seed;
 use mc_core::spawn::{spawn_chunk, spawn_estimate, spawn_origin};
+use mc_core::structure::end_gateway::gateways;
 use mc_core::structure::scan::ChunkRect;
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement};
 use mc_core::terrain::{Heightmap, OverworldTerrain, SEA_LEVEL, Substance};
@@ -207,6 +208,8 @@ struct Hit {
     structure: String,
     x: i32,
     z: i32,
+    /// End gateways: which dragon defeat opens it (1 to 20).
+    order: Option<u8>,
 }
 
 fn structures(raw: &[String]) -> Result {
@@ -240,6 +243,7 @@ fn structures(raw: &[String]) -> Result {
                 structure: hit.generated.name.to_owned(),
                 x: bx,
                 z: bz,
+                order: None,
             });
         }
     }
@@ -255,6 +259,23 @@ fn structures(raw: &[String]) -> Result {
                     structure: "minecraft:stronghold".to_owned(),
                     x: bx,
                     z: bz,
+                    order: None,
+                });
+            }
+        }
+    }
+    if dim == Dimension::End {
+        // The 20 gateways of the main island (the same blocks in every world;
+        // the seed decides the order they open in).
+        for g in gateways(seed) {
+            let distance = (((g.x - x) as f64).powi(2) + ((g.z - z) as f64).powi(2)).sqrt();
+            if distance <= radius as f64 {
+                found.push(Hit {
+                    distance,
+                    structure: "minecraft:end_gateway".to_owned(),
+                    x: g.x,
+                    z: g.z,
+                    order: Some(g.number),
                 });
             }
         }
@@ -265,12 +286,16 @@ fn structures(raw: &[String]) -> Result {
         let items: Vec<String> = found
             .iter()
             .map(|h| {
-                json::object(&[
+                let mut fields = vec![
                     ("structure", json::string(&h.structure)),
                     ("x", h.x.to_string()),
                     ("z", h.z.to_string()),
                     ("distance", json::float(h.distance, 1)),
-                ])
+                ];
+                if let Some(n) = h.order {
+                    fields.push(("order", n.to_string()));
+                }
+                json::object(&fields)
             })
             .collect();
         println!(
@@ -289,13 +314,12 @@ fn structures(raw: &[String]) -> Result {
             dim.id()
         );
         for h in &found {
-            println!(
-                "{:>7.0}  {:<30} {}, {}",
-                h.distance,
-                h.structure.trim_start_matches("minecraft:"),
-                h.x,
-                h.z
-            );
+            let name = h.structure.trim_start_matches("minecraft:");
+            let name = match h.order {
+                Some(n) => format!("{name} #{n}"),
+                None => name.to_owned(),
+            };
+            println!("{:>7.0}  {:<30} {}, {}", h.distance, name, h.x, h.z);
         }
     }
     Ok(())

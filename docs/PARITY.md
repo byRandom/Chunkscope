@@ -13,9 +13,9 @@ Target version: **Minecraft 26.3** (Java 25). The pinned version lives in
 | Tier | Oracle                                   | Covers                                                                                     | Status      |
 | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------- |
 | 1    | The real JDK (`parity/oracle`)           | `java.util.Random`, `StrictMath`, string/number parsing, any formula written in plain Java | Done        |
-| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every structure, mineshafts included), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions, End biomes, terrain (simplex noise, islands) and end cities | Done (0.6) |
+| 2    | The real game classes (`parity/game-oracle`) | Random sources, seeding helpers, slime chunks, Perlin and normal noise (all vanilla noises), overworld climate and biomes, structure placement, strongholds, overworld terrain (`final_density` per sampler node, aquifers, heightmaps), structure validation (every structure, mineshafts included), world spawn origin, Nether biomes, terrain, fortresses, bastions and fossils, ruined portals in both dimensions, End biomes, terrain (simplex noise, islands), end cities and the End gateways' positions and order | Done (0.6) |
 | 2b   | Real servers (`parity/server-oracle`)    | The world spawn block (it needs fully generated chunks); run by hand, not in CI | 32 seeds |
-| 3    | The game at scale (`parity/game-oracle/wide.sh`) | Random seeds in every dimension: biomes, heights, every structure attempt in an area, end city ships, spawn, strongholds; weekly and before each release. cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Running (0.7) |
+| 3    | The game at scale (`parity/game-oracle/wide.sh`) | Random seeds in every dimension: biomes, heights, every structure attempt in an area, end city ships, spawn, strongholds, the End gateways' order; weekly and before each release. cubiomes cannot be used, its noise is `double` and 26.x noise is `float` | Running (0.7) |
 
 In every tier, the Rust tests recompute the same values and must match **bit
 for bit**. Floats are compared by their raw bits, never with a tolerance. CI
@@ -75,7 +75,7 @@ columns, and every structure attempt of every random-spread set around
 (0, 0) and around a random far block (including the candidates a set rejects,
 so Chunkscope cannot add attempts either), with whether each end city has a
 ship. For the Overworld it adds the spawn origin and, every few seeds, all
-128 strongholds. Its output goes to the git-ignored `parity/.cache/wide/`;
+128 strongholds. Every seed also gets the order of its End gateways. Its output goes to the git-ignored `parity/.cache/wide/`;
 `crates/mc-core/tests/wide.rs` compares Chunkscope with it, prints every
 difference with its seed and position, and writes them all to
 `report-*.txt`. Without `CHUNKSCOPE_WIDE` those tests do nothing, so
@@ -457,3 +457,23 @@ mutation: `structures` skips the sets a dimension does not have
 dimension finds no hit anyway, so removing the skip prints the same.
 Neighbouring salts of `--random` share all but one seed, so that test runs
 single seeds.
+
+## End gateways
+
+`end_gateways.txt` holds the block of each of the 20 gateways of the main
+island and the order they open in for 400 seeds (edge values included),
+produced by the same calls `EnderDragonFight` makes: `Util.shuffle` of 0 to
+19 with `RandomSource.createThreadLocalInstance(world seed)`, and
+`floor(96 * cos(a))`, `floor(96 * sin(a))` with `a = 2 * (-π + (π / 20) * i)`.
+The oracle does not run a whole dragon fight (it needs a server level), so
+the fixture is those expressions read from the bytecode, not the fight.
+
+- **The positions are a table.** `cos` of a right angle is `±6e-17`, so for
+  some gateways the sign of the last bit decides the block (`-1` or `0`).
+  A table does not depend on a platform's `cos`; a test checks it against
+  the formula and the game's values.
+- **Mutation-tested**, with one equivalent mutation: starting the shuffle
+  at `i = 1` instead of 2 draws one more random number and swaps the first
+  element with itself, after every other swap, so the order is the same.
+- The wide check compares the order for every random seed
+  (`gateways.txt`).
