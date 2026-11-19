@@ -136,6 +136,29 @@ port should be checked at a much larger scale.
    for anyone to use, so releases stay unsigned, with checksums. The README
    explains how to run unsigned binaries on Windows and macOS.
 
+## 0.9: the user guide (done)
+
+Everything the 1.0 criteria ask for is built; what is left is saying so.
+
+1. **A user guide (done).** `docs/GUIDE.md`: the map, the layers and what
+   each marker promises (checked like the game, or an estimate), the
+   finder and its query, the command line, and what Chunkscope does not do.
+2. **A README that matches reality (done).** Its roadmap and versioning
+   text were behind: 0.7 and 0.8 are done and listed as such.
+3. **The 1.0 checklist (done).** Each 1.0 criterion below, with where it is
+   verified.
+
+| 1.0 criterion | Where it stands |
+| --- | --- |
+| Overworld, Nether and End match the game, no "possible" markers | Tier 2 oracle tests for every system (PARITY.md); the spawn block is the one estimate, measured against 32 real servers |
+| Large-scale verification clean | Tier 3, weekly and before every release; no difference found (first run 200 seeds, release runs 100) |
+| Settings saved | 0.6, format frozen in 0.8 |
+| Command line and formats stable and documented | CLI.md and FORMATS.md (0.8) |
+| README and a user guide describe every feature | README and GUIDE.md (0.9) |
+
+End gateways, the one optional item left from 0.5, are not shown and not
+needed for 1.0.
+
 ## 1.0
 
 Release candidates (`1.0.0-rc.N`) first, then 1.0 when:

@@ -62,8 +62,9 @@ Bedrock Edition is out of scope until after 1.0 (see
 - [x] Nether: biomes, terrain, fortresses, bastions, fossils; ruined portals in both dimensions (0.4)
 - [x] End: biomes, islands, end cities (0.5), and whether each end city has a ship (0.5.1)
 - [x] Mineshafts, no "possible" markers left, saved settings (0.6)
-- [ ] Large-scale verification against the game (0.7)
-- [ ] Stable command line and formats (0.8)
+- [x] Large-scale verification against the game, and a command line tool (0.7)
+- [x] Stable formats, documented (0.8)
+- [ ] User guide, then release candidates (0.9)
 - [ ] Large biomes and amplified presets
 - [x] Structure placement: candidate chunks, frequency rolls, exclusion zones (all vanilla structure sets)
 - [x] Strongholds (concentric rings with their biome search)
@@ -95,6 +96,7 @@ flag first: `xattr -d com.apple.quarantine chunkscope`.
 
 ## Try it
 
+The [user guide](docs/GUIDE.md) explains the app and what its markers mean.
 The desktop app, from source:
 
 ```bash
@@ -190,7 +192,7 @@ the app and in the release notes.
   milestone: 0.1 the map viewer, 0.2 structures validated by biome and
   terrain, 0.3 world spawn and the seed finder, 0.4 the Nether and ruined
   portals, 0.5 the End, 0.6 mineshafts and saved settings, 0.7 large-scale
-  verification, 0.8 a stable command line and formats.
+  verification, 0.8 a stable command line and formats, 0.9 the user guide.
   The full plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
 - **1.0** comes when everything Chunkscope shows for the Overworld, the
   Nether and the End matches the game bit for bit and is verified by oracle
