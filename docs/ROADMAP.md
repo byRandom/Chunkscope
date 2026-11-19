@@ -172,7 +172,7 @@ Release candidates (`1.0.0-rc.N`) first, then 1.0 when:
 - the command line and the saved formats are stable and documented;
 - the README and a short user guide describe every feature.
 
-## Before 1.0: End gateways (the 20 done in 0.9.1)
+## Before 1.0: End gateways (done in 0.9.1)
 
 Read from the game's `EnderDragonFight` with `javap`: the 20 gateways sit at
 fixed points on a circle of radius 96 around the main island (height 75),
@@ -189,7 +189,8 @@ decoration of the End's outer islands, about one every 700 chunks, at a
 random spot in the chunk, 3 to 9 blocks above the surface, in the biomes that
 allow it. They follow from the seed, but need the game's decoration draw (the
 population seed of the chunk and the feature's place in its step), which
-Chunkscope does not have yet. Second step of this item.
+Chunkscope did not have (done: PARITY.md, "Return gateways"). Checked against
+the game's own placement classes and against a real server.
 
 Done when the positions and the order of the 20, and the return gateways,
 match the game on the wide check's seeds as well as the fixtures. It ships as

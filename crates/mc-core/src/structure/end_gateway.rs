@@ -6,7 +6,13 @@
 //! appear in: a shuffle of 0 to 19 with the game's single-threaded random
 //! source (the `java.util.Random` generator) seeded with the world seed.
 
-use crate::random::{LegacyRandomSource, RandomSource};
+use crate::biome::Biome;
+use crate::random::{LegacyRandomSource, RandomSource, WorldgenRandom, XoroshiroRandomSource};
+use crate::structure::end_city::end_city_pieces;
+use crate::structure::scan::{ChunkRect, SetFilter};
+use crate::structure::{STRUCTURE_SETS, StructureSets};
+use crate::terrain::Heightmap;
+use crate::world::{Dimension, World};
 
 /// How many gateways the game places.
 pub const GATEWAY_COUNT: usize = 20;
@@ -86,6 +92,104 @@ pub fn gateways(seed: i64) -> Vec<Gateway> {
             }
         })
         .collect()
+}
+
+/// The generation step (`SURFACE_STRUCTURES`) and the index within it the game
+/// gives the `end_gateway_return` placed feature. Checked against the
+/// game's own sorting by the fixture (`feature 4 0`).
+pub const RETURN_STEP: i32 = 4;
+pub const RETURN_INDEX: i32 = 0;
+
+/// A gateway that leads back from the outer islands to the main island.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ReturnGateway {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+    /// The bounding box of a piece of an end city covers this column. The
+    /// city's blocks are placed before the gateway and can raise the
+    /// surface it is placed on, so `y` is then the least it can be. `x` and
+    /// `z` are exact either way.
+    pub under_city: bool,
+}
+
+/// The return gateway the End's outer islands get in chunk `(cx, cz)`, if
+/// any: the placed feature `end_gateway_return`, as the game decorates a
+/// chunk.
+///
+/// The game seeds a `WorldgenRandom` with the decoration seed of the chunk's
+/// corner and the feature's step and index, then applies the feature's
+/// placement: one chunk in 700 (`RarityFilter`), a random block of the chunk
+/// (`InSquarePlacement`), the terrain surface there
+/// (`WORLD_SURFACE_WG`, nothing where the column is empty), 3 to 9 blocks
+/// above it, and only where the biome has the feature (End Highlands).
+///
+/// `world` must be an End world. `y` is the height of the terrain as
+/// generated; an end city placed earlier in the chunk can raise the surface
+/// (see [`ReturnGateway::under_city`]).
+pub fn return_gateway(world: &World, cx: i32, cz: i32) -> Option<ReturnGateway> {
+    debug_assert_eq!(world.dimension(), Dimension::End);
+    let mut random = WorldgenRandom::new(XoroshiroRandomSource::new(0));
+    let decoration = random.set_decoration_seed(world.seed(), cx * 16, cz * 16);
+    random.set_feature_seed(decoration, RETURN_INDEX, RETURN_STEP);
+    // RarityFilter.onAverageOnceEvery(700)
+    if random.next_float() >= 1.0f32 / 700.0f32 {
+        return None;
+    }
+    // InSquarePlacement.spread()
+    let x = random.next_int_bounded(16) + cx * 16;
+    let z = random.next_int_bounded(16) + cz * 16;
+    // PlacementUtils.HEIGHTMAP: the heightmap WORLD_SURFACE_WG, if above the
+    // dimension's bottom
+    let surface = world.base_height(x, z, Heightmap::WorldSurface);
+    if surface <= 0 {
+        return None;
+    }
+    // OffsetPlacement.vertical(UniformInt.of(3, 9))
+    let y = surface + random.next_int_bounded(9 - 3 + 1) + 3;
+    // BiomeFilter.biome(): the biome there must have the feature
+    let highlands = Biome::from_name("minecraft:end_highlands").expect("a biome");
+    if world.biome(x >> 2, y >> 2, z >> 2) != highlands {
+        return None;
+    }
+    Some(ReturnGateway {
+        x,
+        y,
+        z,
+        under_city: city_covers(world, x, z),
+    })
+}
+
+/// Whether the bounding box of a piece of a generating end city covers the
+/// column (`x`, `z`): the pieces are placed in the same chunk generation,
+/// before the feature, and the heightmap the gateway uses sees their blocks.
+fn city_covers(world: &World, x: i32, z: i32) -> bool {
+    let set = STRUCTURE_SETS
+        .find_set("minecraft:end_cities")
+        .expect("end cities");
+    // A city's pieces reach less than 96 blocks from its start chunk.
+    let rect = ChunkRect::around_block(x, z, 160);
+    world
+        .structures()
+        .hits(&SetFilter::all(set), rect)
+        .any(|hit| {
+            let (cx, cz) = hit.candidate.chunk;
+            let (sx, sy, sz) = hit.generated.start;
+            end_city_pieces(world.seed(), cx, cz, [sx, sy, sz])
+                .iter()
+                .any(|p| p.bbox[0] <= x && x <= p.bbox[3] && p.bbox[2] <= z && z <= p.bbox[5])
+        })
+}
+
+/// The return gateways of every chunk in `rect`.
+pub fn return_gateways(world: &World, rect: ChunkRect) -> Vec<ReturnGateway> {
+    let mut out = Vec::new();
+    for cx in rect.x0..=rect.x1 {
+        for cz in rect.z0..=rect.z1 {
+            out.extend(return_gateway(world, cx, cz));
+        }
+    }
+    out
 }
 
 #[cfg(test)]

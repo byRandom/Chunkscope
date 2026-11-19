@@ -106,6 +106,7 @@ public class GameOracle {
         endCityPieces(lookup);
         mineshafts(lookup);
         endGateways();
+        endReturnGateways(lookup);
         System.out.println("game fixtures written for Minecraft " + args[1]);
     }
 
@@ -2419,6 +2420,107 @@ public class GameOracle {
                 w.println(sb);
             }
         }
+    }
+
+    /**
+     * The End's return gateways (placed feature end_gateway_return, decorating the outer islands): the real
+     * FeaturePlacer and PlacedFeature run for every chunk of a region, seeded like
+     * ChunkGenerator.applyBiomeDecoration (decoration seed of the chunk's corner, then the feature seed of its
+     * step and index), on a stand-in level that answers the height and biome questions from the terrain and
+     * records where the gateway block is set. Lines: `feature step index`, `region seed cx0 cz0 cx1 cz1` and
+     * `gateway seed cx cz x y z` for every gateway the region produces.
+     */
+    static void endReturnGateways(HolderLookup.Provider lookup) throws Exception {
+        long[] seeds = {0L, 1L, 12345L, -987654321L, INPUTS.nextLong(), INPUTS.nextLong()};
+        final int radius = 200;
+        try (PrintWriter w = writer("end_return_gateways.txt")) {
+            var feature = returnGatewayFeature(lookup);
+            w.println("feature " + feature[0] + " " + feature[1]);
+            for (long seed : seeds) {
+                var lines = returnGatewayLines(lookup, seed, -radius, -radius, radius - 1, radius - 1);
+                lines.forEach(w::println);
+                System.out.println("return gateways: seed " + seed + ": " + (lines.size() - 1));
+            }
+        }
+    }
+
+    /** The generation step and index the game gives end_gateway_return: the sorted features of every End biome. */
+    @SuppressWarnings("unchecked")
+    static int[] returnGatewayFeature(HolderLookup.Provider lookup) {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.END);
+        var biomeSource = net.minecraft.world.level.biome.TheEndBiomeSource.create(lookup.lookupOrThrow(Registries.BIOME));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        var placed = lookup.lookupOrThrow(Registries.PLACED_FEATURE)
+                .getOrThrow(net.minecraft.data.worldgen.placement.EndPlacements.END_GATEWAY_RETURN).value();
+        var steps = (List<net.minecraft.world.level.biome.FeatureSorter.StepFeatureData>)
+                ((java.util.function.Supplier<?>) get(generator, "featuresPerStep")).get();
+        for (int i = 0; i < steps.size(); i++) {
+            int k = steps.get(i).features().indexOf(placed);
+            if (k >= 0) return new int[] {i, k};
+        }
+        throw new IllegalStateException("end_gateway_return is in no step");
+    }
+
+    /**
+     * `region seed cx0 cz0 cx1 cz1`, then `gateway seed cx cz x y z` for every return gateway the game's
+     * FeaturePlacer makes in those chunks, on a stand-in level that answers the height and biome questions from
+     * the terrain and records where the gateway block is set.
+     */
+    static List<String> returnGatewayLines(HolderLookup.Provider lookup, long seed, int cx0, int cz0, int cx1, int cz1) {
+        var settingsHolder = lookup.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.END);
+        var biomeSource = net.minecraft.world.level.biome.TheEndBiomeSource.create(lookup.lookupOrThrow(Registries.BIOME));
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(biomeSource, settingsHolder);
+        var height = net.minecraft.world.level.LevelHeightAccessor.create(0, 256);
+        var placed = lookup.lookupOrThrow(Registries.PLACED_FEATURE)
+                .getOrThrow(net.minecraft.data.worldgen.placement.EndPlacements.END_GATEWAY_RETURN).value();
+        int[] feature = returnGatewayFeature(lookup);
+        RandomState rs = RandomState.create(lookup.lookupOrThrow(Registries.NOISE), seed, settingsHolder.value());
+        var resolver = biomeSource.createResolver(rs.createClimateSampler(SamplerContext.builder().build()));
+        var recorded = new java.util.ArrayList<int[]>();
+        java.lang.reflect.InvocationHandler handler = (proxy, method, args) -> {
+            switch (method.getName()) {
+                case "getHeight":
+                    if (args != null && args.length == 3)
+                        return generator.getBaseHeight((int) args[1], (int) args[2],
+                                (net.minecraft.world.level.levelgen.Heightmap.Types) args[0], height, rs);
+                    return 256;
+                case "getMinY": return 0;
+                case "getMaxY": return 255;
+                case "getBiome": {
+                    var p = (net.minecraft.core.BlockPos) args[0];
+                    return resolver.getNoiseBiome(p.getX() >> 2, p.getY() >> 2, p.getZ() >> 2);
+                }
+                case "setBlock":
+                    if (((net.minecraft.world.level.block.state.BlockState) args[1]).is(net.minecraft.world.level.block.Blocks.END_GATEWAY)) {
+                        var p = (net.minecraft.core.BlockPos) args[0];
+                        recorded.add(new int[] {p.getX(), p.getY(), p.getZ()});
+                    }
+                    return true;
+                case "getBlockState": return net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
+                case "getBlockEntity": return args.length == 2 ? java.util.Optional.empty() : null;
+                case "ensureCanWrite": return true;
+                case "getLevel": return null;
+                default:
+                    if (method.isDefault()) return java.lang.reflect.InvocationHandler.invokeDefault(proxy, method, args);
+                    throw new UnsupportedOperationException("level." + method.getName());
+            }
+        };
+        var level = (net.minecraft.world.level.WorldGenLevel) java.lang.reflect.Proxy.newProxyInstance(
+                GameOracle.class.getClassLoader(), new Class<?>[] {net.minecraft.world.level.WorldGenLevel.class}, handler);
+        var placer = new net.minecraft.world.level.levelgen.placement.FeaturePlacer(level, generator);
+        WorldgenRandom random = new WorldgenRandom(new XoroshiroRandomSource(0L));
+        List<String> lines = new ArrayList<>();
+        lines.add("region " + seed + " " + cx0 + " " + cz0 + " " + cx1 + " " + cz1);
+        for (int cx = cx0; cx <= cx1; cx++) {
+            for (int cz = cz0; cz <= cz1; cz++) {
+                long deco = random.setDecorationSeed(seed, cx * 16, cz * 16);
+                random.setFeatureSeed(deco, feature[1], feature[0]);
+                recorded.clear();
+                placer.placeWithBiomeCheck(placed, random, new net.minecraft.core.BlockPos(cx * 16, 0, cz * 16));
+                for (int[] g : recorded) lines.add("gateway " + seed + " " + cx + " " + cz + " " + g[0] + " " + g[1] + " " + g[2]);
+            }
+        }
+        return lines;
     }
 
     /** One mineshaft piece: kind, bounding box and gen depth. */

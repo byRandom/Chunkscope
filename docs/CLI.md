@@ -22,7 +22,7 @@ nothing to stdout).
 | `biome <seed> <x> <z> [y]` | the biome at a block (default y 64) |
 | `height <seed> <x> <z>` | `WORLD_SURFACE_WG` and `OCEAN_FLOOR_WG` of a column, and what its blocks are made of |
 | `spawn <seed>` | the world spawn origin (exact) and the estimated spawn block (Overworld) |
-| `structures <seed> <x> <z> [radius]` | the structures within `radius` blocks (default 1000), nearest first, with strongholds in the Overworld and the 20 gateways in the End (`end_gateway #n`: the nth dragon defeat opens it; JSON `order`) |
+| `structures <seed> <x> <z> [radius]` | the structures within `radius` blocks (default 1000), nearest first, with strongholds in the Overworld and the 20 gateways in the End (`end_gateway #n`: the nth dragon defeat opens it; JSON `order`) and the return gateways of the outer islands (`end_gateway_return`; JSON `y` and `under_city`) |
 | `find [options] <query>...` | the seeds that match a query |
 | `targets` | the structure targets a query can name |
 | `help`, `version` | |
@@ -63,7 +63,7 @@ height      {"seed","dimension","x","z","world_surface","ocean_floor",
              "column":{"solid","air","water","lava"}}
 spawn       {"seed","origin":{"x","z"},"chunk":{"x","z"},"estimate":{"x","y","z"}}
 structures  {"seed","dimension","center":{"x","z"},"radius",
-             "structures":[{"structure","x","z","distance"[,"order"]}]}
+             "structures":[{"structure","x","z","distance"[,"order"][,"y","under_city"]}]}
 find        {"seed","center":{"x","z"},"biome",
              "found":[{"structure","dimension","x","z","distance"}]}
 targets     [{"id","dimension"}]
