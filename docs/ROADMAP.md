@@ -156,8 +156,8 @@ Everything the 1.0 criteria ask for is built; what is left is saying so.
 | Command line and formats stable and documented | CLI.md and FORMATS.md (0.8) |
 | README and a user guide describe every feature | README and GUIDE.md (0.9) |
 
-End gateways, the one optional item left from 0.5, are not shown and not
-needed for 1.0.
+End gateways, the one optional item left from 0.5, are not needed for 1.0
+and are planned for 1.1.
 
 ## 1.0
 
@@ -171,6 +171,17 @@ Release candidates (`1.0.0-rc.N`) first, then 1.0 when:
 - settings are saved;
 - the command line and the saved formats are stable and documented;
 - the README and a short user guide describe every feature.
+
+## 1.1: End gateways
+
+The 20 gateways the game places around the main island, one after each
+dragon defeat, in an order that comes from the seed. Whether the whole order
+follows from the seed alone is to be confirmed by reading the game's dragon
+fight code with `javap`; if it does, the plan is the usual one: port it, add
+an oracle fixture from the game, match it bit for bit, mutate it, and show
+the gateways as a layer on the End map (and the outer island each one leads
+to, if that is also fixed by the seed). If part of it depends on the fight
+rather than the seed, Chunkscope shows only what is fixed and says so.
 
 ## Following Minecraft
 

@@ -66,7 +66,7 @@ What the markers mean:
 - In the End, a green dot marks end cities **with a ship** (an elytra).
   The outer islands are drawn from their density: their edges are
   approximate, their biomes and structures are exact. End gateways are not
-  shown.
+  shown yet (planned for 1.1).
 
 ## The finder
 
