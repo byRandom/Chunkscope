@@ -536,7 +536,16 @@ impl ChunkscopeApp {
                             field_box(ui, if ship { "Yes (elytra)" } else { "No" });
                         }
                         theme::field_label(ui, "Status");
-                        field_box(ui, "Generates (checked like the game)");
+                        field_box(
+                            ui,
+                            if kind.source == Source::ReturnGateways && m.under_city {
+                                "Exact spot; an end city may raise it"
+                            } else if kind.source == Source::ReturnGateways {
+                                "Exact; height: terrain + 3 to 9"
+                            } else {
+                                "Generates (checked like the game)"
+                            },
+                        );
                     }
                     ui.add_space(4.0);
                     ui.horizontal(|ui| {
@@ -840,7 +849,10 @@ impl ChunkscopeApp {
         let mut visible: Vec<Marker> = Vec::new();
         let mut wanted: Vec<BlockKey> = Vec::new();
         for (kind, info) in KINDS.iter().enumerate() {
-            if !self.kinds_on[kind] || info.dimension() != self.dimension || !info.searchable() {
+            if !self.kinds_on[kind]
+                || info.dimension() != self.dimension
+                || !(info.searchable() || info.source == Source::ReturnGateways)
+            {
                 continue;
             }
             if structures::spacing_blocks(kind).is_none_or(|s| s < min_spacing) {
@@ -880,6 +892,7 @@ impl ChunkscopeApp {
                 start: Some(("chunkscope:spawn", x, y, z)),
                 ship: None,
                 gateway: None,
+                under_city: false,
             });
         }
         if let Some(i) = KINDS.iter().position(|k| k.source == Source::Strongholds)
@@ -893,6 +906,7 @@ impl ChunkscopeApp {
                 start: None,
                 ship: None,
                 gateway: None,
+                under_city: false,
             }));
         }
         if let Some(i) = KINDS.iter().position(|k| k.source == Source::Gateways)
@@ -906,6 +920,7 @@ impl ChunkscopeApp {
                 start: Some(("chunkscope:end_gateway", g.x, GATEWAY_Y, g.z)),
                 ship: None,
                 gateway: Some(g.number),
+                under_city: false,
             }));
         }
 
@@ -951,6 +966,7 @@ impl ChunkscopeApp {
             let name = match m.start {
                 _ if kind.is_spawn() => kind.label.to_owned(),
                 _ if m.gateway.is_some() => format!("End gateway {}", m.gateway.unwrap_or(0)),
+                _ if kind.source == Source::ReturnGateways => singular(kind.label),
                 Some((structure, ..)) => biome_colors::display_name(structure),
                 None => singular(kind.label),
             };

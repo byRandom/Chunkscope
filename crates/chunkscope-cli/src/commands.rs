@@ -7,7 +7,7 @@ use mc_core::biome::OverworldClimate;
 use mc_core::finder::{Match, Query, SearchState, Seeds, TARGETS, search};
 use mc_core::parse_seed;
 use mc_core::spawn::{spawn_chunk, spawn_estimate, spawn_origin};
-use mc_core::structure::end_gateway::gateways;
+use mc_core::structure::end_gateway::{gateways, return_gateways};
 use mc_core::structure::scan::ChunkRect;
 use mc_core::structure::{STRUCTURE_SETS, StructurePlacement};
 use mc_core::terrain::{Heightmap, OverworldTerrain, SEA_LEVEL, Substance};
@@ -210,6 +210,10 @@ struct Hit {
     z: i32,
     /// End gateways: which dragon defeat opens it (1 to 20).
     order: Option<u8>,
+    /// Return gateways: the block's height, and whether an end city's piece
+    /// covers the column (so the height may be higher).
+    y: Option<i32>,
+    under_city: bool,
 }
 
 fn structures(raw: &[String]) -> Result {
@@ -244,6 +248,8 @@ fn structures(raw: &[String]) -> Result {
                 x: bx,
                 z: bz,
                 order: None,
+                y: None,
+                under_city: false,
             });
         }
     }
@@ -260,6 +266,8 @@ fn structures(raw: &[String]) -> Result {
                     x: bx,
                     z: bz,
                     order: None,
+                    y: None,
+                    under_city: false,
                 });
             }
         }
@@ -276,6 +284,25 @@ fn structures(raw: &[String]) -> Result {
                     x: g.x,
                     z: g.z,
                     order: Some(g.number),
+                    y: None,
+                    under_city: false,
+                });
+            }
+        }
+    }
+    if dim == Dimension::End {
+        // The gateways of the outer islands that lead back to the main one.
+        for g in return_gateways(&world, ChunkRect::around_block(x, z, radius)) {
+            let distance = (((g.x - x) as f64).powi(2) + ((g.z - z) as f64).powi(2)).sqrt();
+            if distance <= radius as f64 {
+                found.push(Hit {
+                    distance,
+                    structure: "minecraft:end_gateway_return".to_owned(),
+                    x: g.x,
+                    z: g.z,
+                    order: None,
+                    y: Some(g.y),
+                    under_city: g.under_city,
                 });
             }
         }
@@ -294,6 +321,10 @@ fn structures(raw: &[String]) -> Result {
                 ];
                 if let Some(n) = h.order {
                     fields.push(("order", n.to_string()));
+                }
+                if let Some(y) = h.y {
+                    fields.push(("y", y.to_string()));
+                    fields.push(("under_city", h.under_city.to_string()));
                 }
                 json::object(&fields)
             })
@@ -317,6 +348,7 @@ fn structures(raw: &[String]) -> Result {
             let name = h.structure.trim_start_matches("minecraft:");
             let name = match h.order {
                 Some(n) => format!("{name} #{n}"),
+                None if h.under_city => format!("{name} (under a city)"),
                 None => name.to_owned(),
             };
             println!("{:>7.0}  {:<30} {}, {}", h.distance, name, h.x, h.z);

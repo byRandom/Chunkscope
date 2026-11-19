@@ -68,7 +68,9 @@ What the markers mean:
   approximate, their biomes and structures are exact. The 20 End gateways of the main island are
   exact: their blocks are the same in every world, and each marker says
   which dragon defeat opens it (that order comes from the seed). The
-  gateways that lead back from the outer islands are not shown yet.
+  **return gateways** of the outer islands, which lead back to the main island, are
+  shown too. Their spot is exact; their height is the terrain's plus 3 to 9, and
+  can be higher where an end city stands over them (the inspector says so).
 
 ## The finder
 

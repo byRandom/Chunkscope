@@ -18,6 +18,8 @@
 //   strongholds.txt  seed x,z ...                     (every `strongholdEvery`-th seed)
 // and for every seed:
 //   gateways.txt     seed i0 i1 ... i19               (the order the End gateways open in)
+//   return_gateways.txt  `region seed cx0 cz0 cx1 cz1`, then `gateway seed cx cz x y z` lines: the
+//                    End's return gateways in a 150 x 150 chunk region at a random place in the outer islands
 
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -130,7 +132,8 @@ public class WideOracle {
         try (PrintWriter biomes = GameOracle.writer("biomes.txt"); PrintWriter heights = GameOracle.writer("heights.txt");
                 PrintWriter structures = GameOracle.writer("structures.txt"); PrintWriter ships = GameOracle.writer("ships.txt");
                 PrintWriter spawn = GameOracle.writer("spawn.txt"); PrintWriter strongholds = GameOracle.writer("strongholds.txt");
-                PrintWriter gateways = GameOracle.writer("gateways.txt")) {
+                PrintWriter gateways = GameOracle.writer("gateways.txt");
+                PrintWriter returns = GameOracle.writer("return_gateways.txt")) {
             for (int i = 0; i < count; i++) {
                 long seed = rnd.nextLong();
                 for (Dim d : dims) {
@@ -209,6 +212,11 @@ public class WideOracle {
                 for (int g = 0; g < 20; g++) order.add(g);
                 net.minecraft.util.Util.shuffle(order, net.minecraft.util.RandomSource.createThreadLocalInstance(seed));
                 gateways.println(seed + " " + order.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(" ")));
+                // The return gateways of a region of the outer islands (its place comes from the seed, so the
+                // random sequence above is not disturbed).
+                var place = new java.util.SplittableRandom(seed ^ 0x5eed5eedL);
+                int rx = place.nextInt(-300, 150), rz = place.nextInt(-300, 150);
+                GameOracle.returnGatewayLines(lookup, seed, rx, rz, rx + 149, rz + 149).forEach(returns::println);
                 if ((i + 1) % 10 == 0 || i + 1 == count) {
                     System.out.printf("%d/%d seeds (%.0f s)%n", i + 1, count, (System.nanoTime() - started) / 1e9);
                 }

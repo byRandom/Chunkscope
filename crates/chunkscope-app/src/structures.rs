@@ -12,6 +12,7 @@ use std::thread;
 use eframe::egui::{self, Color32};
 use mc_core::biome::OverworldBiomeSource;
 use mc_core::structure::StructurePlacement;
+use mc_core::structure::end_gateway::return_gateways;
 use mc_core::structure::scan::ChunkRect;
 use mc_core::structure::target::Target;
 use mc_core::structure::validate::StructureGenerator;
@@ -32,6 +33,9 @@ pub enum Source {
     Target,
     /// The 20 End gateways of the main island and the order they open in.
     Gateways,
+    /// The gateways of the End's outer islands that lead back to the main
+    /// island (computed per chunk, like the structures).
+    ReturnGateways,
 }
 
 /// One structure layer of the map.
@@ -61,13 +65,13 @@ impl Kind {
     pub fn target(&self) -> Option<&'static Target> {
         match self.source {
             Source::Target => Target::find(self.id),
-            Source::Spawn | Source::Strongholds | Source::Gateways => None,
+            Source::Spawn | Source::Strongholds | Source::Gateways | Source::ReturnGateways => None,
         }
     }
 
     pub fn dimension(&self) -> Dimension {
         match self.source {
-            Source::Gateways => Dimension::End,
+            Source::Gateways | Source::ReturnGateways => Dimension::End,
             _ => self.target().map_or(Dimension::Overworld, |t| t.dimension),
         }
     }
@@ -285,6 +289,14 @@ pub static KINDS: &[Kind] = &[
         color: rgb(0x58d6c8),
         default_on: true,
     },
+    Kind {
+        id: "end_return_gateways",
+        source: Source::ReturnGateways,
+        label: "Return gateways",
+        glyph: "RG",
+        color: rgb(0x2f9e92),
+        default_on: true,
+    },
 ];
 
 /// A structure marker on the map, at the position `/locate` reports.
@@ -300,11 +312,18 @@ pub struct Marker {
     pub ship: Option<bool>,
     /// End gateways: which dragon defeat opens it (1 to 20).
     pub gateway: Option<u8>,
+    /// Return gateways: an end city covers the column, so the height may be
+    /// higher than `start` says.
+    pub under_city: bool,
 }
 
 /// Expected distance between two attempts of a random-spread set, in
 /// blocks (`None` for strongholds).
 pub fn spacing_blocks(kind: usize) -> Option<f64> {
+    if KINDS[kind].source == Source::ReturnGateways {
+        // One chunk in 700 tries, so about one try in a square 26 chunks wide.
+        return Some(16.0 * 700f64.sqrt());
+    }
     let StructurePlacement::RandomSpread(p) = &KINDS[kind].target()?.set().placement else {
         return None;
     };
@@ -331,6 +350,7 @@ pub fn markers(kind: usize, rect: ChunkRect, generator: &StructureGenerator) -> 
             )),
             ship: hit.generated.ship,
             gateway: None,
+            under_city: false,
         })
         .collect()
 }
@@ -418,6 +438,20 @@ fn block_markers(worlds: &mut Vec<World>, key: BlockKey) -> Vec<Marker> {
         x1: c.0 + BLOCK_CHUNKS - 1,
         z1: c.1 + BLOCK_CHUNKS - 1,
     };
+    if KINDS[key.kind].source == Source::ReturnGateways {
+        return return_gateways(world, rect)
+            .into_iter()
+            .map(|g| Marker {
+                kind: key.kind,
+                x: g.x,
+                z: g.z,
+                start: Some(("minecraft:end_gateway", g.x, g.y, g.z)),
+                ship: None,
+                gateway: None,
+                under_city: g.under_city,
+            })
+            .collect();
+    }
     markers(key.kind, rect, &world.structures())
 }
 

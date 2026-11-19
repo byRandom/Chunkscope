@@ -1,7 +1,8 @@
 //! Large-scale check against the real game: compares Chunkscope with what
 //! `parity/game-oracle/WideOracle.java` wrote for many random seeds (biomes,
 //! terrain heights, every structure attempt in an area, end city ships, the
-//! spawn, strongholds and the order of the End gateways).
+//! spawn, strongholds, and the End gateways: their order and, in a region of
+//! the outer islands, the return gateways).
 //!
 //! Its output is not committed: run `parity/game-oracle/wide.sh`, which sets
 //! `CHUNKSCOPE_WIDE` to it. Without that variable these tests do nothing.
@@ -14,7 +15,8 @@ use std::path::PathBuf;
 use mc_core::biome::OverworldClimate;
 use mc_core::spawn::{spawn_chunk, spawn_origin};
 use mc_core::structure::end_city::end_city_has_ship;
-use mc_core::structure::end_gateway::gateway_order;
+use mc_core::structure::end_gateway::{gateway_order, return_gateways};
+use mc_core::structure::scan::ChunkRect;
 use mc_core::structure::validate::Outcome;
 use mc_core::structure::{STRUCTURE_SETS, StructureSets};
 use mc_core::terrain::Heightmap;
@@ -290,4 +292,55 @@ fn wide_gateways() {
         });
     }
     report.finish("gateways");
+}
+
+#[test]
+fn wide_return_gateways() {
+    let Some(lines) = lines("return_gateways.txt") else {
+        return;
+    };
+    let mut report = Report::default();
+    let mut it = lines.iter().peekable();
+    while let Some(line) = it.next() {
+        let v: Vec<i64> = line
+            .split(' ')
+            .skip(1)
+            .map(|t| t.parse().unwrap())
+            .collect();
+        let rect = ChunkRect {
+            x0: v[1] as i32,
+            z0: v[2] as i32,
+            x1: v[3] as i32,
+            z1: v[4] as i32,
+        };
+        let mut want = Vec::new();
+        while let Some(l) = it.next_if(|l| l.starts_with("gateway ")) {
+            let g: Vec<i32> = l.split(' ').skip(2).map(|t| t.parse().unwrap()).collect();
+            want.push((g[2], g[3], g[4]));
+        }
+        let seed = v[0];
+        let world = World::new(seed, Dimension::End);
+        let got: Vec<(i32, i32, i32)> = return_gateways(&world, rect)
+            .into_iter()
+            .map(|g| (g.x, g.y, g.z))
+            .collect();
+        // One check per gateway, and one for a region whose count differs.
+        for w in &want {
+            report.check("return gateways", got.contains(w), || {
+                format!("seed {seed}: game has a return gateway at {w:?}, got none")
+            });
+        }
+        report.check("return gateways (extra)", got.len() == want.len(), || {
+            format!(
+                "seed {seed}, chunks {}..{} x {}..{}: game {} gateways, got {}",
+                rect.x0,
+                rect.x1,
+                rect.z0,
+                rect.z1,
+                want.len(),
+                got.len()
+            )
+        });
+    }
+    report.finish("return_gateways");
 }

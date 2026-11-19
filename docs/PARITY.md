@@ -477,3 +477,42 @@ the fixture is those expressions read from the bytecode, not the fight.
   element with itself, after every other swap, so the order is the same.
 - The wide check compares the order for every random seed
   (`gateways.txt`).
+
+### Return gateways
+
+The gateways of the End's outer islands that lead back to the main island
+are the placed feature `end_gateway_return`, decorating a chunk like any
+feature: the `WorldgenRandom` is seeded with the decoration seed of the
+chunk's corner, then with the feature's step and index (`SURFACE_STRUCTURES`,
+0), and the placement modifiers draw from it in order: `RarityFilter` (1 in
+700), `InSquarePlacement` (x, then z), the heightmap (`WORLD_SURFACE_WG`,
+nothing where the column is empty), `OffsetPlacement` (3 to 9 up) and
+`BiomeFilter` (only End Highlands has the feature).
+
+- **Fixture** (`end_return_gateways.txt`): the real `FeaturePlacer` and
+  `PlacedFeature` run for every chunk of six 400 x 400 chunk regions, on a
+  stand-in level (`java.lang.reflect.Proxy`) that answers height and biome
+  from the terrain and records where the gateway block is set. The Rust test
+  compares the whole set per region, not just points. The wide check does the
+  same for a 150 x 150 chunk region of every random seed.
+- **A real server** (`parity/server-oracle/gateways.sh`, by hand, not in CI):
+  loads the chunks of predicted gateways and asks `data get block` for the
+  gateway block entity. It must be at the predicted block, and not one block
+  higher. This is what shows the one thing the fixture cannot: what really
+  happens in a chunk.
+- **Pitfall: an end city raises the surface.** Structures are placed before
+  the features of their step, and their blocks count for the heightmap the
+  gateway is placed on. In the server run, a gateway whose column lies inside
+  a city piece's bounding box was not where the terrain height said (one of
+  the first 22). `x` and `z` are right either way; `y` is the terrain's plus
+  3 to 9 and Chunkscope marks the gateways under a city piece
+  (`under_city`), whose height can be higher. Computing it exactly would
+  need the blocks of every city template.
+- **Mutation-tested**, with these equivalent mutations: `>` for `>=` in the
+  rarity test (differs only for a float equal to 1/700), `surface < 0` for
+  `<= 0` (no highlands column is empty), the ocean floor instead of the
+  surface (the End has no water), and the biome looked up at the surface
+  instead of the gateway's height (the End's biomes do not depend on y).
+  `under_city` is checked against 12 covered and 32 other gateways of the
+  server run: dropping the `z` condition of the piece's box, or the piece's
+  start height (which does not matter, only its x and z do) is not caught.
