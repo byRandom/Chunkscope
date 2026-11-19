@@ -81,10 +81,10 @@ center=spawn villages:300:2 pillager_outposts:500 biome=plains,meadow
 ```
 
 - **Center:** distances are measured from the world spawn, or from 0, 0.
-- **Structures:** "at least *n* of this structure within *r* blocks". Add as
+- **Structures:** "at least *n* of this structure within *r* blocks". **+ Add structure** adds as
   many as you like. Nether and End structures are measured from 0, 0 in their
-  dimension, whatever the center. Tick **ship** to keep only end cities with
-  a ship.
+  dimension, whatever the center. Tick **With a ship (elytra)** to keep only
+  end cities with a ship.
 - **Biome at the center:** the biome at the center must be one of those you
   pick.
 - **Seeds:** where to start and how many to check, or **random seeds** (the
