@@ -64,7 +64,8 @@ Bedrock Edition is out of scope until after 1.0 (see
 - [x] Mineshafts, no "possible" markers left, saved settings (0.6)
 - [x] Large-scale verification against the game, and a command line tool (0.7)
 - [x] Stable formats, documented (0.8)
-- [ ] User guide, then release candidates (0.9)
+- [x] User guide; End gateways and return gateways (0.9)
+- [ ] Release candidates, then 1.0
 - [ ] Large biomes and amplified presets
 - [x] Structure placement: candidate chunks, frequency rolls, exclusion zones (all vanilla structure sets)
 - [x] Strongholds (concentric rings with their biome search)
@@ -192,7 +193,8 @@ the app and in the release notes.
   milestone: 0.1 the map viewer, 0.2 structures validated by biome and
   terrain, 0.3 world spawn and the seed finder, 0.4 the Nether and ruined
   portals, 0.5 the End, 0.6 mineshafts and saved settings, 0.7 large-scale
-  verification, 0.8 a stable command line and formats, 0.9 the user guide.
+  verification, 0.8 a stable command line and formats, 0.9 the user guide
+  and the End gateways.
   The full plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
 - **1.0** comes when everything Chunkscope shows for the Overworld, the
   Nether and the End matches the game bit for bit and is verified by oracle
