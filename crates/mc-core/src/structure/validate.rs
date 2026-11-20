@@ -1,8 +1,8 @@
 //! Structure validation (Minecraft 26.x): whether a structure set's attempt
 //! at a chunk really generates a structure, which one, and where.
 //!
-//! A random-spread set *attempts* a structure at one chunk per region (see
-//! [`super::placement`]). The game then picks one of the set's structures
+//! A random-spread set *attempts* a structure at one chunk per region (see the
+//! `placement` module). The game then picks one of the set's structures
 //! and asks it for a generation point (`Structure.findGenerationPoint`);
 //! the structure generates when that point exists and its biome is one of
 //! the structure's biomes. Each structure type finds its point differently:
