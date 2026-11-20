@@ -172,6 +172,9 @@ Release candidates (`1.0.0-rc.N`) first, then 1.0 when:
 - the command line and the saved formats are stable and documented;
 - the README and a short user guide describe every feature.
 
+All of them are met in 1.0.0-rc.1. From the first candidate on, only fixes
+go in; 1.0 is the last candidate that needed none.
+
 ## Before 1.0: End gateways (done in 0.9.0)
 
 Read from the game's `EnderDragonFight` with `javap`: the 20 gateways sit at

@@ -43,7 +43,7 @@ Bedrock Edition is out of scope until after 1.0 (see
 | Crate                  | Purpose                                                                                 |
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | `crates/java-compat`   | Bit-exact ports of the JDK behaviour Minecraft relies on: `java.util.Random`, `StrictMath.log`, `Math.round`, `DoubleStream.sum`, `String.hashCode`, `String.trim`, `Long.parseLong` |
-| `crates/mc-core`       | Minecraft logic: random sources (Xoroshiro, legacy, worldgen), noise (Perlin, normal noise, all vanilla noise parameters), overworld climate and biomes, overworld terrain (`final_density`, aquifers, heightmaps), structure placement, seed text → world seed, slime chunks |
+| `crates/mc-core`       | Minecraft logic: random sources, noise, biomes and terrain of the Overworld, the Nether and the End, structure placement and validation (strongholds, mineshafts, end cities and their ships, End gateways), the world spawn, the seed finder, seed text → world seed, slime chunks |
 | `crates/chunkscope-cli` | The command line (`chunkscope-cli`): biome, height, spawn, structures and seed search, with JSON output |
 | `crates/chunkscope-app` | The desktop app (`chunkscope`): an interactive biome and structure map, native Rust with egui |
 | `parity/oracle`        | JDK oracle: reference fixtures from a real JDK                                          |
@@ -66,10 +66,9 @@ Bedrock Edition is out of scope until after 1.0 (see
 - [x] Stable formats, documented (0.8)
 - [x] User guide; End gateways and return gateways (0.9)
 - [ ] Release candidates, then 1.0
-- [ ] Large biomes and amplified presets
 - [x] Structure placement: candidate chunks, frequency rolls, exclusion zones (all vanilla structure sets)
 - [x] Strongholds (concentric rings with their biome search)
-- [ ] Terrain height (needed to validate structures), in steps:
+- [x] Terrain height (needed to validate structures), in steps:
   - [x] Volume-mode noise (`NoiseStack.addToVolume`)
   - [x] Volume-mode density samplers, cell interpolation, smeared Perlin noise
   - [x] Overworld `final_density` (the game's compiled sampler tree)
@@ -78,11 +77,13 @@ Bedrock Edition is out of scope until after 1.0 (see
 - [x] Structure validation (biome and terrain height), every structure
 - [x] World spawn: the climate origin (exact) and the spawn block (estimate)
 - [x] Seed finder with filters (structures near the spawn, biome at the spawn), in the app and on the command line
-- [ ] Map viewer GUI
+- [x] Map viewer GUI
   - [x] Biome map (tiled, computed in parallel), structure layers, strongholds, slime chunks, grid, inspector
   - [x] Structure markers validated by biome and terrain (0.2)
   - [x] Release builds for Windows, macOS and Linux
   - [x] Saved settings (0.6)
+- [ ] After 1.0: large biomes and amplified presets, where the End gateways lead
+  (1.1), Bedrock (see [docs/ROADMAP.md](docs/ROADMAP.md))
 
 ## Download
 

@@ -65,12 +65,13 @@ What the markers mean:
   lakes that only exist once the chunks are generated.
 - In the End, a green dot marks end cities **with a ship** (an elytra).
   The outer islands are drawn from their density: their edges are
-  approximate, their biomes and structures are exact. The 20 End gateways of the main island are
-  exact: their blocks are the same in every world, and each marker says
-  which dragon defeat opens it (that order comes from the seed). The
-  **return gateways** of the outer islands, which lead back to the main island, are
-  shown too. Their spot is exact; their height is the terrain's plus 3 to 9, and
-  can be higher where an end city stands over them (the inspector says so).
+  approximate, their biomes and structures are exact. The 20 End gateways
+  of the main island are exact: their blocks are the same in every world,
+  and each marker says which dragon defeat opens it (that order comes from
+  the seed). The **return gateways** of the outer islands, which lead back
+  to the main island, are shown too. Their spot is exact; their height is
+  the terrain's plus 3 to 9, and can be higher where an end city stands
+  over them (the inspector says so).
 
 ## The finder
 
