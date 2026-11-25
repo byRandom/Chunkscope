@@ -12,7 +12,7 @@
 use std::sync::OnceLock;
 
 pub use super::mineshaft::MineshaftType;
-use super::mineshaft::{encapsulating, mineshaft_pieces};
+use super::mineshaft::{MineshaftPiece, encapsulating, mineshaft_pieces};
 use super::placement::{StructurePlacement, StructureSet};
 use crate::biome::Biome;
 use crate::random::{LegacyRandomSource, RandomSource, WorldgenRandom};
@@ -370,17 +370,39 @@ impl<'a> StructureGenerator<'a> {
         self.generation_point(structure, chunk_x, chunk_z, false)
     }
 
-    fn generation_point(
+    /// The pieces of the mineshaft `structure` (normal or badlands) that
+    /// starts at a chunk, where the game builds them: after
+    /// `generatePiecesAndAdjust` moves them up or down. `None` for other
+    /// structures. Whether the mineshaft generates (its biome) is not
+    /// checked here.
+    pub fn mineshaft_layout(
         &self,
         structure: &'static Structure,
         chunk_x: i32,
         chunk_z: i32,
-        check_biome: bool,
-    ) -> Option<(i32, i32, i32)> {
-        let valid = &tables().structures[structure.index()];
-        let mut ctx = Context {
+    ) -> Option<Vec<MineshaftPiece>> {
+        let StructureKind::Mineshaft(kind) = structure.kind else {
+            return None;
+        };
+        let mut ctx = self.context(structure, chunk_x, chunk_z);
+        let (mut pieces, dy) = ctx.mineshaft_layout(kind);
+        for p in &mut pieces {
+            p.bbox[1] += dy;
+            p.bbox[4] += dy;
+        }
+        Some(pieces)
+    }
+
+    /// `Structure.GenerationContext` for `structure` at a chunk.
+    fn context(
+        &self,
+        structure: &'static Structure,
+        chunk_x: i32,
+        chunk_z: i32,
+    ) -> Context<'_, 'a> {
+        Context {
             generator: self,
-            valid,
+            valid: &tables().structures[structure.index()],
             chunk_x,
             chunk_z,
             random: {
@@ -388,7 +410,17 @@ impl<'a> StructureGenerator<'a> {
                 r.set_large_feature_seed(self.seed, chunk_x, chunk_z);
                 r
             },
-        };
+        }
+    }
+
+    fn generation_point(
+        &self,
+        structure: &'static Structure,
+        chunk_x: i32,
+        chunk_z: i32,
+        check_biome: bool,
+    ) -> Option<(i32, i32, i32)> {
+        let mut ctx = self.context(structure, chunk_x, chunk_z);
         let point = match structure.kind {
             StructureKind::NetherFortress => Some((chunk_x << 4, 64, chunk_z << 4)),
             StructureKind::NetherFossil {
@@ -659,6 +691,13 @@ impl Context<'_, '_> {
     /// `MineshaftStructure.findGenerationPoint`: the room's chunk, moved
     /// down below sea level, or (badlands) up towards the surface.
     fn mineshaft(&mut self, kind: MineshaftType) -> (i32, i32, i32) {
+        let (_, dy) = self.mineshaft_layout(kind);
+        (self.middle_x(), 50 + dy, self.chunk_z << 4)
+    }
+
+    /// The mineshaft's pieces before the vertical move, and the move
+    /// (`generatePiecesAndAdjust`).
+    fn mineshaft_layout(&mut self, kind: MineshaftType) -> (Vec<MineshaftPiece>, i32) {
         self.random.next_double();
         let pieces = mineshaft_pieces(&mut self.random, self.chunk_x, self.chunk_z);
         let [_, min_y, _, _, max_y, _] = encapsulating(&pieces);
@@ -687,7 +726,7 @@ impl Context<'_, '_> {
                 top - max_y
             }
         };
-        (self.middle_x(), 50 + dy, self.chunk_z << 4)
+        (pieces, dy)
     }
 
     fn on_top_of_chunk_center(&self, heightmap: Heightmap) -> Option<(i32, i32, i32)> {
