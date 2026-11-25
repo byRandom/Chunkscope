@@ -31,6 +31,10 @@ const MIN_ZOOM: f32 = 1.0 / 32.0;
 const MAX_ZOOM: f32 = 16.0;
 /// Structure markers closer than this on screen are not drawn.
 const MARKER_SPACING_PX: f64 = 48.0;
+/// From this zoom (pixels per block) on, mineshafts show their tunnels.
+const TUNNEL_ZOOM: f32 = 0.5;
+/// Mineshaft tunnels: dark, so they read on every biome color.
+const TUNNEL: Color32 = Color32::from_rgba_premultiplied(0x1e, 0x17, 0x12, 0xc8);
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Tab {
@@ -493,7 +497,7 @@ impl ChunkscopeApp {
         section(ui, |ui| {
             theme::section_title(ui, "Selection");
             ui.add_space(2.0);
-            match self.selected {
+            match self.selected.clone() {
                 Some(m) => {
                     let kind = &KINDS[m.kind];
                     ui.horizontal(|ui| {
@@ -530,6 +534,16 @@ impl ChunkscopeApp {
                             field_box(ui, &biome_colors::display_name(name));
                             theme::field_label(ui, "Start");
                             field_box(ui, &format!("{sx}, {sy}, {sz}"));
+                        }
+                        if let Some(pieces) = &m.tunnels {
+                            let x0 = pieces.iter().map(|b| b[0]).min().unwrap_or(m.x);
+                            let z0 = pieces.iter().map(|b| b[1]).min().unwrap_or(m.z);
+                            let x1 = pieces.iter().map(|b| b[2]).max().unwrap_or(m.x);
+                            let z1 = pieces.iter().map(|b| b[3]).max().unwrap_or(m.z);
+                            theme::field_label(ui, "Tunnels");
+                            field_box(ui, &format!("{} pieces", pieces.len()));
+                            theme::field_label(ui, "Area");
+                            field_box(ui, &format!("{x0}, {z0} to {x1}, {z1}"));
                         }
                         if let Some(ship) = m.ship {
                             theme::field_label(ui, "Ship");
@@ -858,8 +872,11 @@ impl ChunkscopeApp {
             if structures::spacing_blocks(kind).is_none_or(|s| s < min_spacing) {
                 continue;
             }
-            for bz in (z0 / span).floor() as i32..=(z1 / span).floor() as i32 {
-                for bx in (x0 / span).floor() as i32..=(x1 / span).floor() as i32 {
+            // Tunnels reach about 100 blocks past their mineshaft's chunk:
+            // one more square around the view finds those starting outside.
+            let m = i32::from(info.id == "mineshafts" && self.zoom >= TUNNEL_ZOOM);
+            for bz in (z0 / span).floor() as i32 - m..=(z1 / span).floor() as i32 + m {
+                for bx in (x0 / span).floor() as i32 - m..=(x1 / span).floor() as i32 + m {
                     let key = BlockKey {
                         seed: self.seed,
                         kind,
@@ -867,7 +884,7 @@ impl ChunkscopeApp {
                         bz,
                     };
                     match self.markers.get(&key) {
-                        Some(found) => visible.extend(found),
+                        Some(found) => visible.extend(found.iter().cloned()),
                         None => wanted.push(key),
                     }
                 }
@@ -893,6 +910,7 @@ impl ChunkscopeApp {
                 ship: None,
                 gateway: None,
                 under_city: false,
+                tunnels: None,
             });
         }
         if let Some(i) = KINDS.iter().position(|k| k.source == Source::Strongholds)
@@ -907,6 +925,7 @@ impl ChunkscopeApp {
                 ship: None,
                 gateway: None,
                 under_city: false,
+                tunnels: None,
             }));
         }
         if let Some(i) = KINDS.iter().position(|k| k.source == Source::Gateways)
@@ -921,6 +940,7 @@ impl ChunkscopeApp {
                 ship: None,
                 gateway: Some(g.number),
                 under_city: false,
+                tunnels: None,
             }));
         }
 
@@ -929,6 +949,25 @@ impl ChunkscopeApp {
         let mut hovered: Option<(f32, Marker)> = None;
         let painter = ui.painter_at(rect);
         let r = if self.zoom >= 0.5 { 11.0 } else { 9.0 };
+        // Mineshafts, close up: their tunnels seen from above, under every
+        // badge. Pointing at a tunnel picks its mineshaft.
+        let tunnels = self.zoom >= TUNNEL_ZOOM;
+        let mut over_tunnel: Option<&Marker> = None;
+        if tunnels {
+            for m in &visible {
+                let Some(pieces) = &m.tunnels else { continue };
+                for &b in pieces.iter() {
+                    let t = self.tunnel_rect(rect, b);
+                    if !rect.intersects(t) {
+                        continue;
+                    }
+                    painter.rect_filled(t, 0.0, TUNNEL);
+                    if pointer.is_some_and(|ptr| t.contains(ptr)) {
+                        over_tunnel = Some(m);
+                    }
+                }
+            }
+        }
         for m in &visible {
             let p = self.to_screen(rect, m.x as f64, m.z as f64);
             if !rect.expand(r).contains(p) {
@@ -936,8 +975,8 @@ impl ChunkscopeApp {
             }
             if let Some(ptr) = pointer {
                 let d = p.distance(ptr);
-                if d <= r + 2.0 && hovered.is_none_or(|(best, _)| d < best) {
-                    hovered = Some((d, *m));
+                if d <= r + 2.0 && hovered.as_ref().is_none_or(|(best, _)| d < *best) {
+                    hovered = Some((d, m.clone()));
                 }
             }
             marker_badge(&painter, p, KINDS[m.kind].glyph, KINDS[m.kind].color, r);
@@ -952,15 +991,26 @@ impl ChunkscopeApp {
                 );
             }
         }
-        self.hover_marker = hovered.map(|(_, m)| m);
-        for (m, color) in [(self.hover_marker, Color32::WHITE), (self.selected, ACCENT)] {
+        self.hover_marker = hovered.map(|(_, m)| m).or_else(|| over_tunnel.cloned());
+        for (m, color) in [
+            (self.hover_marker.clone(), Color32::WHITE),
+            (self.selected.clone(), ACCENT),
+        ] {
             // Only ring markers that are drawn at this zoom.
             if let Some(m) = m.filter(|m| visible.contains(m)) {
+                if tunnels && let Some(pieces) = &m.tunnels {
+                    for &b in pieces.iter() {
+                        let t = self.tunnel_rect(rect, b);
+                        if rect.intersects(t) {
+                            painter.rect_filled(t, 0.0, color.gamma_multiply(0.8));
+                        }
+                    }
+                }
                 let p = self.to_screen(rect, m.x as f64, m.z as f64);
                 painter.circle_stroke(p, r + 3.0, Stroke::new(2.0, color));
             }
         }
-        if let Some(m) = self.hover_marker {
+        if let Some(m) = &self.hover_marker {
             let p = self.to_screen(rect, m.x as f64, m.z as f64);
             let kind = &KINDS[m.kind];
             let name = match m.start {
@@ -991,8 +1041,17 @@ impl ChunkscopeApp {
             ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
         }
         if response.clicked() {
-            self.selected = self.hover_marker;
+            self.selected = self.hover_marker.clone();
         }
+    }
+
+    /// A mineshaft piece `[min_x, min_z, max_x, max_z]` on the screen, at
+    /// least a pixel wide.
+    fn tunnel_rect(&self, rect: Rect, [x0, z0, x1, z1]: [i32; 4]) -> Rect {
+        let a = self.to_screen(rect, x0 as f64, z0 as f64);
+        let b = self.to_screen(rect, x1 as f64 + 1.0, z1 as f64 + 1.0);
+        let r = Rect::from_min_max(a, b);
+        Rect::from_center_size(r.center(), r.size().max(vec2(1.0, 1.0)))
     }
 
     fn floating_toolbar(&mut self, ui: &mut egui::Ui, rect: Rect) {

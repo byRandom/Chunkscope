@@ -60,6 +60,12 @@ What the markers mean:
   the terrain where the structure needs it. If it is on the map, the
   structure generates there (a ruined portal, a mineshaft, a village in the
   right biome...). Strongholds are exact too.
+- **Mineshafts** are many and big: the game tries one in every chunk, and
+  each spreads up to about 100 blocks, so neighbours cross. Zoomed in (from
+  50%), each mineshaft draws its tunnels seen from above, where the game
+  builds them; pointing at a tunnel shows which mineshaft it belongs to, and
+  the selected one is drawn in the accent color. Tunnels at different
+  heights can cross on the map without meeting underground.
 - The **world spawn** is an estimate. The point the game searches around is
   exact, but the block you really appear on also depends on trees and
   lakes that only exist once the chunks are generated.
