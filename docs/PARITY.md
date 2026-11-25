@@ -349,6 +349,11 @@ Each of these breaks parity in a naive port. Each is covered by the fixtures:
   `h < seaLevel` instead of `h <= seaLevel` for badlands mineshafts, since
   at `h == seaLevel` the random height is always sea level and the random
   is not used again.
+  The map draws the pieces where the game builds them
+  (`StructureGenerator::mineshaft_layout`): `generatePiecesAndAdjust` moves
+  every piece (`offsetPiecesVertically`) by the same number it returns for
+  the generation point (`BlockPos.offset(0, dy, 0)`), read with javap; a
+  test checks the moved pieces against the game's generation points.
 - Two checks cannot be told apart by any vanilla data, so no fixture
   covers them: the bottom of the column pre-check (y = -65 instead of -64),
   and the trial chambers' dimension padding (they start at y = -40 or

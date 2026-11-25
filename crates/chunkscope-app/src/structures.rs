@@ -15,7 +15,7 @@ use mc_core::structure::StructurePlacement;
 use mc_core::structure::end_gateway::return_gateways;
 use mc_core::structure::scan::ChunkRect;
 use mc_core::structure::target::Target;
-use mc_core::structure::validate::StructureGenerator;
+use mc_core::structure::validate::{Structure, StructureGenerator};
 use mc_core::terrain::OverworldTerrain;
 use mc_core::world::World;
 
@@ -300,7 +300,7 @@ pub static KINDS: &[Kind] = &[
 ];
 
 /// A structure marker on the map, at the position `/locate` reports.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Marker {
     pub kind: usize,
     pub x: i32,
@@ -315,6 +315,9 @@ pub struct Marker {
     /// Return gateways: an end city covers the column, so the height may be
     /// higher than `start` says.
     pub under_city: bool,
+    /// Mineshafts: the pieces seen from above, `[min_x, min_z, max_x,
+    /// max_z]` (blocks, inclusive), where the game builds them.
+    pub tunnels: Option<Arc<[[i32; 4]]>>,
 }
 
 /// Expected distance between two attempts of a random-spread set, in
@@ -351,6 +354,16 @@ pub fn markers(kind: usize, rect: ChunkRect, generator: &StructureGenerator) -> 
             ship: hit.generated.ship,
             gateway: None,
             under_city: false,
+            tunnels: Structure::find(hit.generated.name)
+                .and_then(|s| {
+                    generator.mineshaft_layout(s, hit.candidate.chunk.0, hit.candidate.chunk.1)
+                })
+                .map(|pieces| {
+                    pieces
+                        .iter()
+                        .map(|p| [p.bbox[0], p.bbox[2], p.bbox[3], p.bbox[5]])
+                        .collect()
+                }),
         })
         .collect()
 }
@@ -449,6 +462,7 @@ fn block_markers(worlds: &mut Vec<World>, key: BlockKey) -> Vec<Marker> {
                 ship: None,
                 gateway: None,
                 under_city: g.under_city,
+                tunnels: None,
             })
             .collect();
     }

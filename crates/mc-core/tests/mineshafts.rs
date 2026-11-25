@@ -96,3 +96,43 @@ fn generation_points_match_the_game() {
         "{checked} checked, {generated} generate"
     );
 }
+
+/// `mineshaft_layout` moves the pieces by what the game's generation point
+/// was moved by (`offsetPiecesVertically` and `BlockPos.offset` take the
+/// same number): the room's floor moves from 54..59 by `y - 50`.
+#[test]
+fn layout_moves_like_the_generation_point() {
+    let text = fixture("mineshaft_points.txt");
+    let mut sources: Option<World> = None;
+    let mut checked = 0;
+    for line in text.lines() {
+        let mut parts = line.split(' ');
+        let seed: i64 = parts.next().unwrap().parse().unwrap();
+        let name = format!("minecraft:{}", parts.next().unwrap());
+        if sources.as_ref().is_none_or(|s| s.seed() != seed) {
+            sources = Some(World::new(seed, Dimension::Overworld));
+        }
+        let generator = sources.as_ref().unwrap().structures();
+        let structure = Structure::find(&name).unwrap();
+        for entry in parts.filter(|e| !e.ends_with(":no")).take(60) {
+            let (chunk, want) = entry.split_once(':').unwrap();
+            let (cx, cz) = chunk.split_once(',').unwrap();
+            let (cx, cz): (i32, i32) = (cx.parse().unwrap(), cz.parse().unwrap());
+            let y: i32 = want.split(',').nth(1).unwrap().parse().unwrap();
+            let mut random = WorldgenRandom::new(LegacyRandomSource::new(0));
+            random.set_large_feature_seed(seed, cx, cz);
+            random.next_double();
+            let unmoved = mineshaft_pieces(&mut random, cx, cz);
+            let moved = generator.mineshaft_layout(structure, cx, cz).unwrap();
+            assert_eq!(moved.len(), unmoved.len());
+            for (m, u) in moved.iter().zip(&unmoved) {
+                let mut b = u.bbox;
+                b[1] += y - 50;
+                b[4] += y - 50;
+                assert_eq!(m.bbox, b, "{name} seed {seed} chunk ({cx}, {cz})");
+            }
+            checked += 1;
+        }
+    }
+    assert!(checked >= 200, "{checked}");
+}
